@@ -4,11 +4,12 @@
 // To read or write to a given bus pin, all that is needed to access the pin is its row and side.
 
 fB_Pin::fB_Pin(uint16_t ctag,uint8_t   row,uint8_t   side,   uint8_t  dir, uint8_t  onval) {
-	iodir = dir;
-	onVal = 0;
-	if(onval) onVal = onval;
-	//vdr = 0;  // undefined resistor value
-	//gate = OFF;  
+	flags = 0;
+	flags |= (dir << 6);
+	flags |= (onVal << 7);
+	offset = row-1+side;  // should be 6 bits (<=32);
+	flags |= offset;
+
 
 	pCard = Card(ctag);  // pointer into card array;
 	uint8_t start;
@@ -30,13 +31,26 @@ fB_Pin::fB_Pin(uint16_t ctag,uint8_t   row,uint8_t   side,   uint8_t  dir, uint8
 	pull(~onVal); // pulls to OFF for both input and output getMode()s
 }
 
-uint8_t fB_Pin::getCpin() {  // get chip pin
+uint8_t fB_Pin::getOffset() {  // get chip pin
+	
 	switch(pCard->type) {
 		case X50:
-			return pgm_read_byte(&Xmap50[poff]);
+		case X76:
+			return ( flags & 0X3F );
+			break;
+		case BRAIN: 
+			//if(getMode()== D)    pinMode(getCpin(),iodir);
+			break;
+	}
+}
+uint8_t fB_Pin::getCpin() {  // get chip pin
+	
+	switch(pCard->type) {
+		case X50:
+			return pgm_read_byte(&Xmap50[getOffset()*4]);
 			break;
 		case X76:
-			return pgm_read_byte(&Xmap76[poff]);
+			return pgm_read_byte(&Xmap76[getOffset()*4]);
 			break;
 		case BRAIN: 
 			//if(getMode()== D)    pinMode(getCpin(),iodir);
@@ -47,10 +61,10 @@ uint8_t fB_Pin::getMode() {  // get chip pin
 	//dbug(F("gM p %d, m %x"), poff, pgm_read_byte(&Xmap76[poff-1]));
 	switch(pCard->type) {
 		case X50:
-			return pgm_read_byte(&Xmap50[poff-1]);
+			return pgm_read_byte(&Xmap50[getOffset()*4-1]);
 			break;
 		case X76:
-			return pgm_read_byte(&Xmap76[poff-1]);
+			return pgm_read_byte(&Xmap76[getOffset()*4-1]);
 			break;
 		case BRAIN: 
 			break;
@@ -59,10 +73,10 @@ uint8_t fB_Pin::getMode() {  // get chip pin
 uint8_t fB_Pin::getSide() {  // get chip pin
 	switch(pCard->type) {
 		case X50:
-			return pgm_read_byte(&Xmap50[poff-2]);
+			return pgm_read_byte(&Xmap50[getOffset()*4-2]);
 			break;
 		case X76:
-			return pgm_read_byte(&Xmap76[poff-2]);
+			return pgm_read_byte(&Xmap76[getOffset()*4-2]);
 			break;
 		case BRAIN: 
 			break;
@@ -71,10 +85,10 @@ uint8_t fB_Pin::getSide() {  // get chip pin
 uint8_t fB_Pin::getRow() {  // get chip pin
 	switch(pCard->type) {
 		case X50:
-			return pgm_read_byte(&Xmap50[poff-3]);
+			return pgm_read_byte(&Xmap50[getOffset()*4-3]);
 			break;
 		case X76:
-			return pgm_read_byte(&Xmap76[poff-3]);
+			return pgm_read_byte(&Xmap76[getOffset()*4-3]);
 			break;
 		case BRAIN: 
 			break;

@@ -9,10 +9,10 @@ class MCP23017; // pre-declare
 
 class fB_Card {
 public:
-        fB_Card(uint16_t tag,const __FlashStringHelper* Ptitle, uint8_t  index, uint8_t  type,uint8_t  i2cAddr, uint8_t  aChan );
-        ~fB_Card();
-		const __FlashStringHelper* Ptitle;
+        fB_Card(uint16_t tag,const __FlashStringHelper* Ptitle, uint8_t  type,uint8_t  i2cAddr, uint8_t  aChan );
+
 		uint16_t tag;
+		const __FlashStringHelper* Ptitle;
 		uint8_t  type;
 		uint8_t  i2cAddr;
 		uint8_t  aChan ;

@@ -161,9 +161,48 @@ XCARDS		Ox20-27
 #define MONX		   60
 #define ADJX		   52
 
-#define	NOFLAG			0x00  //  Tag  flags, unique uint8_t bits
-#define	TSYS			0x01   // System Tag
-#define	TINIT			0x02  // store and init from eeprom
+//////////////////////////////////////////
+// Tag->flags is 8 bits, LAST 2bits IS MASKED FOR FORMAT
+#define	PAGE			0x01	// ROW PAGE JUMP
+
+#define	MASKP			0x1E	// next 4 bits overwritte in case of PAGE to hold pagerowcount
+
+#define	TSYS			0x02	// System Tag
+#define	STOREE			0x04	// store in eeprom
+#define	LOG				0x08	
+//#define	AVAIL		0x10	
+
+#define	MASKF			0xE0	// last 3 bits reserved for format, EXCLUSIVE
+#define	BLANK			0x00	
+#define	TEXT			0x20	// default
+#define	INT5			0x40	
+#define	FLOAT1			0x60
+#define	FLOAT2			0x80	
+#define	BINARY			0xB0	
+#define	STRIKE			0xC0	
+//#define	AVAIL		0xD0	
+
+//////////////////////////////////////////
+//////////////////////////////////////////
+// Row->flags is 8 bits, LAST 2bits is unused ( format defaults to Tag
+//#define	AVAIL		0x0O	
+#define	MARK			0x01	
+#define	VISIBLE			0x02	
+//#define	avail  		0x04
+//#define	avail  		0x08
+//#define	avail  		0x10
+
+#define	MASKA			0xE0	 // last 3 bits reserved for format, EXCLUSIVE
+#define	NOACT			0x00	
+#define	TOGGLE			0x20	
+#define	INCR			0x40	
+#define	SHFTPULSE		0x60	
+#define	PULSE			0x80
+#define	REFRESH			0xB0
+#define	CGATE			0xD0
+//#define AVAIL			0xE0	
+
+//////////////////////////////////////////
 
 
 #define GAUGEHT		    60
@@ -178,9 +217,9 @@ XCARDS		Ox20-27
 #define	NOSTATUS	0x00    // page/button/block status
 #define	CREATED		0x01   
 #define	INITED		0x02   
-#define	VISIBLE		0x04
+//#define	VISIBLE		0x04
 #define	SELECTED	0x08
-#define	MARK		0x10
+//#define	MARK		0x10
 #define	LOG			0x20
 #define	DISABLE		0x80
 //#define	 		0x80
@@ -192,9 +231,6 @@ XCARDS		Ox20-27
 //#define SWITCH			111	// Block type	 
 //#define MONITOR			112	// Block type	 
 #define WINDOW			2	// Block type	 
-
-#define	PSYS			1  // page type,8 bit
-#define	PUSR			2  // page type,8 bit
 
 #define	STRIKE			1	// row format  (unique from Action Types)
 #define FLOAT1			2	// format
@@ -220,31 +256,29 @@ XCARDS		Ox20-27
 ////////////// ALL SYSTEM TAGS < 500 ///////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
 
+#define	SYSTAG		1	// LOG tags
+
 #define	HOME		0   // page tags,16 bit
 #define	SYSTEM		1
 #define	GLOBALS 	2
-#define TPAGE		3	
-#define	TLIST		4   
+#define FILES		7
+#define FPANEL		5	
 #define TPANEL		5	
 #define	DIAGNOSTICS	6
-#define FILES		7
 #define	CLOCK		8
 #define	ALARM		9
 #define	PINS		10
 
-
-#define TSTAGS		19
-#define TUTAGS		20
-#define TPINS		21
-#define TLOGS		22
-#define TPAGES		23
-#define TROWS		24
-#define FRAM		25
+#define TLIST		20   // 10 numbers (MAXLISTROW)  RESERVED FOR LIST of TAG POINTER ARRAY INDEXES
 
 
-#define FROW			30   // 10 numbers RESERVED FOR FILE LIST ROW INDEXES
-#define TROW			50   // 10 numbers RESERVED FOR TAG LIST ROW INDEXES
-#define YROW			60   
+#define TSTAGS		31
+#define TUTAGS		32
+#define TPINS		33
+#define TLOGS		34
+#define TPAGES		35
+#define TROWS		36
+#define FRAM		37
 
 #define TLOG			81  //  Tags
 #define TOPR			82
@@ -262,44 +296,44 @@ XCARDS		Ox20-27
    
 
 
-#define CLKYR			100	// Clock Set row index	    
-#define CLKMO			101	// Clock Set row index	    
-#define CLKDY			102	// Clock Set row index	    
-#define CLKHH			103	// Clock Set row index	    
-#define CLKMM			104	// Clock Set row index	    
-#define CLKSET			105	// Clock Set row index	    
-#define CLKGET			106	// Clock Set row index	    
+#define CLKYR			100		    
+#define CLKMO			101		    
+#define CLKDY			102		    
+#define CLKHH			103		    
+#define CLKMM			104		    
+#define CLKSET			105		    
+#define CLKGET			106		    
 
-#define PNCUT 			120	// Action Type (atype)	    
-#define PNPIN 			121	// Action Type (atype)	    
-#define PNROW 			122	// Action Type (atype)	    
-#define PNCOL 			123	// Action Type (atype)	    
-#define PNCRD 			125	// Action Type (atype)	    
-#define PNTOG 			126	// Action Type (atype)	    
-#define PNADC 			127	// Action Type (atype)	    
-#define PGATE 			128	// Action Type (atype)	    
+#define PNCUT 			120		    
+#define PNPIN 			121		    
+#define PNROW 			122		    
+#define PNCOL 			123		    
+#define PNCRD 			125		    
+#define PNTOG 			126		    
+#define PNADC 			127		    
+#define PGATE 			128		    
 
 
 
-#define HEADER			130   // Action Type (atype)
-#define TOGGLE			131	// Action Type (atype)	    
-#define JPAGE			132  // Action Type (atype)
-#define FPANEL			136	// Action Type (atype)	    
-#define FSTAMP			137	// Action Type (atype)	    
-#define FARCH			138	// Action Type (atype)	    
-#define FSIZE			139	// Action Type (atype)
-#define FDATE			140	// Action Type (atype)
-#define FDEL			141	// Action Type (atype)
-#define FDUMP			142	// Action Type (atype)
+#define HEADER			130   
+#define TOGGLE			131		    
+#define JPAGE			132  
+#define FPANEL			136		    
+#define FSTAMP			137		    
+#define FARCH			138		    
+#define FSIZE			139	
+#define FDATE			140	
+#define FDEL			141	
+#define FDUMP			142	
 #define	FSTD			143  // tag for FPANEL row that can hgouse either FSTAMP or FDELETE subtype
-#define CLK				144	// Action Type (atype)	    
-#define VALUE			145	// Action Type (atype)	    
-#define NOACT			146	// Action Type (atype)	    
-#define TADJ			149	// Action Type (atype)	    
-#define TARB 			150	// Action Type (atype)	
-#define GATE 			152	// Action Type (atype)	    
-#define PULSE 			154	// Action Type (atype)	    
-#define YPULSE 			155	// Action Type (atype)	    
+#define CLK				144		    
+#define VALUE			145		    
+#define NOACT			146		    
+#define TADJ			149		    
+#define TARB 			150		
+#define GATE 			152		    
+#define PULSE 			154		    
+#define YPULSE 			155		    
 
 #endif
 

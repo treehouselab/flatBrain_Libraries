@@ -7,20 +7,21 @@ Treehouselab.com - Mike Price */
 #include <fB_SYS_Define.h>
 #include <fB_USER_Define.h>
 
-#define definePin(tag,ctag,row,side,dir,onval)	initPin(tag,F(#tag),ctag,row,side,dir,onval) 
-#define defineCard(ctag,ctype,i2cAddr, aChan )  initCard(ctag,F(#ctag),ctype,i2cAddr, aChan )  
-#define defineLog(fTag)							initLog(fTag,F(#fTag));
-#define defineTag(tag,format,fTag,flags)		initTag(tag,F(#fTag),format,fTag,flags)
-#define defineValue(tag,value,factor,offset)	initValue(tag,value,factor,offset)
+#define definePin(tag,ctag,row,side,dir,onval)		initPin(tag,F(#tag),ctag,row,side,dir,onval) 
+#define defineCard(ctag,ctype,i2cAddr, aChan )		initCard(ctag,F(#ctag),ctype,i2cAddr, aChan )  
+#define defineLog(fTag)								initLog(fTag,F(#fTag));
+#define defineTag(tag,flags)						initTag(tag,F(#tag),NULL,flags)
+#define defineRecord(tag,fTag,flags)				initTag(tag,F(#tag),fTag,flags)
 
 //												definePage(uint16_t pTag=NULL,const __FlashStringHelper* Ptitle=NULL, uint16_t parentTag = NULL)  {
-#define menuHome(tag)							menu.definePage(HOME,F(#tag));
-#define menuPage(tag,parentTag)					menu.definePage(tag,F(#tag),parentTag);
+#define defineHome(tag)							initPage(HOME,F(#tag))
+#define definePage(tag,parentTag)				initPage(tag,F(#tag),parentTag)
+#define defineRow(tag,format,flags,tTag)		initRow(tag,F(#tag),format,flags,tTag)
+#define defineSpace()							initSpace()
 
  //												defineRow(uint16_t mTag, const __FlashStringHelper* Ptitle,uint8_t  type,uint8_t  format,uint16_t tTag, float value = NULL)
-#define menuJump(pTag)							menu.defineRow(NULL,F(#pTag),JPAGE,NULL,pTag, NULL);
+#define defineJump(tag)							initJump(tag);
 #define menuSpace()								menu.defineRow(NULL,NULL,NULL,NULL,NULL, NULL);
-#define menuRow(rTag,type,format,tTag,value)	menu.defineRow(rTag,F(#rTag),type,format,tTag,value);
 
 #define P(str) (strcpy_P(Pbuffer, PSTR(str)), Pbuffer)
 #define createPstr(text) PstrRay[PstrCount++] = F(text); 

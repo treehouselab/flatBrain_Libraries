@@ -13,7 +13,6 @@
 #include "fB_Define.h"
 #include "fB_TFT_RY.h"
 #include "fB_tFAT.h"
-#include "fB_Menu.h"
 #include "fB_mmc.h"
 #include "fB_RTC.h"
 #include "fB_EEPROM.h"
@@ -24,6 +23,7 @@
 #include "fB_Tag.h"
 #include "fB_Record.h"
 #include "fB_Define.h"
+#include "fB_Menu.h"
 //#include "fBT_Seg.h"
 #endif
 

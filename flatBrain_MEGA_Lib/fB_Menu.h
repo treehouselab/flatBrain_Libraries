@@ -2,153 +2,74 @@
 #define FB_MENU_H
 
 
-class fB_Row; // pre-declare
-class fB_Page; // pre-declare
-class fB_Log; // pre-declare
-
 class fB_Row {
-
 	public:
-		const __FlashStringHelper* Ptitle;
 		const __FlashStringHelper* Ptext;
-		char		*ptitle;				// alternative non-PROGMEM title
-		char		*ptext;				// alternative non-PROGMEM text
-		uint16_t	tag;	// this tag
-		fB_Page		*pPage;
-		uint16_t	Y; // upper left of button
-		uint8_t 	type;
+		char		*ptext;	// alternative non-PROGMEM text
+		char		*ptitle;	// alternative non-PROGMEM title
 
-		uint8_t 	status;
-		uint8_t 	format;
-		float		value;
-		uint16_t	tTag;	// target Tag ( Pins or Globals )
-		//uint8_t 	state;
-		//float		factor; // calibration factor
-		//uint8_t 		ftype;  // factor type ( AMPLIFY{*}, BIAS{+} )
-		void	frame();
-		void	unframe();
-		void	clearRow1();
-		void	clearRow();
-		void	show(uint8_t  flag=0);
-		void	hide();
-		void    action(uint8_t  flag);
-		void	select();
-		void	deselect();
-
+		uint16_t		tTag;	  // pointer to target Tag 
+		uint8_t 	flags;
+		
+		uint8_t		getAction();
+		uint8_t		putAction(uint8_t action);
+		uint16_t	getY();
+		void		frame();
+		void		unframe();
+		void		clearRow1();
+		void		clearRow();
+		void		showRow(uint8_t  hide=0);
+		fB_Row(); 
 };
 
 
-class fB_Page {
+class fB_Curr {
 	public:
-		
-		const __FlashStringHelper* Ptitle;
-		uint16_t	tag; 
-		uint16_t	parentTag; 
-		uint16_t	Y; // upper left 
-		uint8_t 	type;
-		byte		currRowDex;
-		//uint8_t 	status;
-		fB_Row	    * pRow;
-		//fB_Window	win;
-		int			farY; 
-		uint8_t 	pageRowCount;	
+		uint8_t		tag;			// tag of current page
+		fB_Tag*		pTag;			// pointer to tag used to store Page info ( flags = PAGE )
+		fB_Tag*		pRzero;			// first  tag index (row) of current page in pTagRay[]
+		uint16_t	parentTag;      // parent Tag of current page
+		uint8_t		rowDex;			// offset from pRzero of current selected row, updated by setCurrPage and menu.selectRow()
+		uint8_t		rowCount;		// 
+		uint16_t	farY;			// used to determine max Y coord of page for refresh
+		void		updateRowCount(uint8_t count);
+		void		setCurrPage(uint16_t _tag);
 
-		void		show();
-		void		hide(uint8_t  flag=0);
-		void		selectHeader();
-		void		nextSwitch();
-		void		prevSwitch();
-		//void		update();
-
+		fB_Curr();
 };
 
 
 class fB_Menu { 
 	public:	
-		char		nullText[2];
+		fB_Curr		curr;
+
+		int			fListStart ;	// can go negative !	
+		int			tListStart ;		
+
+		uint16_t 	PstrCount;	
+		uint8_t 	buttonCode;  // set by tft.readButtons in interrupt
+
+		uint8_t 	totalFiles ;		
+		fB_Log		**mFile;
+		uint8_t 	*fSort; // pointer to array of sorted indexes of mFile
+
 		void        init();
 		void		show(uint16_t pTag);
+		void		showPage(uint16_t pTag);
 		void		erase();
 		void		context(uint8_t  hand); // RIGHT or LEFT
 		void		checkButtonCode();
-		void		jumpPage(uint16_t pTag);
-		//void		defineMenu(); 
+		void		jumpPage(uint16_t tag);
+		void		jumpPage(fB_Tag* pT);
+		void		selectHeader();
 		void		defineSystem();
-		void        calibrate(uint16_t mTag,uint8_t  ftype,float value);
-
-		//void        defineJrow(uint16_t tTag,const __FlashStringHelper* pText);
-		//void        defineArow(uint8_t  type,const __FlashStringHelper* pText);
-		//void	    defineRow(uint16_t mTag,const __FlashStringHelper* pTitle,uint8_t  type,uint8_t  format=NULL);
-
-		void		definePage( uint16_t pTag=NULL,const __FlashStringHelper* pTitle=NULL,uint16_t parentTag = NULL);
-		void		defineRow(uint16_t mTag,const __FlashStringHelper* pTitle,uint8_t  type, uint8_t  format,uint16_t tTag, float value=0);
-		void		defineJump(uint16_t tTag); 
-		void		defineSpace(); 
-		void        writeRow(uint16_t mTag,char* text,float value=NULL);
-		void		updateGauge(uint16_t mTag);
-		void		updateRow(uint16_t mTag);
-		void		showGauge(uint16_t mTag);
-		void		showRow(uint16_t mTag);
-
-		//void        defineGauge(uint16_t mTag,uint8_t  type, char *text, uint16_t tTag);
-		//void		resetGauge(uint16_t mTag,uint8_t  type, char* text, uint16_t tTag);
-		//void		writeGauge(uint16_t mTag,uint8_t  type, char* text, float value);
-		//void        defineWindow(uint16_t mTag,uint16_t ht);
-		//void        defineWindow(uint16_t  mTag, uint16_t ht,uint8_t   type,uint8_t  type,char *text, uint16_t pin);
-		//void        writeWindow(uint16_t mTag,uint8_t  type, char* text, uint16_t tTag,float value);// general case
 		void		listFiles(uint16_t x1,uint16_t y1,uint16_t x2,uint16_t y2);
 		void		getFileList(); 
 
-		uint8_t 	    mTagCount;	
-		uint16_t 	    PstrCount;	
-
-		int	    fListStart ;	// can go negative !	
-		//int	    sListStart ;		
-		int	    tSysListStart ;		
-		int	    tUsrListStart ;		
-		//uint8_t 		currPageDex;
-		fB_Page		*pCurrPage;
-
-
-		uint8_t 		buttonCode;  // set by tft.readButtons in interrupt
-		//uint8_t 		totalPages;
-		//uint8_t 		totalRows;
-		uint8_t 	    totalFiles ;		
-
-		fB_Page		*mPage;
-		fB_Row  	*mRow;
-		fB_Log		**mFile;
-		uint8_t 		*fSort; // pointer to array of sorted indexes of mFile
-		fB_Row		*Row(uint16_t mTag);
-		fB_Page		*Page(uint16_t tTag);
-
-
-
 	private:
 
-		//void		createMenu();
 
 };
 
 
 #endif
-/*
-class fB_Window: public fB_Block{
-
-	public:
-		
-		//char	*gTitle1;
-		//char	*gTitle2;
-		uint8_t  type;
-		void	clear();
-
-		void	show(uint8_t  flag=0);
-		void	hide();
-
-		//void	gaugeParseTitle(char *text);
-		//void	gaugeShowMinus();
-		//void	gaugeShowPeriod(uint8_t  gtype);
-		//void    gaugeShowTitle();
-	
-};
-*/

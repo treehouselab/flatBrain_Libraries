@@ -7,11 +7,6 @@
 //class fB_Card; // pre-declare
 //class fB_Col; // pre-declare
 
-typedef struct		logStruc {	
-	uint16_t	tag;	 
-	char		name[13];
-	fB_Log*		pLog;			
-	};
 
 class fB_Log {
 	public:
@@ -32,6 +27,12 @@ class fB_Log {
 		void		dump();
 		fB_Log(uint16_t	fTag, char * filename) ;
 };
+
+typedef struct		logStruc {	
+	uint16_t	tag;	 
+	char		name[13];
+	fB_Log*		pLog;			
+	};
 
 class fB_Record {
 	public:

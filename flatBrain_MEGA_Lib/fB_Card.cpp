@@ -2,14 +2,12 @@
 #include "fB_Include.h"
 
 
-fB_Card::fB_Card(uint16_t ctag,const __FlashStringHelper* Ptit, uint8_t  dex, uint8_t  ctyp,uint8_t  i2c, uint8_t  al) {
-  Ptitle = Ptit;
-  tag = ctag;
-  type = ctyp;
-  i2cAddr = i2c;
-  aChan  = al;
-  init();
-   
+    fB_Card(uint16_t tag,const __FlashStringHelper* Ptitle, uint8_t _type,uint8_t  _i2cAddr, uint8_t  _aChan ) {
+	type = _type;
+	i2cAddr = _i2cAddr;
+	aChan  = aChan;
+	pTag = initCardTag(tag,Ptitle,this);
+	init();
 }
 
 void fB_Card::init() {
