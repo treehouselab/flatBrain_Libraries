@@ -43,7 +43,7 @@ PandT*			rTP;
 uint16_t*		tempTagRay;		// temp array for packed tag list
 fB_Tag*			tagRay;			// array of Tag objects
 fB_Tag*			rowTagRay;		// array of tags, preserves menu structure
-fB_Card**		cardRay;		// sparse array of pointers 
+fB_Card**		pCard;			// sparse array of pointers to Card objects
 logStruc*		logRay;
 
 
@@ -100,30 +100,40 @@ fB_Tag* Tag(uint16_t tag) {
 	if(tag != NULL) for(int i=0;i < tagCount;i++) if(tagRay[i].tag == tag) return &tagRay[i];
 	return NULL;
 }
-fB_Pin* Pin(uint16_t tag) {	
-	if(tag != NULL) for(int i=0;i < tagCount;i++) if(tagRay[i].tag == tag && tagRay[i].pPin) return tagRay[i].pPin;
-	return NULL;
-}
+//fB_Pin* Pin(uint16_t tag) {	
+//	if(tag != NULL) for(int i=0;i < tagCount;i++) if(tagRay[i].tag == tag && tagRay[i].pPin) return tagRay[i].pPin;
+//	return NULL;
+//}
 fB_Card* Card(uint16_t tag) {	
-	if(tag != NULL)for(int i=0;i < cardCount;i++) if(cardRay[i]->tag == tag) return cardRay[i];
+	if(tag != NULL)for(int i=0;i < cardCount;i++) if(pCard[i]->tag == tag) return pCard[i];
 	return NULL;
 }
 
 fB_Tag* initTag(uint16_t tag,const __FlashStringHelper* Ptitle,uint32_t flags,uint8_t fTag=NULL,uint16_t tTag=NULL) {
-	fB_Tag *pT;
+		
+	fB_Tag *pT = NULL;
 	if(!secondPass) packTempTagRay(tag); // add to tempTagRay if unique;
 	else {
 		pT = Tag(tag);
-		if(!pT) {  // not defined yet
-			tagRay[tagCount].tag = tag;
-			tagRay[tagCount].Ptitle = Ptitle;
-			tagRay[tagCount].putFlags(flags);
-			tagRay[tagCount].putFormat(flags);
-			tagRay[tagCount].fTag = fTag;
-			tagRay[tagCount].tTag = tTag;
-			pT  =  &tagRay[tagCount++];
-			//dbug(F("IT %P, t:%d  tc:%d"),Ptitle,tag,tagCount);
+		if(!pT)	{
+			pT =  &tagRay[tagCount++]; 
+			pT->tag = tag;
+			pT->Ptitle = Ptitle;
+			pT->fTag = fTag;
+			pT->tTag = tTag;
+			pT->pin = NULL;
+			pT->putFlags(flags);
+			pT->putFormat(flags);
+			pT->putAction(flags);
 		}
+		else {
+			if(fTag) pT->fTag = fTag;
+			if(tTag) pT->tTag = tTag;
+		}
+		pT->putFlags(flags);
+		pT->putFormat(flags);
+		pT->putAction(flags);
+	
 	}
 	return pT;
 }
@@ -152,10 +162,8 @@ void initJump(uint16_t tag) {
 	rowCount++;
 }
 void initRow(uint16_t tag, const __FlashStringHelper* Ptitle,uint32_t  flags,uint16_t tTag=NULL){
-	fB_Tag	*pT;
-	pT = initTag(tag,Ptitle,flags,NULL,tTag);
+	initTag(tag,Ptitle,flags,NULL,tTag);
 	if(secondPass) 	{
-		//dbug(F("---IRow %P,   RC:%d"),Ptitle, rowCount);
 		rTP[rowCount].t = tag;
 		curr.incrRowCount(); // increment rowCount for this page, store in page flags
 		curr.rowDex++;
@@ -174,16 +182,20 @@ void initSpace() {
 	rowCount++;
 }
 void initPin( uint16_t tag,const __FlashStringHelper* Ptitle, uint16_t ctag,uint8_t   row,uint8_t   side,   uint8_t  dir, uint8_t  onval) {
-	fB_Tag * pT;
+	fB_Tag *pT;
 	pT = initTag(tag,Ptitle,NULL,NULL,NULL);
-	if(secondPass)	pT->pPin = new fB_Pin(ctag,row,side,dir,onval) ;
+	if(secondPass)	{
+		pT->createPin(ctag,row,side,dir,onval) ;
+	}
 	pinCount++;
 }
 
 void  initCard(uint16_t tag,const __FlashStringHelper* Ptitle, uint8_t  type,uint8_t  i2cAddr, uint8_t  aChan ) {
 
-	if(secondPass)	cardRay[cardCount] = new fB_Card(tag,Ptitle,type,i2cAddr,aChan ); // Card array is separate from Tag array
-	cardCount++;
+	if(secondPass)	{
+		pCard[cardCount++] = new fB_Card(tag,Ptitle,type,i2cAddr,aChan ); // Card array is separate from Tag array
+		dbug(F("IC cc:%d,t;%d, pt:%d"),cardCount-1,pCard[cardCount-1]->tag,Card(tag)->tag);
+	}
 }
 
 void Calibrate( uint16_t tag, double factor=NULL,double offset=NULL) {
@@ -215,6 +227,8 @@ void initLog(uint16_t fTag,const __FlashStringHelper* Ptitle ) {
 
 
 void flatBrainInit(){
+
+
 	dbug(F("FB INIT ENTRY"));
 
 	dbug(F("free RAM %d"),freeRAM());
@@ -257,10 +271,6 @@ void flatBrainInit(){
 		dbug(F("INIT SD"));
 	}
 
-	menu.init();
-	dbug(F("INIT MENU"));
-
-
 	secondPass = 0;  // 1st pass , determine array sizes
 	tempTagRay = (uint16_t*) calloc( MAXTEMPTAG,2); // temp array for packed tag list
 
@@ -270,9 +280,9 @@ void flatBrainInit(){
 	free(tempTagRay);
 	dbug(F("free RAM3 %d"),freeRAM());
 	tagRay =	(fB_Tag *) calloc(tagCount,sizeof(fB_Tag));			// array of Tag objects
-	rTP =		(PandT *) calloc(rowCount,sizeof(PandT));				// array of tags or pointers, for menu operations
+	rTP    =	(PandT *) calloc(rowCount,sizeof(PandT));				// array of tags or pointers, for menu operations
 	logRay =	(logStruc *) calloc(logCount,sizeof(logStruc));
-	cardRay =	(fB_Card**) calloc(cardCount,sizeof(fB_Card*));
+	pCard  =	(fB_Card **) calloc(cardCount,sizeof(fB_Card*));
 
 	dbug(F("INIT PASS 1"));
 	dbug(F("tagCount %d"),tagCount);
@@ -282,7 +292,6 @@ void flatBrainInit(){
 	dbug(F("pinCount %d"),pinCount);
 	dbug(F("logCount %d"),logCount);
 	dbug(F("tag size %d"),sizeof(fB_Tag));
-	dbug(F("pin size %d"),sizeof(fB_Pin));
 	dbug(F("log size %d"),sizeof(fB_Log));
 
 	dbug(F("INIT MALLOC"));
@@ -339,12 +348,12 @@ void flatBrainInit(){
 
 
 void dbug(const __FlashStringHelper* Ptitle, ... ){
-  char fmt[ 40 ]; //Size array as needed.
+  char fmt[ 60 ]; //Size array as needed.
 
   getPtextU(Ptitle,fmt);
-  char prefix[ 41 ]; 
-  char sbuffer[41] = { '\0' };
-  int wid = 40;
+  char prefix[ 61 ]; 
+  char sbuffer[61] = { '\0' };
+  int wid = 60;
   double f;
   char * s;
   const __FlashStringHelper* Ptext;
@@ -386,6 +395,14 @@ void dbug(const __FlashStringHelper* Ptitle, ... ){
 		}
 		else if(fmt[i] == 'h' || fmt[i] == 'x') { 
 			n=va_arg(args,int);
+			Serial.print(n,HEX);
+		}
+		else if(fmt[i] == 'L' || fmt[i] == 'l') { 
+			n=va_arg(args,unsigned long);
+			Serial.print(n,DEC);
+		}
+		else if(fmt[i] == 'J' || fmt[i] == 'j') { 
+			n=va_arg(args,unsigned long);
 			Serial.print(n,HEX);
 		}
 	  }

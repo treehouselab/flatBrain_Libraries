@@ -10,14 +10,13 @@ class fB_Menu {
 		int			fListStart ;	// can go negative !	
 		int			tListStart ;		
 
-		uint16_t 	PstrCount;	
 		uint8_t 	buttonCode;  // set by tft.readButtons in interrupt
+		uint16_t 	PstrCount;	
 
 		uint8_t 	totalFiles ;		
 		fB_Log		**mFile;
 		uint8_t 	*fSort; // pointer to array of sorted indexes of mFile
 
-		void        init();
 		void		showPage(uint16_t tag=NULL);
 		void		clearPage(uint8_t fullFlag=NULL);
 		void		erase();
@@ -28,6 +27,7 @@ class fB_Menu {
 		void		selectHeader();
 		void		listFiles(uint16_t x1,uint16_t y1,uint16_t x2,uint16_t y2);
 		void		getFileList(); 
+		fB_Menu();
 
 	private:
 

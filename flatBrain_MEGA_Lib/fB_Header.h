@@ -20,7 +20,7 @@
 #include "fB_Alarm.h"
 #include "fB_I2C.h"
 #include "fB_Card.h"
-#include "fB_Pin.h"
+//#include "fB_Pin.h"
 #include "fB_Tag.h"
 #include "fB_Record.h"
 #include "fB_Define.h"

@@ -97,13 +97,17 @@ XCARDS		Ox20-27
 #define X50				1
 #define X76				2
 
+// Pin DIRECTION
+#define	INPUT		0
+#define	OUTPUT		1
+
 // Pin sides
-#define	L		0
-#define	R		1
+#define	COL_L		0
+#define	COL_R		1
 
 //Pin types		unique4, 0..7
-#define	D		0
-#define A		1
+#define	IO_D		0
+#define IO_A		1
 
 
 // Pin mapping for IOX cards 
@@ -198,7 +202,7 @@ XCARDS		Ox20-27
 
 ////////////////////////////////////////////////////////////////////////////////
 //Tag->format is 8 bits. The low 4bits of Tag->format contain one of 11 possible 
-// action codes (incl. zero) in decimal format. This code is converted to 32bit binary
+// action codes (incl. zero) in decimal format. This code is converted to 32bit BLAMP
 // for run-time comparisons (listed below). This allows for all the Tflag, format, and 
 // action flags to be entered on a single OR'd field at Tag definition arguments.
 
@@ -227,7 +231,7 @@ XCARDS		Ox20-27
 #define	INT5			0x00800000L	
 #define	FLOAT1			0x01000000L
 #define	FLOAT2			0x02000000L	
-#define	BINARY			0x04000000L	
+#define	BLAMP			0x04000000L	
 #define	STRIKE			0x08000000L	
 #define	PTEXT			0x10000000L	
 //#define				0x20000000L
@@ -324,8 +328,9 @@ XCARDS		Ox20-27
 #define FDEL			141	
 #define FDUMP			142	
 #define	FSTD			143  // tag for FPANEL row that can hgouse either FSTAMP or FDELETE subtype
-#define CLK				144		    
+#define CLK				144		  
 
+	
 #endif
 
 

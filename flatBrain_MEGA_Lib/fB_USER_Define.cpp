@@ -3,32 +3,7 @@
 
 void defineUser() {
 
-	//////////// DEFINE CARDS AND PINS
 
-	defineCard(YCRD,X76,C0,B1);	
-
-		definePin(Y1,YCRD,26,L,INPUT,LOW); 
-		definePin(Y2,YCRD,26,R,INPUT,LOW); 
-		definePin(Y3,YCRD,27,R,INPUT,LOW); 
-		definePin(Y4,YCRD,27,L,INPUT,LOW); 
-		definePin(Y5,YCRD,28,R,INPUT,LOW);
-		definePin(Y6,YCRD,28,L,INPUT,LOW);
-		definePin(YRST,YCRD,25,L,INPUT,LOW);
-		definePin(YSHFT,YCRD,25,R,INPUT,LOW);
-
-		definePin(Y1S,YCRD,18,L,INPUT,LOW); 
-		definePin(Y2S,YCRD,19,R,INPUT,LOW); 
-		definePin(Y3S,YCRD,19,L,INPUT,LOW); 
-		definePin(Y4S,YCRD,20,R,INPUT,LOW); 
-		definePin(Y5S,YCRD,20,L,INPUT,LOW);
-		definePin(Y6S,YCRD,18,R,INPUT,LOW);
-
-		definePin(V1,YCRD,22,L,INPUT,LOW); 
-		definePin(V2,YCRD,24,R,INPUT,LOW); 
-		definePin(V3,YCRD,22,R,INPUT,LOW); 
-		definePin(CZ,YCRD,21,L,INPUT,LOW); 
-		definePin(CC,YCRD,23,L,INPUT,LOW);
-		definePin(CL,YCRD,23,R,INPUT,LOW); 
 
 	//////////// DEFINE MENU
 
@@ -37,6 +12,32 @@ void defineUser() {
 	//  definePage(tag,parentTag)	
 	//  defineRow(tag,targetTag,flags)	
 	//////////////////////////////////////////
+
+ 	//////////// DEFINE CARDS AND PINS
+		defineCard(YCRD,X76,C0,B1);	
+
+		definePin(Y1,YCRD,26,COL_L,INPUT,HIGH); 
+		definePin(Y2,YCRD,26,COL_R,INPUT,LOW); 
+		definePin(Y3,YCRD,27,COL_R,INPUT,LOW); 
+		definePin(Y4,YCRD,27,COL_L,INPUT,LOW); 
+		definePin(Y5,YCRD,28,COL_R,INPUT,LOW);
+		definePin(Y6,YCRD,28,COL_L,INPUT,LOW);
+		definePin(YRST,YCRD,25,COL_L,INPUT,LOW);
+		definePin(YSHFT,YCRD,25,COL_R,INPUT,LOW);
+
+		definePin(Y1S,YCRD,18,COL_L,INPUT,HIGH); 
+		definePin(Y2S,YCRD,19,COL_R,INPUT,LOW); 
+		definePin(Y3S,YCRD,19,COL_L,OUTPUT,HIGH); 
+		definePin(Y4S,YCRD,20,COL_R,INPUT,LOW); 
+		definePin(Y5S,YCRD,20,COL_L,INPUT,LOW);
+		definePin(Y6S,YCRD,18,COL_R,INPUT,LOW);
+
+		definePin(V1,YCRD,22,COL_L,INPUT,LOW); 
+		definePin(V2,YCRD,24,COL_R,INPUT,LOW); 
+		definePin(V3,YCRD,22,COL_R,INPUT,LOW); 
+		definePin(CZ,YCRD,21,COL_L,INPUT,LOW); 
+		definePin(CC,YCRD,23,COL_L,INPUT,LOW);
+		definePin(CL,YCRD,23,COL_R,INPUT,LOW); 
 
 	//////////////////////////////////////////
    	defineHome(FLATBRAIN);			// MUST HAVE A HOME
@@ -65,12 +66,12 @@ void defineUser() {
 		defineRow(YRST,NULL,BLANK | SHFTPULSE);
 
    	definePage(RELAYSTAT,HOME);
-		defineRow(Y1S, NULL, BINARY| REFRESH);
-		defineRow(Y2S, NULL, BINARY| REFRESH);
-		defineRow(Y3S, NULL, BINARY| REFRESH);
-		defineRow(Y4S, NULL, BINARY| REFRESH);
-		defineRow(Y5S, NULL, BINARY| REFRESH);
-		defineRow(Y6S, NULL, BINARY| REFRESH);
+		defineRow(Y1S, NULL, BLAMP| REFRESH);
+		defineRow(Y2S, NULL, BLAMP| REFRESH);
+		defineRow(Y3S, NULL, BLAMP| REFRESH);
+		defineRow(Y4S, NULL, BLAMP| REFRESH);
+		defineRow(Y5S, NULL, BLAMP| REFRESH);
+		defineRow(Y6S, NULL, BLAMP| REFRESH);
 
    	definePage(SENSORS,HOME);
 		defineRow(V1, NULL, FLOAT1);
@@ -89,6 +90,7 @@ void defineUser() {
      ////defineLog(LOG3);
 
 	////defineRecord(tag,fTag,flags)
- 
+
+
  }
 

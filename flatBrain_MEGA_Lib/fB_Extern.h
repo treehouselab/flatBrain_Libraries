@@ -27,7 +27,7 @@ typedef union  PandT {		// array of tags, preserves menu structure
 extern PandT*			rTP;	
 
 extern	fB_Tag*			tagRay;			// array of Tag objects
-extern	fB_Card**		pCardRay;		// sparse array of pointers 
+extern	fB_Card**		pCard;		// sparse array of pointers 
 extern	logStruc*		logRay;
 
 extern uint8_t		tagCount;
@@ -50,7 +50,6 @@ char* getPstr(uint16_t tag, char *buffer);
 void getPtext(const __FlashStringHelper* Ptext,char *buffer);
 void getPtextU(const __FlashStringHelper* Ptext,char *buffer);
 fB_Tag* Tag(uint16_t tag) ;
-fB_Pin* Pin(uint16_t tag) ;
 fB_Card* Card(uint16_t tag) ;	
 fB_Tag* initTag(uint16_t tag,const __FlashStringHelper* Ptitle,uint32_t flags,uint8_t fTag=NULL,uint16_t tTag=NULL);
 fB_Tag* initPage( uint16_t tag,const __FlashStringHelper* Ptitle, uint16_t parentTag); 

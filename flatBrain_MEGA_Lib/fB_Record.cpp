@@ -28,7 +28,7 @@ void fB_Record::createTagDefLog() {
 					getPtext(pT->Ptitle,title);
 					char datastr[16];
 					switch(pT->getFormat()){
-						case BINARY:
+						case BLAMP:
 						case INT5:		sprintf(datastr,"%d",pT->iVal);break;
 						case FLOAT1:	
 						case FLOAT2:	doubleToStr(pT->dVal->dVal,3,datastr); break;	
@@ -121,7 +121,7 @@ void fB_Log::writeData() {
 		if(pT->fTag == fTag){
 			char datastr[16];
 			switch(pT->getFormat()){
-				case BINARY:
+				case BLAMP:
 				case INT5:		sprintf(datastr,"%d",pT->iVal);break;
 				case FLOAT1:	
 				case FLOAT2:	doubleToStr(pT->dVal->dVal,3,datastr); break;	

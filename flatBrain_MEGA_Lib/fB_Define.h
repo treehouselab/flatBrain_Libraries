@@ -22,8 +22,5 @@ Treehouselab.com - Mike Price */
 #define P(str) (strcpy_P(Pbuffer, PSTR(str)), Pbuffer)
 #define createPstr(text) PstrRay[PstrCount++] = F(text); 
 
-
-
-
 #endif
 
