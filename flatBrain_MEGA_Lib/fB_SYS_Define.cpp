@@ -25,12 +25,12 @@ void defineSystem()  {
 
 
 	definePage(PINS,SYSTEM);
-		defineRow(PNPIN,NULL,TEXT);
-		defineRow(PNCRD,NULL,NOACT | TEXT);
-		defineRow(PNROW,NULL,INT5 | NOACT);
-		defineRow(PNCOL,NULL,TEXT | NOACT);
-		defineRow(PNTOG,NULL,BLAMP);
-		defineRow(PNADC,NULL,INT5);
+		defineRow(PNPIN,NULL,PTEXT );
+		defineRow(PNCRD,NULL,PTEXT | NOACT);
+		defineRow(PNROW,NULL,INT5  | NOACT);
+		defineRow(PNCOL,NULL,PTEXT | NOACT);
+		defineRow(PNTOG,NULL,BLAMP | TOGGLE);
+		defineRow(PNADC,NULL,INT5  | UPDATE);
 		if(secondPass)Tag(PNROW)->flag16 |= MARK;
 		if(secondPass)Tag(PNCOL)->flag16 |= MARK;
 

@@ -122,9 +122,6 @@ fB_Tag* initTag(uint16_t tag,const __FlashStringHelper* Ptitle,uint32_t flags,ui
 			pT->fTag = fTag;
 			pT->tTag = tTag;
 			pT->pin = NULL;
-			pT->putFlags(flags);
-			pT->putFormat(flags);
-			pT->putAction(flags);
 		}
 		else {
 			if(fTag) pT->fTag = fTag;

@@ -17,7 +17,7 @@ void defineUser() {
 		defineCard(YCRD,X76,C0,B1);	
 
 		definePin(Y1,YCRD,26,COL_L,INPUT,HIGH); 
-		definePin(Y2,YCRD,26,COL_R,INPUT,LOW); 
+		definePin(Y2,YCRD,26,COL_R,OUTPUT,LOW); 
 		definePin(Y3,YCRD,27,COL_R,INPUT,LOW); 
 		definePin(Y4,YCRD,27,COL_L,INPUT,LOW); 
 		definePin(Y5,YCRD,28,COL_R,INPUT,LOW);
@@ -66,12 +66,12 @@ void defineUser() {
 		defineRow(YRST,NULL,BLANK | SHFTPULSE);
 
    	definePage(RELAYSTAT,HOME);
-		defineRow(Y1S, NULL, BLAMP| REFRESH);
-		defineRow(Y2S, NULL, BLAMP| REFRESH);
-		defineRow(Y3S, NULL, BLAMP| REFRESH);
-		defineRow(Y4S, NULL, BLAMP| REFRESH);
-		defineRow(Y5S, NULL, BLAMP| REFRESH);
-		defineRow(Y6S, NULL, BLAMP| REFRESH);
+		defineRow(Y1S, NULL, BLAMP| UPDATE);
+		defineRow(Y2S, NULL, BLAMP| UPDATE);
+		defineRow(Y3S, NULL, BLAMP| UPDATE);
+		defineRow(Y4S, NULL, BLAMP| UPDATE);
+		defineRow(Y5S, NULL, BLAMP| UPDATE);
+		defineRow(Y6S, NULL, BLAMP| UPDATE);
 
    	definePage(SENSORS,HOME);
 		defineRow(V1, NULL, FLOAT1);

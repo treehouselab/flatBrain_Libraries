@@ -162,6 +162,7 @@ XCARDS		Ox20-27
 #define LINEHT			20
 #define MONX		   60
 #define ADJX		   52
+#define REFRESHPAGE		53
 
 
 #define GAUGEHT		    60
@@ -208,18 +209,16 @@ XCARDS		Ox20-27
 
 // The high 4bits of  Tag->format contains one of 11 possible format codes in similar scheme.
 
-//#define	AVAIL		0x0O	
-
 #define	MASK8A			0x0F	 
 #define	MASK32A			0x003FF000L
-#define	NOACT			0x00000000L	
+#define	UNDEF			0x00000000L	
 #define	TOGGLE			0x00001000L	
 #define	INCR			0x00002000L	
 #define	SHFTPULSE		0x00004000L	
 #define	PULSE			0x00008000L
-#define	REFRESH			0x00010000L
+#define	UPDATE			0x00010000L
 #define	CGATE			0x00020000L
-//#define				0x00040000L
+#define	NOACT			0x00040000L
 //#define				0x00080000L
 //#define				0x00100000L
 //#define				0x00200000L

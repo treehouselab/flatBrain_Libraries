@@ -17,7 +17,7 @@ class fB_Menu {
 		fB_Log		**mFile;
 		uint8_t 	*fSort; // pointer to array of sorted indexes of mFile
 
-		void		showPage(uint16_t tag=NULL);
+		void		showPage(uint16_t tag, uint8_t option = NULL);
 		void		clearPage(uint8_t fullFlag=NULL);
 		void		erase();
 		void		context(uint8_t  hand); // RIGHT or LEFT

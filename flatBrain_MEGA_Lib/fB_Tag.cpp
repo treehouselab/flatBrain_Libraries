@@ -67,8 +67,11 @@ uint32_t	fB_Tag::getAction() {
 	uint8_t j;
 	uint32_t action32 = 0;
 	j = flag8 & MASK8A;
-	if(j) action32 = (1 << (uint32_t) (j-1)) << 12;
-	return action32 ;
+	if(j) action32 = (uint32_t)(1 <<  (j-1)) << 12;
+	//dbug(F("ga %P, j: %d, f8: %x, %L"),Ptitle,j,flag8,action32);
+//Serial.println(action32,DEC);
+//Serial.println(action32,HEX);
+return action32 ;
 }
 
 
@@ -120,7 +123,7 @@ fB_Curr::fB_Curr() {
 }
 
 void fB_Curr::setCurrPage(uint16_t _tag) {
-	rowDex = 0;  // update when row selected
+	//rowDex = 0;  // update when row selected
 	if(_tag) {
 		pageTag = _tag;
 		pP = Tag(_tag);
@@ -140,6 +143,12 @@ fB_Tag* fB_Curr::tag(uint8_t index) {
 	if(!index) return Tag(HEADER);
 	else return rTP[pP->iVal + index].p; 
 	}
+
+uint8_t fB_Curr::row(uint16_t tag) { // set current row to tag's row on page
+	int i;
+	for(i=1; i<= rowCount; i++) if(rTP[pP->iVal + i].p->tag == tag) return i;
+	return 0;
+}
 	
 uint8_t fB_Curr::getRowCount() { return ((pP->flag16 & MASKP)>>RCOFFSET); }  
 
@@ -155,18 +164,20 @@ void fB_Curr::incrRowCount() {
 	putRowCount(++count);
 }
 
-void fB_Curr::selectRow() {
+void fB_Curr::selectRow(uint8_t rowIndex) {
+	if(!rowIndex) rowIndex = rowDex;
 	tft.setColor(FCOLOR,GCOLOR);
-	tft.drawHLine(STARTX,tag()->getY()+ROWHT-8,MAXPIXELWID);
+	tft.drawHLine(STARTX,tag()->getY(rowIndex)+ROWHT-8,MAXPIXELWID);
 	tft.resetDefColors();	
 	rSelected = 1;
 	
 }
 
-void fB_Curr::deselectRow() {
+void fB_Curr::deselectRow(uint8_t rowIndex) {
 	if(!rSelected) return;
+	if(!rowIndex) rowIndex = rowDex;
 	tft.setAll2Bcolor();
-	tft.drawHLine(STARTX,tag()->getY()+ROWHT-8,MAXPIXELWID);
+	tft.drawHLine(STARTX,tag()->getY(rowIndex)+ROWHT-8,MAXPIXELWID);
 	tft.resetDefColors();
 	rSelected = 0;
 }
@@ -178,37 +189,35 @@ void fB_Curr::deselectRow() {
 void fB_Tag::createPin(uint16_t ctag,uint8_t   row,uint8_t   side,   uint8_t  dir, uint8_t  onval) {
 
 	uint8_t offset,cPin,mode;
-	offset = (row - 17 + side)*8;
-	cPin = getCpinMap(0);
-	cPin = getCpinMap(0);
-	//cPin = pgm_read_byte(&Xmap76[offset+3]);
-	//mode = pgm_read_byte(&Xmap76[offset+2]);
 
-	//mode = getModeMap(offset);
+
+	offset = (row - 17) * 8 + (side*4);
+	switch(Card(ctag)->type) {
+		case X50:
+			cPin =  pgm_read_byte(&Xmap50[offset+3]);
+			mode =  pgm_read_byte(&Xmap50[offset+2]);
+			break;
+		case X76:
+			cPin =  pgm_read_byte(&Xmap76[offset+3]);
+			mode =  pgm_read_byte(&Xmap76[offset+2]);
+			if(mode == IO_D)   Card(ctag)->MCPd_pinMode(cPin,dir);
+			break;
+		case BRAIN: 
+			//if(getMode()== IO_D)    pinMode(getCpin(),iodir);
+			break;
+	}
+	pull(~onval); // pulls to OFF for both input and output getMode()s
 
 	pin = 0;
 	pin |= (onval << 15);
 	pin |= (dir   << 14);
-	pin |= (mode  << 13);
+	pin |= ((mode  << 13)& 0xFF);
+	pin |= ((ctag  << 4)& 0xF0);
 	//unused flag bits 8-11
-	pin |= (ctag  << 4);
-	pin |= cPin;
+	pin |= (cPin & 0x0F);
+//dbug(F("pp R%d,r%d,s%d,d%d,m%d,v%d,,p:%x "),row,getDir(),getMode(),getOnVal(),pin);
+//dbug(F(""));
 
-dbug(F("pp ct:%d,t%d"),ctag,Card(ctag)->tag);
-dbug(F("pp R%d,r%d,s%d,d%d,m%d,v%d, C%d, c:%d, p%d"),row,getRowBus(),getSideBus(),getDir(),getMode(),getOnVal(),ctag,getCtag(),cPin);
-dbug(F(""));
-
-	switch(Card(ctag)->type) {	 // pointer into card array;
-		case X50:
-		case X76:
-			//if(getMode() == IO_A ) 	pinMode(getCard()->aChan ,iodir); // unecessary, analog line getMode() set at each read/write
-			if(mode == IO_D)   Card(ctag)->MCPd_pinMode(cPin,dir);
-			break;
-		case BRAIN: 
-			//pinMode(getCpin(),iodir);
-			break;
-	}
-	pull(~onval); // pulls to OFF for both input and output getMode()s
 }
 
 uint8_t fB_Tag::getOnVal()	{return ( pin >> 15 ) &  0x01 ;}
@@ -217,67 +226,25 @@ uint8_t fB_Tag::getMode()   {return ( pin >> 13 ) &  0X01 ;}
 uint8_t fB_Tag::getCtag()   {return ( pin >>  4 ) &  0X0F ;}
 uint8_t fB_Tag::getCpin()   {return ( pin & 0X0F );}
 
-
-fB_Card* fB_Tag::getCard() {  return Card(getCtag()); }
-
-uint8_t fB_Tag::getCpinMap(uint8_t offset) {  // get chip pin
-	switch(getCard()->type) {
-		case X50:
-			return pgm_read_byte(&Xmap50[offset+3]);
-			break;
-		case X76:
-			return pgm_read_byte(&Xmap76[offset+3]);
-			break;
-		case BRAIN: 
-			//if(getMode()== IO_D)    pinMode(getCpin(),iodir);
-			break;
-	}
-}
-
-uint8_t fB_Tag::getModeMap(uint8_t offset) {  
-	//dbug(F("gM p %d, m %x"), poff, pgm_read_byte(&Xmap76[poff-1]));
-	switch(getCard()->type) {
-		case X50:
-			return pgm_read_byte(&Xmap50[offset+2]);
-			break;
-		case X76:
-			return pgm_read_byte(&Xmap76[offset+2]);
-			break;
-		case BRAIN: 
-			break;
-	}
-}
-
-uint8_t fB_Tag::getRowBus() {
+void fB_Tag::getRowSide(uint8_t& rowSide) {
 	int i;
-	switch(getCard()->type) {
+	rowSide = 0;
+	switch(Card(getCtag())->type) {
 		case X50:
-			for( i=3; i < 64; i=i+4) if(pgm_read_byte(&Xmap76[i]) == getCpin()) break;
-			if(i==64) return 0;
-			return pgm_read_byte(&Xmap76[i-3]);
+			for( i=3; i < 64; i=i+4) {
+				if ( pgm_read_byte(&Xmap50[i]) == getCpin()
+				&& ( pgm_read_byte(&Xmap50[i-1]) == getMode()) ) break;
+			}
+			rowSide |=  pgm_read_byte(&Xmap50[i-3]); ///row
+			rowSide |=  pgm_read_byte(&Xmap50[i-2]) << 7 ;
 			break;
 		case X76:
-			for( i=3; i < 128; i=i+4) if(pgm_read_byte(&Xmap76[i]) == getCpin()) break;
-			if(i==128) return 0;
-			return pgm_read_byte(&Xmap76[i-3]);
-			break;
-		case BRAIN: 
-			//if(getMode()== IO_D)    pinMode(getCpin(),iodir);
-			break;
-	}
-}
-uint8_t fB_Tag::getSideBus() {
-	int i;
-	switch(getCard()->type) {
-		case X50:
-			for( i=3; i < 64; i=i+4) if(pgm_read_byte(&Xmap76[i]) == getCpin()) break;
-			if(i==64) return 0;
-			return pgm_read_byte(&Xmap76[i-2]);
-			break;
-		case X76:
-			for( i=3; i < 128; i=i+4) if(pgm_read_byte(&Xmap76[i]) == getCpin()) break;
-			if(i==128) return 0;
-			return pgm_read_byte(&Xmap76[i-2]);
+			for( i=3; i < 128; i=i+4)	{
+				if ( pgm_read_byte(&Xmap76[i]) == getCpin()
+				&& ( pgm_read_byte(&Xmap76[i-1]) == getMode()) ) break;
+			}
+			rowSide |=  pgm_read_byte(&Xmap76[i-3]); ///row
+			rowSide |=  pgm_read_byte(&Xmap76[i-2]) << 7 ; // side
 			break;
 		case BRAIN: 
 			//if(getMode()== IO_D)    pinMode(getCpin(),iodir);
@@ -285,11 +252,11 @@ uint8_t fB_Tag::getSideBus() {
 	}
 }
 void fB_Tag::pull(unsigned int value) {
-	switch(getCard()->type) {
+	switch(Card(getCtag())->type) {
 		case X50:
 		case X76:
-			//if(getMode() == IO_A ) 	getCard()->CD_analogWrite(getCpin(),value); 
-			if(getMode()== IO_D)    getCard()->MCPd_pull(getCpin(),value);
+			//if(getMode() == IO_A ) 	Card(getCtag())->CD_analogWrite(getCpin(),value); 
+			if(getMode()== IO_D)    Card(getCtag())->MCPd_pull(getCpin(),value);
 			break;
 		case BRAIN: 
 			if(getMode()== IO_D)    digitalWrite(getCpin(),value);
@@ -310,13 +277,13 @@ void fB_Tag::pulse(unsigned int msecs) {
 }
 void fB_Tag::write(unsigned int value) {
 
-	switch(getCard()->type) {
+	switch(Card(getCtag())->type) {
 		case X50:
 		case X76:
-		//if(getMode() == IO_A ) 	getCard()->CD_analogWrite(this->CDchan(),value); 
-		//if(getMode()== IO_D)    getCard()->MCP_digitalWrite(this->MCPchan(),value);
-			if(getMode() == IO_A && getOnVal() == GATE ) 	getCard()->CD_analogWrite(getCpin(),value); 
-			if(getMode()== IO_D)   getCard()->MCPd_digitalWrite(getCpin(),value);
+		//if(getMode() == IO_A ) 	Card(getCtag())->CD_analogWrite(this->CDchan(),value); 
+		//if(getMode()== IO_D)    Card(getCtag())->MCP_digitalWrite(this->MCPchan(),value);
+			if(getMode() == IO_A && getOnVal() == GATE ) 	Card(getCtag())->CD_analogWrite(getCpin(),value); 
+			if(getMode()== IO_D)   Card(getCtag())->MCPd_digitalWrite(getCpin(),value);
 			break;
 		case BRAIN:
 			if(getMode()== IO_D)  digitalWrite(getCpin(),value);
@@ -326,11 +293,11 @@ void fB_Tag::write(unsigned int value) {
 	}
 }
 void fB_Tag::dWrite(unsigned int value) {
-	switch(getCard()->type) {
+	switch(Card(getCtag())->type) {
 		case X50:
 		case X76:
-			if(getMode() == IO_A )  getCard()->CD_digitalWrite(getCpin(),value);
-			if(getMode()== IO_D)    getCard()->MCPd_digitalWrite(getCpin(),value);
+			if(getMode() == IO_A )  Card(getCtag())->CD_digitalWrite(getCpin(),value);
+			if(getMode()== IO_D)    Card(getCtag())->MCPd_digitalWrite(getCpin(),value);
 			break;
 		case BRAIN:
 			if(getMode()== IO_D)  digitalWrite(getCpin(),value);
@@ -340,11 +307,11 @@ void fB_Tag::dWrite(unsigned int value) {
 	}
 }
 void fB_Tag::aWrite(unsigned int value) {
-	switch(getCard()->type) {
+	switch(Card(getCtag())->type) {
 		case X50:
 		case X76:
-			if(getMode() == IO_A )  getCard()->CD_analogWrite(getCpin(),value);
-			if(getMode()== IO_D)    getCard()->MCPd_analogWrite(getCpin(),value);
+			if(getMode() == IO_A )  Card(getCtag())->CD_analogWrite(getCpin(),value);
+			if(getMode()== IO_D)    Card(getCtag())->MCPd_analogWrite(getCpin(),value);
 			break;
 		case BRAIN:
 			//if(getMode()== IO_D)  digitalWrite(getCpin(),value);
@@ -356,7 +323,7 @@ void fB_Tag::aWrite(unsigned int value) {
 
 unsigned int fB_Tag::read() {
 
-	switch(getCard()->type) {
+	switch(Card(getCtag())->type) {
 		case X50:
 		case X76:
 			if(getMode()== IO_A  && getOnVal() == GATE) {
@@ -367,7 +334,7 @@ unsigned int fB_Tag::read() {
 					if (isLatched()) return HIGH;
 					else return LOW;
 				}
-				else return (getCard()->MCPd_digitalRead(getCpin()));
+				else return (Card(getCtag())->MCPd_digitalRead(getCpin()));
 			}
 			break;
 		case BRAIN:
@@ -381,17 +348,17 @@ bool fB_Tag::isLatched() {
 	uint16_t latches,bit;
 
 	bit = 1 << getCpin();
-	latches = getCard()->MCPd_getLatches();
+	latches = Card(getCtag())->MCPd_getLatches();
 	if(latches & bit) return true;
 	else return false;
 }
 
 unsigned int fB_Tag::dRead() {
-	switch(getCard()->type) {
+	switch(Card(getCtag())->type) {
 		case X50:
 		case X76:
-			if(getMode()== IO_A  && getOnVal() == GATE) return (getCard()->CD_digitalRead(getCpin())); 
-			if(getMode()== IO_D)getCard()->MCPd_pinMode(getCpin(),INPUT);
+			if(getMode()== IO_A  && getOnVal() == GATE) return (Card(getCtag())->CD_digitalRead(getCpin())); 
+			if(getMode()== IO_D)Card(getCtag())->MCPd_pinMode(getCpin(),INPUT);
 			break;
 		case BRAIN:
 			return digitalRead(getCpin());
@@ -400,11 +367,11 @@ unsigned int fB_Tag::dRead() {
 	}
 }
 unsigned int fB_Tag::aRead() {
-	switch(getCard()->type) {
+	switch(Card(getCtag())->type) {
 		case X50:
 		case X76:
-			if(getMode()== IO_A && getOnVal() == GATE) return (getCard()->CD_analogRead(getCpin())); 
-			if(getMode()== IO_D) return (getCard()->MCPd_analogRead(getCpin())); 
+			if(getMode()== IO_A && getOnVal() == GATE) return (Card(getCtag())->CD_analogRead(getCpin())); 
+			if(getMode()== IO_D) return (Card(getCtag())->MCPd_analogRead(getCpin())); 
 			break;
 		case BRAIN:
 			if(getMode()== IO_A) return analogRead(getCpin());
@@ -416,7 +383,7 @@ uint16_t fB_Tag::avgAnalogIn() {
 	uint16_t  sum = 0;
 	if(getOnVal() != GATE) return 0;
     for(int i = 0; i < ANALOGSAMPLESIZE; i++) {
-        sum += getCard()->CD_analogRead(getCpin());
+        sum += Card(getCtag())->CD_analogRead(getCpin());
 		delay(ANALOGSAMPLEDELAY);
     }
 	return( (uint16_t) (sum/ANALOGSAMPLESIZE));

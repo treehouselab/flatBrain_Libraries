@@ -113,6 +113,56 @@ void fB_Menu::context(uint8_t  hand) {
 	else curr.tag()->action(hand);
 }
 
+void fB_Curr:: nextSwitch() {
+	int i;
+	fB_Tag* pT;
+	for(i=0;i <= rowCount;i++)	{
+		pT = tag(i);
+//dbug(F("NX %P,  f16:%x , a:%L"),pT->Ptitle, pT->flag16,pT->getAction()) ;
+//Serial.println(pT->getAction(),DEC);
+		if((pT->flag16 & DISABLE || pT->getAction() == NOACT)  && !(pT->flag16 & PAGE)) continue;
+//dbug(F("NX2 %P,  f16:%x , a:%L"),pT->Ptitle, pT->flag16,pT->getAction()) ;
+		if( i > rowDex) {
+//dbug(F("NX3 %P,  f16:%x , a:%L"),pT->Ptitle, pT->flag16,pT->getAction()) ;
+			deselectRow();
+			rowDex = i;
+			selectRow();
+			break;
+		}
+	}
+}
+void fB_Curr:: prevSwitch() {
+	int i;
+	fB_Tag* pT;
+	if(!rowDex) return;
+	for(i=rowCount;i >=0 ;i--)	{
+		pT = tag(i);
+		if((pT->flag16 & DISABLE || pT->getAction() == NOACT)  && !(pT->flag16 & PAGE)) continue;
+		if( i < rowDex) {
+			deselectRow();
+			rowDex = i;
+			selectRow();
+			break;
+		}
+	}
+}
+
+
+void fB_Menu:: selectHeader() {
+	curr.deselectRow();
+	curr.rowDex = 0;			
+	curr.selectRow();
+}
+
+void fB_Menu:: clearPage(uint8_t  full) {
+	//curr.deselectRow();
+	if(!full) tft.clear(curr.farY);
+	else tft.clear();	
+	curr.rowDex = 0;
+
+}
+
+
 
 
 
@@ -177,15 +227,20 @@ void fB_Menu::getFileList() {
 }
 
 
-void fB_Menu:: showPage(uint16_t tag) {
+void fB_Menu:: showPage(uint16_t tag, uint8_t pageOption) {
 	int dr;
 	uint8_t  i,x;
 	uint8_t  rows = 0;  //  calculated rows on this page (may be less than default pageRowCount)
 	uint8_t  count,listStart;
 	float dv;
 	//fB_Tag *pT;
+	if(pageOption != REFRESHPAGE) {
+		Tag(HEADER)->Ptitle = curr.pP->Ptitle; 
+		curr.deselectRow();
+		curr.rowDex = 0;		
+		menu.selectHeader();
+	}
 	curr.setCurrPage(tag);
-
 
 	switch(tag) {
 		case FILES:
@@ -208,19 +263,20 @@ void fB_Menu:: showPage(uint16_t tag) {
 			break;
 		case PINS:{
 			if(cardCount<2) jumpPage(SYSTEM);//jumpPage(curr.parentTag);
-			uint8_t  index;
+			uint8_t  index, rowSide;
 			fB_Tag* pT;
 			fB_Card* pC;
 			for(index=0;index<tagCount;index++) if(tagRay[index].pin) break; // find first pin
 			if(i==tagCount) break;
 			pT = &tagRay[index];
 			pC = Card(pT->getCtag());
+			pT->getRowSide(rowSide); // stuff row,side encoded byte into this variable
 			Tag(PNPIN)->Ptext= pT->Ptitle;
-			Tag(PNPIN)->iVal= index;
+			Tag(PNPIN)->fTag = index;
 			Tag(PNCRD)->Ptext= pC->Ptitle;
 			Tag(PNADC)->iVal=0;
-			Tag(PNROW)->iVal = pT->getRowBus();
-			if(pT->getSideBus() == COL_L) Tag(PNCOL)->Ptext = PstrRay[P_LEFT];
+			Tag(PNROW)->iVal = rowSide & 0x0F;
+			if((rowSide >> 7) == COL_L) Tag(PNCOL)->Ptext = PstrRay[P_LEFT];
 			else Tag(PNCOL)->Ptext = PstrRay[P_RIGHT];
 
 			if( pT->getMode() == IO_D) {
@@ -279,60 +335,7 @@ void fB_Menu:: showPage(uint16_t tag) {
 		}
 
 	}
-
-	Tag(HEADER)->Ptitle = curr.pP->Ptitle; 
-	for(int i = 0; i <= curr.rowCount; i++)	{
-		curr.rowDex=i;
-		//dbug(F("SPr %P , rc:%d ,rd:%d"),curr.tag()->Ptitle,curr.rowCount,i);
-		curr.tag()->showRow();
-	}
-	menu.selectHeader();
-}
-
-
-void fB_Curr:: nextSwitch() {
-	int i;
-	fB_Tag* pT;
-	for(i=0;i <= rowCount;i++)	{
-		pT = tag(i);
-		if((pT->flag16 & DISABLE || pT->getAction() == NOACT)  && !(pT->flag16 & PAGE)) continue;
-		if( i > rowDex) {
-			deselectRow();
-			rowDex = i;
-			selectRow();
-			break;
-		}
-	}
-}
-void fB_Curr:: prevSwitch() {
-	int i;
-	fB_Tag* pT;
-	if(!rowDex) return;
-	for(i=rowCount;i >=0 ;i--)	{
-		pT = tag(i);
-		if((pT->flag16 & DISABLE || pT->getAction() == NOACT)  && !(pT->flag16 & PAGE)) continue;
-		if( i < rowDex) {
-			deselectRow();
-			rowDex = i;
-			selectRow();
-			break;
-		}
-	}
-}
-
-
-void fB_Menu:: selectHeader() {
-	curr.deselectRow();
-	curr.rowDex = 0;			
-	curr.selectRow();
-}
-
-void fB_Menu:: clearPage(uint8_t  full) {
-	curr.deselectRow();
-	if(!full) tft.clear(curr.farY);
-	else tft.clear();	
-	curr.rowDex = 0;
-
+	for(int i = 0; i <= curr.rowCount; i++)	curr.tag(i)->showRow(i,pageOption);
 }
 
 
@@ -340,44 +343,57 @@ void fB_Menu:: clearPage(uint8_t  full) {
 
 
 
-uint16_t fB_Tag::getY() {  return ( STARTY + (ROWHT) * curr.rowDex); }
+uint16_t fB_Tag::getY(uint8_t rowIndex) {  return ( STARTY + (ROWHT) * rowIndex); }
 //uint16_t fB_Tag::getY(uint8_t) {  return ( STARTY + (ROWHT) * i); }
+/*
+void fB_Tag::showRow() {  
+	uint8_t buffer = curr.rowDex;
+	curr.row(tag);  // set rowDex to this tag on the current page
+	showRow();
+	curr.rowDex = buffer;
+}
+*/
 
-void fB_Tag::showRow(uint8_t  hide) {  //when hide ==1, page is being updated only
-//dbug(F("SR %P rc: %d  farY: %d"),curr.tag()->Ptitle,curr.rowCount,curr.farY);
+void fB_Tag::refreshRow(uint8_t rowIndex) {  
+	if(!rowIndex) rowIndex = curr.rowDex;
+	showRow(rowIndex,REFRESHPAGE);
+}
+
+void fB_Tag::showRow(uint8_t  rowIndex, uint8_t  option) {  //when option == REFRESH, only right col data is updated
+dbug(F("SR %P "),Ptitle);
 
 	int i=0;
 	uint32_t format;
 	char bufferTitle[MAXCHARSTEXT+1];
 	char Pbuffer[MAXCHARSTEXT+1];
-	bufferTitle[0] = '\0';	
-		
-	if(Ptitle != NULL) {
-		getPtext(Ptitle,Pbuffer);
-		if(!curr.rowDex) {
-			sprintf(bufferTitle,"< %s >",Pbuffer);
-			tft.print(CENTER,getY(),bufferTitle,MAXCHARSTEXT);
-			return;
-		}
-		else if(curr.pP->flag16 & LIST)  sprintf(bufferTitle,"%s%d",Pbuffer,curr.rowDex);
-		else strcpy(bufferTitle,Pbuffer);
-	}
-
 	char bufferText[MAXCHARSTEXT+1];
-	if(text != NULL) strcpy(bufferText,text);  // use non-PROGMEM title (left side string) if avail
-	else {
-		if(Ptext != NULL) getPtext(Ptext,bufferText);
-		else bufferText[0] = '\0';
-	}
-	if( hide != HIDE  ) 	tft.resetDefColors();
-	if( (hide == HIDE)  || (flag16 & DISABLE)) 	tft.setAll2Bcolor();
+	bufferTitle[0] = '\0';	
+
+	tft.resetDefColors();
+	if( (flag16 & DISABLE)) 	tft.setAll2Bcolor();
 	else if(flag16 & MARK)	tft.setColor(FCOLOR,HCOLOR);
-	if( getAction() != REFRESH ) tft.print(STARTX +ROWTEXTX,getY(),bufferTitle,MAXCHARSTEXT);
-//dbug(F("GA %d ,i:%d, f16: %d"),flag8,i,flag16);
 	format = getFormat();
-if(pin){ 
-	dbug(F("SR Pin %P  %d,%d,%d,%d"),Ptitle,getSideBus(),getDir(),getOnVal(),getRowBus());
-}
+
+	if(option != REFRESHPAGE) {
+		if(Ptitle != NULL) {
+			getPtext(Ptitle,Pbuffer);
+			if(!rowIndex) {
+				sprintf(bufferTitle,"< %s >",Pbuffer);
+				tft.print(CENTER,getY(rowIndex),bufferTitle,MAXCHARSTEXT);
+				return;
+			}
+			else if(curr.pP->flag16 & LIST)  sprintf(bufferTitle,"%s%d",Pbuffer,curr.rowDex);
+			else strcpy(bufferTitle,Pbuffer);
+		}
+		if(format == TEXT) strcpy(bufferText,text);  // use non-PROGMEM title (left side string) if avail
+		else {
+			if(format == PTEXT) getPtext(Ptext,bufferText);
+			else bufferText[0] = '\0';
+		}
+	}
+	//if( hide != HIDE  ) 	tft.resetDefColors();
+	//if( getAction() != UPDATE && option != REFRESHPAGE) tft.print(STARTX +ROWTEXTX,getY(rowIndex),bufferTitle,MAXCHARSTEXT);
+	if( option != REFRESHPAGE) tft.print(STARTX +ROWTEXTX,getY(rowIndex),bufferTitle,MAXCHARSTEXT);
 		//dbug(F("SR format H: 0x%J"),format);
 		//Serial.println(format,DEC);
 		//Serial.println(format,HEX);
@@ -387,7 +403,7 @@ if(pin){
 		if(!pin || getMode()== IO_D) {
 			if(pin && (read() == getOnVal()))  bVal = HIGH;
 			else bVal = iVal;
-			int x = STARTX +ROWSTATEX; int y = getY()+ROWSTATEY+2;
+			int x = STARTX +ROWSTATEX; int y = getY(rowIndex)+ROWSTATEY+2;
 			tft.drawCircle(x,y,8);
 			if(bVal) {
 				tft.setAll2Bcolor();
@@ -406,23 +422,23 @@ if(pin){
 		switch(format) {
 
 			case INT5:
-				if(flag16 & UNDEF) tft.print( RIGHT, getY(),getPstr(P_STRIKE,Pbuffer));
-				else tft.printInt(STARTX +MONX,getY(),iVal,6,RIGHT);
+				if(flag16 & UNDEF) tft.print( RIGHT, getY(rowIndex),getPstr(P_STRIKE,Pbuffer));
+				else tft.printInt(STARTX +MONX,getY(rowIndex),iVal,6,RIGHT);
 				break;
 			case FLOAT1:
-				if(flag16 & UNDEF) tft.print( RIGHT, getY(),getPstr(P_STRIKE,Pbuffer));
-				else tft.printFloat(STARTX +MONX,getY(),dVal->dVal,1,RIGHT);
+				if(flag16 & UNDEF) tft.print( RIGHT, getY(rowIndex),getPstr(P_STRIKE,Pbuffer));
+				else tft.printFloat(STARTX +MONX,getY(rowIndex),dVal->dVal,1,RIGHT);
 				break;
 			case FLOAT2:
-				if(flag16 & UNDEF) tft.print( RIGHT, getY(), getPstr(P_STRIKE,Pbuffer));
-				else tft.printFloat(STARTX +MONX,getY(),dVal->dVal,AR4_2,RIGHT);
+				if(flag16 & UNDEF) tft.print( RIGHT, getY(rowIndex), getPstr(P_STRIKE,Pbuffer));
+				else tft.printFloat(STARTX +MONX,getY(rowIndex),dVal->dVal,AR4_2,RIGHT);
 				break;
 				break;
 			case TEXT:
-				tft.print( RIGHT, getY(), bufferText);
+				tft.print( RIGHT, getY(rowIndex), bufferText);
 				break;
 			case PTEXT:
-				( RIGHT, getY(), getPtext(Ptext,Pbuffer));
+				( RIGHT, getY(rowIndex), getPtext(Ptext,Pbuffer));
 				break;
 		}
 	}
@@ -437,7 +453,6 @@ void fB_Tag::action(uint8_t  hand) {
 	fB_Log *pF = NULL;   //  ptr to  logfile
 	uint16_t  index;
 	if(curr.pageTag == FPANEL)	pF = menu.mFile[fTag];//   value = index of the selected logfile
-	//dbug(F("ACTION flag %d , tTag %d,  type %d"),flag,tTag,type);
 	switch (hand)	{
 		case RIGHT:
 			//check page jump first 
@@ -445,16 +460,20 @@ void fB_Tag::action(uint8_t  hand) {
 			// then check tag
 			switch(tag) {
 				case PNPIN: {
-					index = Tag(PNPIN)->iVal;
+	dbug(F("ACTION %P , tag %d"),Ptitle,tag);
+					index = Tag(PNPIN)->fTag;
 					if(index++ >= tagCount) index=0;
 					pT = &tagRay[index];
+					uint8_t rowSide;
+					pT->getRowSide(rowSide); // stuff row,side encoded byte into this variable
+//	dbug(F("ACTION2 %P , tag %d"),Ptitle,tag);
 					//pP->pCard->AnalogGate(OFF);
 					Tag(PNTOG)->iVal= LOW;
 					Tag(PNCRD)->Ptext= Card(pT->getCtag())->Ptitle;
 					Tag(PNPIN)->Ptext=pT->Ptitle;
-					Tag(PNPIN)->iVal= index;
-					Tag(PNROW)->iVal = pT->getRowBus();
-					if(getSideBus() == COL_L) Tag(PNCOL)->Ptext = PstrRay[P_LEFT];
+					Tag(PNPIN)->fTag = index; //  fTag avail to store index
+					Tag(PNROW)->iVal = rowSide & 0x0F;
+					if((rowSide >> 7) == COL_L) Tag(PNCOL)->Ptext = PstrRay[P_LEFT];
 					else Tag(PNCOL)->Ptext = PstrRay[P_RIGHT];
 
 					if( pT->getMode() == IO_D) {
@@ -476,16 +495,12 @@ void fB_Tag::action(uint8_t  hand) {
 							Tag(PNTOG)->iVal= LOW;
 						}
 					}
-					showRow();
-					Tag(PNROW)->showRow();
-					Tag(PNCOL)->showRow();
-					Tag(PNTOG)->showRow();
-					Tag(PNADC)->showRow();
+					menu.showPage(curr.pP->tag,REFRESHPAGE);
 					return;
 				case PNADC:
 					pT = &tagRay[ Tag(PNPIN)->iVal];
 					Tag(PNADC)->iVal = pT->read();
-					showRow();
+					refreshRow();
 					return;
 				case FROW: {
 					Tag(HEADER)->text = pF->filename;
@@ -517,8 +532,9 @@ void fB_Tag::action(uint8_t  hand) {
 					//Tag(FSIZE)->text = pF->sizeStr;
 					Tag(FDATE)->text = dateStr; // new atts
 					Tag(FSIZE)->text = sizeStr;
-					Tag(FDATE)->showRow();
-					Tag(FSIZE)->showRow();
+					menu.showPage(curr.pP->tag,REFRESHPAGE);
+					//Tag(FDATE)->showRow();
+					//Tag(FSIZE)->showRow();
 					return;
 				case FARCH:
 					if(pF->archive()){
@@ -528,8 +544,9 @@ void fB_Tag::action(uint8_t  hand) {
 						//Tag(FSIZE)->text = pF->sizeStr;
 						Tag(FDATE)->text = dateStr; // new atts
 						Tag(FSIZE)->text = sizeStr;
-						Tag(FDATE)->showRow();
-						Tag(FSIZE)->showRow();
+						menu.showPage(curr.pP->tag,REFRESHPAGE);
+						//Tag(FDATE)->showRow();
+						//Tag(FSIZE)->showRow();
 					}
 					return;
 				case FDEL:
@@ -548,35 +565,37 @@ void fB_Tag::action(uint8_t  hand) {
 					rtc.hh = (uint8_t ) Tag(CLKHH)->iVal ;
 					rtc.mm = (uint8_t ) Tag(CLKMM)->iVal ;
 					rtc.adjust();
-					menu.showPage();
+					menu.showPage(curr.pP->tag,REFRESHPAGE);
 					break;
 				case CLKGET:
 					rtc.set(__DATE__,__TIME__);
-					menu.showPage();
+					menu.showPage(curr.pP->tag,REFRESHPAGE);
 					break;
 				case CLKYR: 
+						dbug(F("ACTIONtag %P "),Ptitle);
+
 					iVal += 1;
-					showRow();
+					refreshRow();
 					return;
 				case CLKMO: 
 					if(iVal < 12) iVal += 1;
 					else iVal = 1;
-					showRow();
+					refreshRow();
 					return;
 				case CLKDY: 
 					if(iVal < 31) iVal += 1;
 					else iVal = 1;
-					showRow();
+					refreshRow();
 					return;
 				case CLKHH: 
 					if(iVal < 23) iVal += 1;
 					else iVal = 1;
-					showRow();
+					refreshRow();
 					return;
 				case CLKMM: 
 					if(iVal < 59) iVal += 1;
 					else iVal = 1;
-					showRow();
+					refreshRow();
 					return;
 
 				//case TLAS:	createGdefLog() ; pPage->selectHeader();break;
@@ -597,8 +616,8 @@ void fB_Tag::action(uint8_t  hand) {
 					Card(pT->getCtag())->AnalogGate(pT->iVal);
 					if(pT->iVal = HIGH) Tag(PNADC)->iVal = pT->read();
 					else Tag(PNADC)->iVal = 0;
-					showRow();
-					Tag(PNADC)->showRow();
+					refreshRow();
+					refreshRow(curr.row(PNADC));
 					return;
 				case TOGGLE:
 					if(iVal==LOW) { 
@@ -609,23 +628,23 @@ void fB_Tag::action(uint8_t  hand) {
 						iVal = LOW;
 						if(pin) write(~getOnVal());
 					}
-					showRow();
+					refreshRow();
 					return;
 				case PULSE:
 					if(pin)  pulse(PULSEMSECS);
-					showRow();
+					refreshRow();
 					return;
 				case SHFTPULSE:
 					if(pin) YshiftPulse(PULSEMSECS);
-					showRow();
+					refreshRow();
 					return;
 				case INCR:
 					iVal++;
-					showRow();
+					refreshRow();
 					return;
-				case REFRESH:
+				case UPDATE:
 					if(pin) read();
-					showRow();
+					refreshRow();
 					return;
 			} // END SWITCH on Action
 			break;
@@ -641,15 +660,15 @@ void fB_Tag::action(uint8_t  hand) {
 
 
 
-void fB_Tag::hideRow() {
-	flag16 &= ~VISIBLE;
+//void fB_Tag::hideRow(uint8_t rowIndex) {
+	//flag16 &= ~VISIBLE;
 	//tft.setAll2Bcolor();
-	showRow(HIDE);
+	//showRow(HIDE);
 	//tft.resetDefColors();
-	flag16 &= ~VISIBLE;
-}
+	//flag16 &= ~VISIBLE;
+//}
 
-
+/*
 void fB_Tag::frame() {
 
 	tft.drawRect(STARTX,getY() ,STARTX + MAXPIXELWID,getY() + ROWHT);
@@ -660,17 +679,18 @@ void fB_Tag::unframe() {
 	tft.drawRect(STARTX,getY() ,STARTX + MAXPIXELWID,getY() + ROWHT);
 	tft.resetDefColors();
 }
-void fB_Tag::clearRow() {
+*/
+void fB_Tag::clearRow(uint8_t rowIndex) {
 	tft.setAll2Bcolor();
-	tft.fillRect(STARTX +1,getY()+1,STARTX +MAXPIXELWID-1,getY()+ROWHT-1,tft.bColor);
+	tft.fillRect(STARTX +1,getY(rowIndex)+1,STARTX +MAXPIXELWID-1,getY(rowIndex)+ROWHT-1,tft.bColor);
 	tft.resetDefColors();
 	flag16 &= ~VISIBLE;
 
 
 }
-void fB_Tag::clearRow1() {
+void fB_Tag::clearRow1(uint8_t rowIndex) {
 	tft.setAll2Bcolor();
-	tft.fillRect(STARTX +1,getY()+1,STARTX +GTITLEX-10,getY()+ROWHT-1,tft.bColor);
+	tft.fillRect(STARTX +1,getY(rowIndex)+1,STARTX +GTITLEX-10,getY(rowIndex)+ROWHT-1,tft.bColor);
 	tft.resetDefColors();
 	flag16 &= ~VISIBLE;
 

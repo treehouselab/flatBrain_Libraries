@@ -12,20 +12,20 @@ class fB_Curr {
 		uint16_t	parentTag;      // parent Tag of current page
 		uint8_t		rowDex;			// offset from rZero of current selected row, updated by  and menu.selectRow()
 		uint8_t		rowCount;		// 
-		fB_Tag*		tag();					    //  current row tag 
-		fB_Tag*		tag(uint8_t index);		// set current row
 		uint16_t	farY;			// used to determine max Y coord of page for refresh
 		uint8_t		rSelected;		// row is selected (highlighted)
 
+		fB_Tag*		tag();					    //  current row tag 
+		fB_Tag*		tag(uint8_t index);		// set current row
+		uint8_t     row(uint16_t tag);  // return index of tag's row on page
 		uint8_t		getRowCount(); 
 		void		putRowCount(uint8_t count); 
 		void		incrRowCount(); 
 		void		setCurrPage(uint16_t _tag);
 		void        nextSwitch();
 		void        prevSwitch();
-		void		selectRow();
-		void		deselectRow();
-
+		void		selectRow(uint8_t rowIndex = NULL);
+		void		deselectRow(uint8_t rowIndex = NULL);
 		fB_Curr();
 };
 
@@ -58,13 +58,16 @@ class fB_Tag {
 		uint16_t	tTag;	  // pointer to target Tag 
 
 		void		action(uint8_t hand);
-		void		showRow(uint8_t  hide=NULL);
-		uint16_t	getY();
-		void		frame();
-		void		unframe();
-		void		clearRow1();
-		void		clearRow();
-		void		hideRow();
+		void		showRow(uint8_t rowIndex, uint8_t  pageOption=NULL);
+		void		refreshRow(uint8_t rowIndex=NULL);
+
+
+		uint16_t	getY(uint8_t rowIndex);
+		//void		frame();
+		//void		unframe();
+		void		clearRow1(uint8_t rowIndex);
+		void		clearRow(uint8_t rowIndex);
+		void		hideRow(uint8_t rowIndex);
 
 		
 		void		clearFlags();
@@ -87,16 +90,12 @@ class fB_Tag {
 		void pinMode(unsigned int iodir); //INPUT or OUTPUT
 		void pulse(unsigned int msecs); 
 		void YshiftPulse(unsigned int msecs); 
-		fB_Card* getCard();
 		uint8_t getOnVal();
 		uint8_t getDir();
 		uint8_t getMode();
 		uint8_t getCtag() ;
 		uint8_t getCpin() ;
-		uint8_t getCpinMap(uint8_t offset); 
-		uint8_t getModeMap(uint8_t offset);
-		uint8_t getRowBus();
-		uint8_t getSideBus();
+		void getRowSide(uint8_t &rowSide);
 		void write(unsigned int value);
 		void aWrite(unsigned int value);
  		void dWrite(unsigned int value);
