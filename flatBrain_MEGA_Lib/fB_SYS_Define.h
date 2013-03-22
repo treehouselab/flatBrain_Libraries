@@ -30,8 +30,32 @@
 #define K1_INT			1 // Display Navigation button interrupt number, corresp. to Mega pin 3
 #define K1_INTPIN		3
 
+/* CUSTOMARY I2C ADDRESSES:
+TFT-PCF		0x38
+TFT-PCF		0x39
+TFT-PCF		0x3A
+TFT-PCF		0x3B
+RTC-EEPROM  0x50
+EEPROM		0x52
+RTC			0x68
+XCARDS		Ox20-27
+*/
+
 #define RTC_ADDRESS		0x68
 #define EE_ADDRESS		0x52
+
+// IOX Card I2C allowed card addresses: 
+// CARD TYPE X50 TAKES SINGLE ADDRESS, UP TO 8
+// CARD TYPE X76 RESERVES 2 ADDRESS PAIRS, UP TO 4
+#define	C0		0x20	// X50 OR X76
+#define C1		0x21	// X50 IF C0 !X76
+#define	C2		0x22	// X50 OR X76
+#define C3		0x23	// X50 IF C2 !X76
+#define	C4		0x24	// X50 OR X76  
+#define C5		0x25	// X50 IF C4 !X76 
+#define	C6		0x26	// X50 OR X76
+#define C7		0x27	// X50 IF C6 !X76   
+
 
 #define fERR  -1
 
@@ -64,20 +88,9 @@
 
 // Card types
 #define	BRAIN			0
-#define X2				1
-#define X3				2
+#define X50				1
+#define X76				2
 
-// IOX Card I2C allowed card addresses: 
-// CARD TYPE X2 TAKES SINGLE ADDRESS, UP TO 8
-// CARD TYPE X3 RESERVES 2 ADDRESS PAIRS, UP TO 4
-#define	C0		0x20	// X2 OR X3
-#define C1		0x21	// X2 IF C0 !X3
-#define	C2		0x22	// X2 OR X3
-#define C3		0x23	// X2 IF C2 !X3
-#define	C4		0x24	// X2 OR X3  
-#define C5		0x25	// X2 IF C4 !X3 
-#define	C6		0x26	// X2 OR X3
-#define C7		0x27	// X2 IF C6 !X3   
 
 
 // Pin sides
@@ -90,19 +103,27 @@
 
 
 // Pin mapping for IOX cards 
-// CARD TYPE X2 
-#define X2AA			7	// MCP PIN MAPS TO CD4051 A ADDRESS PIN, FOR ANALOG CHANNEL
-#define X2AB			6	// MCP PIN MAPS TO CD4051 A ADDRESS PIN, FOR ANALOG CHANNEL
-#define X2AC			5	// MCP PIN MAPS TO CD4051 A ADDRESS PIN, FOR ANALOG CHANNEL
-#define X2BA			4	// MCP PIN MAPS TO CD4051 B ADDRESS PIN, FOR VD CHANNEL
-#define X2BB			3	// MCP PIN MAPS TO CD4051 B ADDRESS PIN, FOR VD CHANNEL
-#define X2BC			2	// MCP PIN MAPS TO CD4051 B ADDRESS PIN, FOR VD CHANNEL
-#define X2LD			1	// MCP PIN MAPS TO  BOARD LED
-#define X2GT			0	// MCP PIN MAPS TO  opiso gate
+// CARD TYPE X50 
+#define X50AA			7	// MCP PIN MAPS TO CD4051 A ADDRESS PIN, FOR ANALOG CHANNEL
+#define X50AB			6	// MCP PIN MAPS TO CD4051 A ADDRESS PIN, FOR ANALOG CHANNEL
+#define X50AC			5	// MCP PIN MAPS TO CD4051 A ADDRESS PIN, FOR ANALOG CHANNEL
+#define X50BA			4	// MCP PIN MAPS TO CD4051 B ADDRESS PIN, FOR VD CHANNEL
+#define X50BB			3	// MCP PIN MAPS TO CD4051 B ADDRESS PIN, FOR VD CHANNEL
+#define X50BC			2	// MCP PIN MAPS TO CD4051 B ADDRESS PIN, FOR VD CHANNEL
+#define X50LD			1	// MCP PIN MAPS TO  BOARD LED
+#define X50GT			0	// MCP PIN MAPS TO  opiso gate
 
-#define X3GT			0	// MCP PIN MAPS TO N-Chan FET gate
-
-
+// CARD TYPE X76 
+#define X76AA			11	// MCP PIN MAPS TO CD4053 A ADDRESS PIN, FOR ANALOG CHANNEL
+#define X76AB			12	// MCP PIN MAPS TO CD4053 A ADDRESS PIN, FOR ANALOG CHANNEL
+#define X76AC			9	// MCP PIN MAPS TO CD4053 A ADDRESS PIN, FOR ANALOG CHANNEL
+#define X76AD			8	// MCP PIN MAPS TO CD4053 A ADDRESS PIN, FOR ANALOG CHANNEL
+#define X76IN			10	// MCP PIN MAPS TO CD4053 A INHIBIT PIN
+#define X76BA			4	// MCP PIN MAPS TO CD4051 B ADDRESS PIN, FOR VD CHANNEL
+#define X76BB			3	// MCP PIN MAPS TO CD4051 B ADDRESS PIN, FOR VD CHANNEL
+#define X76BC			2	// MCP PIN MAPS TO CD4051 B ADDRESS PIN, FOR VD CHANNEL
+#define X76LD			1	// MCP PIN MAPS TO  BOARD LED
+#define X76GT			0	// MCP PIN MAPS TO  opiso gate
 
 
 // Used when invoking analogRead/Write using an MPC digital line
@@ -222,7 +243,8 @@
 #define VDRES 			124	// Action Type (atype)	    
 #define VDCRD 			125	// Action Type (atype)	    
 #define VDGAT 			126	// Action Type (atype)	    
-#define VDSET 			127	// Action Type (atype)	    
+#define VDADC 			127	// Action Type (atype)	    
+#define VDSET 			128	// Action Type (atype)	    
 
 
 #define HEADER			130   // Action Type (atype)

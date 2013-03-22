@@ -214,6 +214,7 @@ void fB_Menu::defineSystem()  {
 	defineRow(VDCOL,NOACT,"COL",INT5);
 	defineRow(VDRES,VDRES,"RES",INT5);
 	defineRow(VDGAT,VDGAT,"GATE",LAMP);
+	defineRow(VDADC,VDADC,"ADC",INT5);
 	defineArow(VDSET,"SET");
 
 	if(passTog)Row(VDROW)->status |= MARK;
@@ -558,6 +559,7 @@ void fB_Page:: show() {
 				menu.Row(VDPIN)->text= NULL;
 				menu.Row(VDPIN)->value=0;
 				menu.Row(VDRES)->value=0;
+				menu.Row(VDADC)->value=0;
 				/*
 				for( int i=0;i<brain.totalPins;i++) {
 					if(brain.pPin[i]->bcard->index == index) {
@@ -571,6 +573,7 @@ void fB_Page:: show() {
 				menu.Row(VDCRD)->status |= (CREATED | INITED) ;
 				menu.Row(VDPIN)->status |= (CREATED | INITED) ;
 				menu.Row(VDRES)->status |= (CREATED | INITED) ;
+				menu.Row(VDADC)->status |= (CREATED | INITED) ;
 			}
 			break;
 
@@ -855,12 +858,21 @@ void fB_Row::action(uint8_t  flag) {
 						pP->gate = ON;
 						value = HIGH;
 						brain.pCard[(uint8_t ) menu.Row(VDCRD)->value]->VDgate(ON);
+						menu.Row(VDADC)->value = brain.pPin[(uint8_t) menu.Row(VDPIN)->value]->read();
 					}
 					else {
 						pP->gate = OFF;
 						value = LOW;
 						brain.pCard[(uint8_t ) menu.Row(VDCRD)->value]->VDgate(OFF);
+						menu.Row(VDADC)->value = 0;
+
 					}
+					show();
+					menu.Row(VDADC)->show();
+					break;
+				case VDADC:
+					//putTagState(tTag,HIGH); // works for both Pin and Global tags
+					menu.Row(VDADC)->value = brain.pPin[(uint8_t) menu.Row(VDPIN)->value]->read();
 					show();
 					break;
 					/*

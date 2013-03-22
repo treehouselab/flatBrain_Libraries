@@ -17,8 +17,8 @@ fB_Pin::fB_Pin(uint16_t ptag,char* tStr,uint16_t ctag,uint8_t   rw,uint8_t   sid
 
 	bcard = brain.Card(ctag);  // pointer into card array;
 	switch(bcard->cType) {
-		case X2:
-		case X3:
+		case X50:
+		case X76:
 			if(mode == A) 	pinMode(bcard->aChan ,iodir); // unecessary, analog line mode set at each read/write
 			if(mode == D)   bcard->MCP_pinMode(cpin,iodir);
 			break;
@@ -31,8 +31,8 @@ fB_Pin::fB_Pin(uint16_t ptag,char* tStr,uint16_t ctag,uint8_t   rw,uint8_t   sid
 
 void fB_Pin::pull(unsigned int value) {
 	switch(bcard->cType) {
-		case X2:
-		case X3:
+		case X50:
+		case X76:
 			//if(mode == A ) 	bcard->CD_analogWrite(cpin,value); 
 			if(mode== D)    bcard->MCP_pull(cpin,value);
 			break;
@@ -44,8 +44,8 @@ void fB_Pin::pull(unsigned int value) {
 void fB_Pin::write(unsigned int value) {
 
 	switch(bcard->cType) {
-		case X2:
-		case X3:
+		case X50:
+		case X76:
 		//if(mode == A ) 	bcard->CD_analogWrite(this->CDchan(),value); 
 		//if(mode== D)    bcard->MCP_digitalWrite(this->MCPchan(),value);
 			if(mode == A ) 	bcard->CD_analogWrite(cpin,value); 
@@ -60,8 +60,8 @@ void fB_Pin::write(unsigned int value) {
 }
 void fB_Pin::dWrite(unsigned int value) {
 	switch(bcard->cType) {
-		case X2:
-		case X3:
+		case X50:
+		case X76:
 			if(mode == A ) 	bcard->CD_digitalWrite(cpin,value);
 			if(mode== D)    bcard->MCP_digitalWrite(cpin,value);
 			break;
@@ -74,8 +74,8 @@ void fB_Pin::dWrite(unsigned int value) {
 }
 void fB_Pin::aWrite(unsigned int value) {
 	switch(bcard->cType) {
-		case X2:
-		case X3:
+		case X50:
+		case X76:
 			if(mode == A ) 	bcard->CD_analogWrite(cpin,value);
 			if(mode== D)    bcard->MCP_analogWrite(cpin,value);
 			break;
@@ -90,8 +90,8 @@ void fB_Pin::aWrite(unsigned int value) {
 unsigned int fB_Pin::read() {
 
 	switch(bcard->cType) {
-		case X2:
-		case X3:
+		case X50:
+		case X76:
 			if(mode== A) {
 					return(avgAnalogIn(cpin));
 			}
@@ -121,8 +121,8 @@ bool fB_Pin::isLatched() {
 
 unsigned int fB_Pin::dRead() {
 	switch(bcard->cType) {
-		case X2:
-		case X3:
+		case X50:
+		case X76:
 			if(mode== A) return (bcard->CD_digitalRead(cpin)); 
 			if(mode== D)bcard->MCP_pinMode(cpin,INPUT);
 			break;
@@ -134,8 +134,8 @@ unsigned int fB_Pin::dRead() {
 }
 unsigned int fB_Pin::aRead() {
 	switch(bcard->cType) {
-		case X2:
-		case X3:
+		case X50:
+		case X76:
 			if(mode== A) return (bcard->CD_analogRead(cpin)); 
 			if(mode== D) return (bcard->MCP_analogRead(cpin)); 
 			break;

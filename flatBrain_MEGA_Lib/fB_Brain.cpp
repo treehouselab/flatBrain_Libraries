@@ -264,13 +264,13 @@ void fB_Brain::definePin(uint16_t pTag,char* tStr, uint16_t  cTag, uint8_t  row,
 			cpin = row;
 			mode = side;
 			break;
-		case X2:
+		case X50:
 			if(row>24 || row < 17) return;
 			index = getXmapIndex(2,row,side);
 			cpin = x2Map[index] & 0x3F; // read   chip pin address 0..63
 			mode = bitRead(x2Map[index],6); // read   bit for type (D/A)
 			break;
-		case X3:
+		case X76:
 			if(row>32 || row < 17) return;
 			index = getXmapIndex(3,row,side);
 			cpin = x3Map[index] & 0x3F; // read   chip pin address 0..63
@@ -547,14 +547,14 @@ void fB_Brain::initXmaps() {
 	insertXmap(2,24,R,A,1);
 	
 
-	insertXmap(3,17,L,D,14);
-	insertXmap(3,17,R,D,15);
-	insertXmap(3,18,L,D,12);
-	insertXmap(3,18,R,D,13);
-	insertXmap(3,19,L,D,8);
-	insertXmap(3,19,R,D,11);
-	insertXmap(3,20,L,D,10);
-	insertXmap(3,20,R,D,9);
+	insertXmap(3,17,L,D,8);
+	insertXmap(3,17,R,D,9);
+	insertXmap(3,18,L,D,11);
+	insertXmap(3,18,R,D,10);
+	insertXmap(3,19,L,D,13);
+	insertXmap(3,19,R,D,12);
+	insertXmap(3,20,L,D,15);
+	insertXmap(3,20,R,D,14);
 	insertXmap(3,21,L,A,6);
 	insertXmap(3,21,R,A,7);
 	insertXmap(3,22,L,A,4);
@@ -571,11 +571,11 @@ void fB_Brain::initXmaps() {
 	insertXmap(3,27,R,D,2);
 	insertXmap(3,28,L,D,1);
 	insertXmap(3,28,R,D,0);
-	insertXmap(3,29,L,A,13);
-	insertXmap(3,29,R,A,12);
-	insertXmap(3,30,L,A,11);
-	insertXmap(3,30,R,A,10);	
-	insertXmap(3,31,L,A,9);  
+	insertXmap(3,29,L,A,12);
+	insertXmap(3,29,R,A,11);
+	insertXmap(3,30,L,A,10);
+	insertXmap(3,30,R,A,9);	
+	insertXmap(3,31,L,A,13);  
 	insertXmap(3,31,R,A,8);
 	insertXmap(3,32,L,A,14);  
 	insertXmap(3,32,R,A,15);

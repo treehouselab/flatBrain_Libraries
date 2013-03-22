@@ -44,8 +44,8 @@
 // Card tags, unique
 #define VMCU	1
 #define TFTS	2
-#define	UTIL	3
-#define	PRT1	4
+#define	PRT1	3
+#define	PRT2	4
 #define	VLVD	5
 
 // Pin tags, unique, arbitrary MUST BE > 100
@@ -53,8 +53,11 @@
 // UTILITY BOARD PIN TAGS
 
 #define PLED1	105 
+#define PLED2	106 
 #define PANL1	106 
 #define PANL2	107
+#define PANL3	108
+#define PANL4	109
 
 #define LALR	110 // LVD ALARM LED (OUTPUT)
 #define LRON	111 // LVD  RELAY ON (OUTPUT)
