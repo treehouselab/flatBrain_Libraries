@@ -6,15 +6,13 @@
 
 fBT_Seg seg;
 
-#define PIN_CALVZ	7
-#define PIN_CALLO	8
-#define PIN_CALHI	9
-#define PIN_VZSEN	10
-#define PIN_BUTLO	0
-#define PIN_BUTHI	1
-#define PIN_SWVZ	3
-#define PIN_SWSEG	2
-//#define PIN_INT		7
+#define PIN_CALVZ	8  // calib pot
+#define PIN_CALLO	9 // calib pot
+#define PIN_CALHI	10 // calib pot
+#define PIN_VZSEN	7   // V0 sense
+#define PIN_SWMUX	3   // muxed switches
+#define PIN_SWSEG	1  // seg display switch
+#define PIN_INT		2  // mcu int & pwm buzzer
 #define MAXSAMPLES	10
 
 
