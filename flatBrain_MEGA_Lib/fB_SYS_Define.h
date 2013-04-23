@@ -126,6 +126,7 @@ XCARDS		Ox20-27
 #define X76GT			0	// MCP PIN MAPS TO  opiso gate
 
 
+
 // Used when invoking analogRead/Write using an MPC digital line
 #define  AD_HIGH    1024   // returned when MPC_analogRead senses HIGH
 #define  AD_LOW     0      // returned when MPC_analogRead senses LOW

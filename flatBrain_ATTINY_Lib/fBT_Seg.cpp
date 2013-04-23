@@ -1,15 +1,16 @@
 
+// includes are explicit so that this module can be compiled searately for ATTINY program
 #include <Arduino.h>
+#include <avr/pgmspace.h>
+#include <pins_arduino.h>
+#include <stdio.h>
+#include <stdarg.h>
+
 #include <USI_TWI_Master.h>
 #include <TinyWireM.h>
-// includes are explicit so that this module can be compiled searately for ATTINY program
-//#include <Arduino.h>
-//#include <avr/pgmspace.h>
-//#include <pins_arduino.h>
-//#include <stdio.h>
-//#include <stdarg.h>
 #include "fBT_Seg.h"
 
+//USI_TWI TinyWireM;
 
 
 #define SEG_DADDR		0x51 // I2C addr of Seg register for setting address and options, if the Seg DADDR pin is jumped low during power up, configuration commands can be sent. Remove jumper and repower to assume normal operations.
@@ -23,6 +24,14 @@ unsigned short segCodeTable[] =
 
 };
 
+
+void fBT_Seg::displayFloat(double val,unsigned short dplace)
+{
+
+	unsigned long ival;
+	ival =  val* pow(10,(double) dplace);
+	this->displayDec( ival, dplace);
+}
 
 void fBT_Seg::displayDec(unsigned long val,unsigned short dplace)
 {

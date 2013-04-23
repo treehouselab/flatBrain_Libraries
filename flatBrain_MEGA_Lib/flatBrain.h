@@ -24,7 +24,7 @@ fB_TFT      tft;
 fB_Menu     menu; 
 fB_tFAT     fat; 
 fB_Alarm    alarm; 
-fB_Seg		seg;
+//fB_Seg		seg;
 
 //fB_WTV   audio;
 //fB_VLVD   vlvd;

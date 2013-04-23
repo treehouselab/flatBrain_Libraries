@@ -12,6 +12,8 @@ class fBT_Seg {
 
 public:
 	void displayDec(unsigned long val, unsigned short dplace = 0);  // val = integer, dplace = number of decimal places
+	void displayFloat(double val,unsigned short dplace );
+
 
 	void display(unsigned short *buf);
 

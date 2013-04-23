@@ -129,7 +129,7 @@ void loop() {
 void fB_Brain::defineElements() {
     // TWO PASSES!
     
-	createCard(PRT1,X2,C1,B1);		
+	createCard(PRT1,X76,C4,B1);		
 		createPin(PLED1,PRT1,20,L,OUTPUT,HIGH);
 		createPin(PANL1,PRT1,24,L,INPUT,LOW);
 		createPin(PANL2,PRT1,24,R,INPUT,LOW);

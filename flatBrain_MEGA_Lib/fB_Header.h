@@ -22,6 +22,6 @@
 #include "fB_I2C.h"
 #include "fB_Pin.h"
 #include "fB_Card.h"
-#include "fB_Seg.h"
+//#include "fBT_Seg.h"
 #endif
 

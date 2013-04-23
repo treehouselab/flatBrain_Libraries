@@ -10,7 +10,7 @@ extern fB_EEPROM	ee;
 extern fB_TFT		tft;
 extern fB_Menu		menu; 
 extern fB_RTC		rtc;
-extern fB_Seg		seg;
+//extern fB_Seg		seg;
 extern uint8_t 		_i2cspeed;
 
 void dbug(char *fmt, ... );
