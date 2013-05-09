@@ -1,16 +1,16 @@
-//#include <USI_TWI_Master.h>
-//#include <TinyWireM.h>
+#include <USI_TWI_Master.h>
+#include <TinyWireM.h>
 #include "fBT_Seg.h"
 
 fBT_Seg seg;
 
-#define RELAY	0  //   pin 
+#define RELAY	3  //   pin 6 relay
 #define DISPLAY	1  //   pin 3 seg display switch
-#define BUZZER	2  // mcu int & pwm buzzer
-#define BUTTON	A7  //   pin 6 muxed switches
-#define INTRPT	5  // muxed switches
-#define VZSENS	A3  // V0 sense
-#define CALVZ	A2  // calib pot
+#define BUZZER	2  //	pin 5 pwm buzzer
+#define BUTTON	A5  //  pin 8 muxed switches
+#define INTRPT	0  //	pin 2 interrupt
+#define VZSENS	A3  //  pin 10 V0 sense
+#define CALVZ	A2  //  pin 11 calib pot
 #define CALLO	A1  //	pin 12  calib pot
 #define CALHI	A0 //	pin 13 calib pot
 
@@ -20,8 +20,8 @@ fBT_Seg seg;
 float  vButton;
 float vFact  = .00408;
 float bFact  = .00489;
-float cFact = .0002;
-float zFact  = .01445;
+float cFact = .001;
+float zFact  = .01444;
 float vLoLimit = 10; //  default
 float vHiLimit = 13; //  default
 float v0sense =0; 
@@ -53,12 +53,12 @@ void loop() {
         
        
    
-    vButton = avgAnalog(BUTTON) * vFact;
+    vButton =	avgAnalog(BUTTON) * vFact;
 	vLoLimit = (avgAnalog(CALLO) * bFact) + 10;
 	vHiLimit = (avgAnalog(CALHI) * bFact) + 10;
-    vCalib = avgAnalog(CALVZ) * cFact + 0.9;
+    vCalib =	avgAnalog(CALVZ) * cFact - 0.5;
     v0raw = avgAnalog(VZSENS);
-    v0sense = v0raw * zFact * vCalib;
+    v0sense = v0raw * zFact + vCalib;
 
 	if(vButton < 3 && vButton > 1.5) seg.displayFloat(vLoLimit,2);
 	else if(vButton <= 1.5 && vButton > 1 ) seg.displayFloat(vHiLimit,2);
