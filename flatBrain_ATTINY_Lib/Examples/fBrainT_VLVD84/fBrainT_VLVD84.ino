@@ -65,7 +65,10 @@ void loop() {
 	else seg.displayFloat(v0sense,2);
 
 	if(v0sense > vHiLimit) digitalWrite(RELAY,HIGH);
-	if(v0sense < vLoLimit) digitalWrite(RELAY,LOW);
+	if(v0sense < vLoLimit) {
+		digitalWrite(RELAY,LOW);
+
+		digitalWrite(RELAY,LOW);
          
 	delay(1000);
 

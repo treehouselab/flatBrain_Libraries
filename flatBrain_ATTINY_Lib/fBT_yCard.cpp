@@ -14,7 +14,7 @@ fBT_yCard::fBT_yCard() {
 	bState = 0;
 	mapCount = 0;
 	buildCardMap();
-	altBut.bDg = 8;// Button  maps to D8,  ATTINY pin 11, to switch D6, ATTINY pin 7 switch
+	altBut.bDg = 1;// Button  maps to D1,  ATTINY pin 3
 	altBut.sDg = 0;
 	altBut.mode = 0;
 }
@@ -29,12 +29,21 @@ void fBT_yCard::setButtonMode(uint8_t bnum, uint8_t mod) {
 }
 
 void fBT_yCard::buildCardMap() {
+	/* VRELAY76  v3.2
 	insertYmap(12,6);	// Button 1 maps to D12, ATTINY pin 15, to switch D6, ATTINY pin 8 switch
-	insertYmap(13,3);	// Button 1 maps to D13, ATTINY pin 16, to switch D3, ATTINY pin 2 switch
-	insertYmap(11,2);	// Button 1 maps to D11, ATTINY pin 14, to switch D2, ATTINY pin 3 switch
-	insertYmap(10,4);	// Button 1 maps to D10, ATTINY pin 13, to switch D4, ATTINY pin 4 switch
-	insertYmap(9,7);	// Button 1 maps to D9,  ATTINY pin 12, to switch D7, ATTINY pin 5 switch
-	insertYmap(1,5);	// Button 1 maps to D1,  ATTINY pin 13, to switch D5, ATTINY pin 6 switch
+	insertYmap(13,3);	// Button 2 maps to D13, ATTINY pin 16, to switch D3, ATTINY pin 2 switch
+	insertYmap(11,2);	// Button 3 maps to D11, ATTINY pin 14, to switch D2, ATTINY pin 3 switch
+	insertYmap(10,4);	// Button 4 maps to D10, ATTINY pin 13, to switch D4, ATTINY pin 4 switch
+	insertYmap(9,7);	// Button 5 maps to D9,  ATTINY pin 12, to switch D7, ATTINY pin 5 switch
+	insertYmap(1,5);	// Button 6 maps to D1,  ATTINY pin 13, to switch D5, ATTINY pin 6 switch
+	*/
+	//YCARD V1.0
+	insertYmap(11,2);	// Button 1 maps to D11, ATTINY pin 14, to switch D2, ATTINY pin 4 switch
+	insertYmap(12,3);	// Button 2 maps to D12, ATTINY pin 15, to switch D3, ATTINY pin 5 switch
+	insertYmap(13,4);	// Button 3 maps to D13, ATTINY pin 16, to switch D4, ATTINY pin 6 switch
+	insertYmap(10,5);	// Button 4 maps to D10, ATTINY pin 13, to switch D5, ATTINY pin 7 switch
+	insertYmap(9,7);	// Button 5 maps to D9,  ATTINY pin 12, to switch D7, ATTINY pin 9 switch
+	insertYmap(8,6);	// Button 6 maps to D8,  ATTINY pin 11, to switch D6, ATTINY pin 8 switch
 }
 
 void fBT_yCard::initCard() {
