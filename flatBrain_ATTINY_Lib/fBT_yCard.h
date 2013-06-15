@@ -5,6 +5,7 @@
 #define	 REG	0x01  // button modes
 #define  MOM	0x02
 #define  RAD	0x04
+#define  DEP	0x08
 
 
 class fBT_yButton {

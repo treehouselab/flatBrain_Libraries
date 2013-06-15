@@ -60,10 +60,11 @@ void fBT_yCard::initCard() {
 }
 
 void fBT_yCard::getSstate() {
-	int i,j;
+	int i,j,powerState;
 	enableDelay = 0;
 	if(digitalRead(altBut.bDg) == LOW ) sState = 0;
 	else {
+		powerState = 0;
 		for(i= 0; i<yC.mapCount; i++) {
 			if(digitalRead(yMap[i].bDg) == LOW ) {
 				if(!(bState & (0x01 << i))) { // if button not already down
@@ -83,7 +84,6 @@ void fBT_yCard::getSstate() {
 		}
 	}
 }
-
 void fBT_yCard::applySstate() {
 	int i;
 	for(i= 0; i<yC.mapCount; i++) {
@@ -97,6 +97,29 @@ void fBT_yCard::pollButtons() {
 	getSstate();
 	applySstate();
 	if(enableDelay) delay(200);
+	/*
+	int i;
+		digitalWrite(yMap[4].sDg,HIGH); 
+		delay(500);
+		digitalWrite(yMap[4].sDg,LOW); 
+		delay(500);
+	for(i=0; i < yC.mapCount-2; i++) {
+		digitalWrite(yMap[i].sDg,HIGH); 
+		//delay(1000);
+		//digitalWrite(yMap[i].sDg,LOW); 
+		delay(500);
+	}
+	for(i=0; i < yC.mapCount-2; i++) {
+		digitalWrite(yMap[i].sDg,LOW); 
+		//delay(1000);
+		//digitalWrite(yMap[i].sDg,LOW); 
+		delay(1000);
+	}
+
+	delay(1000);
+
+*/
+	
 }
 
 
