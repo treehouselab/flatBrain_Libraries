@@ -44,26 +44,21 @@
 // Card tags, unique
 #define VMCU	1
 #define TFTS	2
-#define	PRT1	3
-#define	PRT2	4
+#define YCRD	3
+#define	PRT1	4
 #define	VLVD	5
 
 // Pin tags, unique, arbitrary MUST BE > 100
 
 // UTILITY BOARD PIN TAGS
 
-#define PLED1	105 
-#define PLED2	106 
-#define PANL1	106 
-#define PANL2	107
-#define PANL3	108
-#define PANL4	109
+#define Y1		101 
+#define Y2		102 
+#define Y3		103 
+#define Y4		104 
+#define Y5		105 
+#define Y6		106
 
-#define LALR	110 // LVD ALARM LED (OUTPUT)
-#define LRON	111 // LVD  RELAY ON (OUTPUT)
-#define LOVR	112 // LVD OVERRIDE ON (INPUT)
-#define LADR	113 // LVD DISPLAY ADR (OUTPUT)
-#define LV0		114 // LVD V0 SENS (INPUT)
 
 // Page Tags, used as indices for tPage array in fB_TFT.cpp
 //#define P1	1

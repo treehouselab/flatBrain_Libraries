@@ -18,7 +18,7 @@ void fB_Card::init() {
 	switch(cType) {
 		case X50:
 			MCP = new MCP23017;
-			MCP->begin(i2cAddr);  // MCP adress is offset one bit from PFC base address
+			MCP->begin(i2cAddr);  
 			MCP->allOff();
 			//delay(500);
 			MCP->pinMode(X50AA, OUTPUT);  // pin maps to address pin of CD4051, for analog channel
@@ -30,15 +30,20 @@ void fB_Card::init() {
 			MCP->pinMode(X50LD, OUTPUT); // pin maps to board LED
 			MCP->pinMode(X50GT, OUTPUT);  // pin maps to N-Chan fet gate
 			MCP->digitalWrite(X50GT, LOW);  //  gate off
+			MCPd = MCP;
 			VDselectR(brain.VDRmap[0]);  // default no connect
 
 			//MCP->digitalWrite(X50LED, HIGH);
 			break;
 		case X76:
-			MCP = new MCP23017;
-			MCP->begin(i2cAddr);  // MCP adress is offset one bit from PFC base address
+			MCP = new MCP23017;  
+			MCP->begin(i2cAddr);  // 1st MCP chip as controller 
 			MCP->allOff();
-			//delay(500);
+
+			MCPd = new MCP23017;  
+			MCPd->begin(i2cAddr+1);  //2nd MCP chip which handles data pins
+			MCPd->allOff();
+		//delay(500);
 			MCP->pinMode(X76AA, OUTPUT);  // pin maps to address pin of CD4051, for analog channel
 			MCP->pinMode(X76AB, OUTPUT);  // pin maps to address pin of CD4051, for analog channel
 			MCP->pinMode(X76AC, OUTPUT);  // pin maps to address pin of CD4051, for analog channel
@@ -46,9 +51,12 @@ void fB_Card::init() {
 			MCP->pinMode(X76BA, OUTPUT);  // pin maps to address pin of CD4051, for VD channel
 			MCP->pinMode(X76BB, OUTPUT);  // pin maps to address pin of CD4051, for VD channel
 			MCP->pinMode(X76BC, OUTPUT);  // pin maps to address pin of CD4051, for VD channel
+			MCP->pinMode(X76RS, OUTPUT); // pin maps to 2nd MCP _RST pin
+			MCP->digitalWrite(X76RS, HIGH);  
 			MCP->pinMode(X76LD, OUTPUT); // pin maps to board LED
 			MCP->pinMode(X76GT, OUTPUT);  // pin maps to N-Chan fet gate
 			MCP->digitalWrite(X76GT, LOW);  //  gate off
+
 			VDselectR(brain.VDRmap[0]);  // default no connect
 
 			break;
@@ -56,8 +64,19 @@ void fB_Card::init() {
 } 
 
 void fB_Card::LED(uint8_t val) {
-		MCP->digitalWrite(X50LD,val);
+	
+	switch(cType) {
+		case X50:
+			MCP->digitalWrite(X50LD,val);
+			break;
+		case X76:
+			MCP->digitalWrite(X76LD,val);
+			break;
+	}
+
+
 }
+
 void fB_Card::VDgate(bool logic) {
 	uint8_t gatePin;
 	if(cType == X50) gatePin = X50GT;
@@ -163,41 +182,56 @@ void fB_Card::CD_digitalWrite(uint8_t  chan, unsigned int value) {
 	digitalWrite(aChan , value);   
 }
 
-void fB_Card::MCP_pull(uint8_t  pin, unsigned int value) {
-	if(!i2cAddr) MCP->pull((uint8_t )pin,(uint8_t )value);
-}
+
+// MCP and MCPd versions of these methods because for X76 cards there are 2 MCP chips with different i2c addresses that use these methods
 void fB_Card::MCP_pinMode(uint8_t  pin, unsigned int value) {
-	if(!i2cAddr) MCP->pinMode((uint8_t )pin,(uint8_t )value);
+	//if(!i2cAddr) MCP->pinMode((uint8_t )pin,(uint8_t )value);//?
+	if(i2cAddr) MCP->pinMode((uint8_t )pin,(uint8_t )value);
 }
-unsigned int fB_Card::MCP_analogRead(uint8_t  pin) {
-	if(!i2cAddr) return fERR;
-	MCP->pinMode((uint8_t )pin,(uint8_t )INPUT);
-	if(MCP->digitalRead(pin) == HIGH) return AD_HIGH;
-	else return AD_LOW;
-}
-unsigned int fB_Card::MCP_digitalRead(uint8_t  pin) {
-	if(!i2cAddr) return fERR;
-	MCP->pinMode((uint8_t )pin,(uint8_t )INPUT);	
-	return (MCP->digitalRead(pin));
-}
-unsigned int fB_Card::MCP_getLatches() {
-	if(!i2cAddr) return fERR;
-	return (MCP->readGPIOAB());
-}
-void fB_Card::MCP_analogWrite(uint8_t  pin, unsigned int value) {
-	if(!i2cAddr) return;
-	MCP->pinMode((uint8_t )pin,(uint8_t )OUTPUT);
-    if(value > AD_TRANS) MCP->digitalWrite(pin,HIGH);
-	else MCP->digitalWrite(pin,LOW);
+void fB_Card::MCPd_pinMode(uint8_t  pin, unsigned int value) {
+	//if(!i2cAddr) MCP->pinMode((uint8_t )pin,(uint8_t )value);//?
+	if(i2cAddr) MCPd->pinMode((uint8_t )pin,(uint8_t )value);
 }
 void fB_Card::MCP_digitalWrite(uint8_t  pin, unsigned int value) {
 	if(!i2cAddr) return;
 	MCP->pinMode((uint8_t )pin,(uint8_t )OUTPUT);
 	MCP->digitalWrite(pin,value);
 }
-unsigned int fB_Card::PCF_digitalRead(uint8_t  pin) {
-	return (PCF->digitalRead(pin));
+void fB_Card::MCPd_digitalWrite(uint8_t  pin, unsigned int value) {
+	if(!i2cAddr) return;
+	MCPd->pinMode((uint8_t )pin,(uint8_t )OUTPUT);
+	MCPd->digitalWrite(pin,value);
 }
+
+
+void fB_Card::MCPd_pull(uint8_t  pin, unsigned int value) {
+	//if(!i2cAddr) MCP->pull((uint8_t )pin,(uint8_t )value); //?
+	if(i2cAddr) MCPd->pull((uint8_t )pin,(uint8_t )value);
+}
+unsigned int fB_Card::MCPd_analogRead(uint8_t  pin) {
+	if(!i2cAddr) return fERR;
+	MCPd->pinMode((uint8_t )pin,(uint8_t )INPUT);
+	if(MCPd->digitalRead(pin) == HIGH) return AD_HIGH;
+	else return AD_LOW;
+}
+unsigned int fB_Card::MCPd_digitalRead(uint8_t  pin) {
+	if(!i2cAddr) return fERR;
+	MCPd->pinMode((uint8_t )pin,(uint8_t )INPUT);	
+	return (MCPd->digitalRead(pin));
+}
+unsigned int fB_Card::MCPd_getLatches() {
+	if(!i2cAddr) return fERR;
+	return (MCPd->readGPIOAB());
+}
+void fB_Card::MCPd_analogWrite(uint8_t  pin, unsigned int value) {
+	if(!i2cAddr) return;
+	MCPd->pinMode((uint8_t )pin,(uint8_t )OUTPUT);
+    if(value > AD_TRANS) MCPd->digitalWrite(pin,HIGH);
+	else MCPd->digitalWrite(pin,LOW);
+}
+//unsigned int fB_Card::PCF_digitalRead(uint8_t  pin) {
+//	return (PCF->digitalRead(pin));
+//}
 
 
 

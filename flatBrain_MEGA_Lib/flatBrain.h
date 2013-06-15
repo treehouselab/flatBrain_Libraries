@@ -104,7 +104,7 @@ void dbug(char *fmt, ... ){
 			n=va_arg(args,int);
 			Serial.print(n,BIN);
 		}
-		else if(fmt[i] == 'h') { 
+		else if(fmt[i] == 'h' || fmt[i] == 'x') { 
 			n=va_arg(args,int);
 			Serial.print(n,HEX);
 		}

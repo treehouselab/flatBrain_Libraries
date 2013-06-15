@@ -20,7 +20,7 @@ fB_Pin::fB_Pin(uint16_t ptag,char* tStr,uint16_t ctag,uint8_t   rw,uint8_t   sid
 		case X50:
 		case X76:
 			if(mode == A) 	pinMode(bcard->aChan ,iodir); // unecessary, analog line mode set at each read/write
-			if(mode == D)   bcard->MCP_pinMode(cpin,iodir);
+			if(mode == D)   bcard->MCPd_pinMode(cpin,iodir);
 			break;
 		case BRAIN: 
 			pinMode(cpin,iodir);
@@ -34,11 +34,57 @@ void fB_Pin::pull(unsigned int value) {
 		case X50:
 		case X76:
 			//if(mode == A ) 	bcard->CD_analogWrite(cpin,value); 
-			if(mode== D)    bcard->MCP_pull(cpin,value);
+			if(mode== D)    bcard->MCPd_pull(cpin,value);
 			break;
 		case BRAIN: 
 			if(mode== D)    digitalWrite(cpin,value);
 			break;
+	}
+}
+void fB_Pin::pulse(unsigned int value,unsigned int msec) {
+	switch(bcard->cType) {
+		case X50:
+		case X76:
+			//if(mode == A ) 	bcard->CD_analogWrite(cpin,value); 
+			if(mode== D)   {
+				bcard->MCPd_pinMode(cpin,OUTPUT);
+			    bcard->MCPd_digitalWrite(cpin,value);
+				delay(msec);
+				bcard->MCPd_pinMode(cpin,INPUT);
+				}
+			break;
+		//case BRAIN: 
+		//	if(mode== D)    digitalWrite(cpin,value);
+		//	break;
+	}
+}
+void fB_Pin::yButtonON() {
+	switch(bcard->cType) {
+		case X50:
+		case X76:
+			//if(mode == A ) 	bcard->CD_analogWrite(cpin,value); 
+			if(mode== D)   {
+				bcard->MCPd_pinMode(cpin,OUTPUT);
+			    bcard->MCPd_digitalWrite(cpin,HIGH);
+				}
+			break;
+		//case BRAIN: 
+		//	if(mode== D)    digitalWrite(cpin,value);
+		//	break;
+	}
+}
+void fB_Pin::yButtonOFF() {
+	switch(bcard->cType) {
+		case X50:
+		case X76:
+			//if(mode == A ) 	bcard->CD_analogWrite(cpin,value); 
+			if(mode== D)   {
+				bcard->MCPd_pinMode(cpin,INPUT);
+				}
+			break;
+		//case BRAIN: 
+		//	if(mode== D)    digitalWrite(cpin,value);
+		//	break;
 	}
 }
 void fB_Pin::write(unsigned int value) {
@@ -49,7 +95,7 @@ void fB_Pin::write(unsigned int value) {
 		//if(mode == A ) 	bcard->CD_analogWrite(this->CDchan(),value); 
 		//if(mode== D)    bcard->MCP_digitalWrite(this->MCPchan(),value);
 			if(mode == A ) 	bcard->CD_analogWrite(cpin,value); 
-			if(mode== D)   bcard->MCP_digitalWrite(cpin,value);
+			if(mode== D)   bcard->MCPd_digitalWrite(cpin,value);
 			break;
 		case BRAIN:
 			if(mode== D) digitalWrite(cpin,value);
@@ -63,7 +109,7 @@ void fB_Pin::dWrite(unsigned int value) {
 		case X50:
 		case X76:
 			if(mode == A ) 	bcard->CD_digitalWrite(cpin,value);
-			if(mode== D)    bcard->MCP_digitalWrite(cpin,value);
+			if(mode== D)    bcard->MCPd_digitalWrite(cpin,value);
 			break;
 		case BRAIN:
 			if(mode== D)  digitalWrite(cpin,value);
@@ -77,7 +123,7 @@ void fB_Pin::aWrite(unsigned int value) {
 		case X50:
 		case X76:
 			if(mode == A ) 	bcard->CD_analogWrite(cpin,value);
-			if(mode== D)    bcard->MCP_analogWrite(cpin,value);
+			if(mode== D)    bcard->MCPd_analogWrite(cpin,value);
 			break;
 		case BRAIN:
 			//if(mode== D)  digitalWrite(cpin,value);
@@ -100,7 +146,7 @@ unsigned int fB_Pin::read() {
 					if (isLatched()) return HIGH;
 					else return LOW;
 				}
-				else return (bcard->MCP_digitalRead(cpin));
+				else return (bcard->MCPd_digitalRead(cpin));
 			}
 			break;
 		case BRAIN:
@@ -114,7 +160,7 @@ bool fB_Pin::isLatched() {
 	uint16_t latches,bit;
 
 	bit = 1 << cpin;
-	latches = bcard->MCP_getLatches();
+	latches = bcard->MCPd_getLatches();
 	if(latches & bit) return true;
 	else return false;
 }
@@ -124,7 +170,7 @@ unsigned int fB_Pin::dRead() {
 		case X50:
 		case X76:
 			if(mode== A) return (bcard->CD_digitalRead(cpin)); 
-			if(mode== D)bcard->MCP_pinMode(cpin,INPUT);
+			if(mode== D)bcard->MCPd_pinMode(cpin,INPUT);
 			break;
 		case BRAIN:
 			return digitalRead(cpin);
@@ -137,7 +183,7 @@ unsigned int fB_Pin::aRead() {
 		case X50:
 		case X76:
 			if(mode== A) return (bcard->CD_analogRead(cpin)); 
-			if(mode== D) return (bcard->MCP_analogRead(cpin)); 
+			if(mode== D) return (bcard->MCPd_analogRead(cpin)); 
 			break;
 		case BRAIN:
 			if(mode== A) return analogRead(cpin);

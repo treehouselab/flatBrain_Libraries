@@ -46,7 +46,7 @@ void MCP23017::begin(uint8_t  addr) {
   // set defaults!
 
   i2c.write((uint8_t )i2cAddr, (uint8_t )MCP23017_IODIRA, (uint8_t )0xFF);  // all inputs on port A
-  i2c.write((uint8_t )i2cAddr, (uint8_t )MCP23017_IODIRB, (uint8_t )0xFF);  // all inputs on port A
+  i2c.write((uint8_t )i2cAddr, (uint8_t )MCP23017_IODIRB, (uint8_t )0xFF);  // all inputs on port B
 }
 
 void MCP23017::begin(void) {
