@@ -27,10 +27,19 @@ unsigned short segCodeTable[] =
 
 void fBT_Seg::displayFloat(double val,unsigned short dplace)
 {
+	int r;
+	unsigned long ival;
 
+	ival =  val* pow(10,(double) (dplace+1));
+	r = ival%10;
+	if(r >= 5.0) ival +=10;
+	ival /= 10;
+	this->displayDec( ival, dplace);
+	/*
 	unsigned long ival;
 	ival =  val* pow(10,(double) dplace);
 	this->displayDec( ival, dplace);
+	*/
 }
 
 void fBT_Seg::displayDec(unsigned long val,unsigned short dplace)
@@ -39,7 +48,7 @@ void fBT_Seg::displayDec(unsigned long val,unsigned short dplace)
   unsigned short segcode[5];
   segcode[0] = SEG_WRITE_CODE;
   segcode[1] = segCodeTable[val%10];
-  segcode[2] = segCodeTable[(val%100)/10];
+  segcode[2] = segCodeTable[(val/10)%10];
   segcode[3] = segCodeTable[(val/100)%10];
   segcode[4] =  segCodeTable[ val/1000];
   if(dplace) dplace++;
@@ -48,12 +57,12 @@ void fBT_Seg::displayDec(unsigned long val,unsigned short dplace)
   for (i=0; i<5; i++)
   {	
 	if (i && i == dplace) segcode[i] |= 0x80; 
+	if(i==4  && segcode[i]== 0x3F) segcode[i] = 0x00;
     TinyWireM.send(segcode[i]);    
   }
   TinyWireM.endTransmission();   
-  
-
 }
+
 
 void fBT_Seg::display(unsigned short *buf)
 {
@@ -85,6 +94,12 @@ void fBT_Seg::setAddress(unsigned short val)
       TinyWireM.send(~val);
       TinyWireM.endTransmission();              
 }
+void fBT_Seg::displayDashes() {
+	unsigned short buff[4];
+
+	buff[0]=buff[1]=buff[2]=buff[3] = (1<<6);
+	display( buff);
+}
 
 
 void fBT_Seg::test() {
@@ -99,6 +114,7 @@ void fBT_Seg::test() {
         display( buff);
         delay(Nopdelay);
     }
+	
     Nopdelay = 100;
     for (i=3 ;i>0; i--)
     {
@@ -126,5 +142,7 @@ void fBT_Seg::test() {
      display( buff);
 
 }
+
+
 
 

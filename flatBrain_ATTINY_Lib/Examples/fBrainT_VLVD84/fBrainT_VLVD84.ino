@@ -35,15 +35,19 @@ float vOFF = 11; //  default
 float v0sense =0; 
 float vCalib = 0;
 
-unsigned long alarmMillis = 0;  // used internally for alarm
-int alarmPeriod = 5000; // milliseconds
-unsigned long overMillis = 0;  // used internally for alarm
-int overPeriod = 10000; // milliseconds
+unsigned long tAlarm = 0;  // used internally for alarm
+unsigned long tOver  = 0;  // used internally for override
+unsigned long tDisplay = 0;  // used internally for read delay
+unsigned long tInit = 0;  // used internally for init display
+
+unsigned long pAlarm   = 10000;  // period in millisecs
+unsigned long pOver    = 20000;  
+unsigned long pDisplay = 1000;  
+unsigned long pInit    = 10000;  
+
 
 uint8_t state = OFF;
-
-
-
+uint8_t displayTog = 0;
 uint8_t maxSamples = 200;
 
 void setup() { 
@@ -66,75 +70,87 @@ void setup() {
     pinMode(DISPLAY,OUTPUT);
 
 	digitalWrite(RELAY,LOW);
-	digitalWrite(DISPLAY,HIGH);
+	startTimer(tInit,pInit);
+
 
 }
 
 void loop() {
-        
+    // Get Voltages
     vButton =	avgAnalog(BUTTON) * vFact;
-    vON = (avgAnalog(CALON) * bFact) + 10;
-    vOFF = (avgAnalog(CALOFF) * bFact) + 10;
+    vON =	avgAnalog(CALON) * bFact + 10;
+    vOFF =	avgAnalog(CALOFF) * bFact + 10;
     vCalib =	avgAnalog(CALVZ) * cFact - 0.5;
-    v0sense =  avgAnalog(VZSENS)/1023.0 * readVcc() * zFact + zBias +vCalib;
+    v0sense =   avgAnalog(VZSENS)/1023.0 * readVcc() * zFact + zBias +vCalib;
 
-	if(vButton > 3.2 ) {
-		startOverTimer();
+    // Check for active button
+	if(vButton > 3.2 ) {  // Boot/Override button
+		startTimer(tOver,pOver);
 		state = OVER;
 	}
-	if(vButton < 3 && vButton > 1.5) seg.displayFloat(vON,2);
-	else if(vButton <= 1.5 && vButton > 1 ) seg.displayFloat(vOFF,2);
-	else seg.displayFloat(v0sense,2);
+        if(vButton < 3 && vButton > 1.5) { //  ON voltage display button
+    		 seg.displayFloat(vON,2);
+    		 tDisplay = 0;
+    	}
+	if(vButton <= 1.5 && vButton > 1) { //  OFF voltage display button
+		seg.displayFloat(vOFF,2);
+		tDisplay = 0;
+        }
+	if(vButton <=  1 && timeout(tDisplay)) { //  no button press, display V0 if after display timeout
+                if( state == ALARM) {		 // if Alarm state, toggle display and buzzer
+                  if(displayTog) {
+                    seg.displayDashes();
+                    analogWrite(BUZZER,50);
+                    displayTog = 0;
+                  }
+                  else { 
+                    seg.displayFloat(v0sense,2);
+                    anologWrite(BUZZER,0);
+                    displayTog = 1;
+                  }
+                }
+                else seg.displayFloat(v0sense,2);
+                
+		startTimer(tDisplay,pDisplay);
+        }
 	//else seg.displayFloat(readVcc(),2);
 
+
+         // Check voltage, set state
 	if(v0sense >= vON) state = ON;
-	else {
-		if(v0sense > vOFF) 	if(state == ALARM || state == OVER) state = ON;
-		else if(v0sense <= vOFF) {
-			if(state == ON || ( state == OVER && overTimeout)) {
-				state = ALARM;
-				startAlarmTimer();   
-			}
+        if(v0sense <= vOFF) {
+		if(state == ON || ( state == OVER && timeout(tOver) )) {  // start Alarm
+			state = ALARM;
+			startTimer(tAlarm,pAlarm);   
 		}
     }
- 	if(state == ALARM){
-		if(alarmTimeout()) state = OFF;
-		else tone(BUZZER,4096,200);
-		//digitalWrite(DISPLAY,LOW);
-		//delay(500);
-		//digitalWrite(DISPLAY,HIGH);
-		delay(500);
+	if(v0sense > vOFF && v0sense < vON) {
+              if((state == ALARM && v0sense-vOFF > 0.15) || state == OVER) state = ON;
 	}
-	else {
-		if(state == ON || state == OVER)    digitalWrite(RELAY,HIGH);
-		if(state == OFF)   digitalWrite(RELAY,LOW);
-		delay(1000);
+         
+        if(state != ALARM || timeout(tAlarm)) digitalWrite(BUZZER,LOW);
+        if(state == ALARM && timeout(tAlarm))  state = OFF;
+	if(state == ON || state == OVER)     {
+		digitalWrite(RELAY,HIGH);
+		digitalWrite(DISPLAY,HIGH);
 	}
-
-
+	if(state == OFF)   {
+		digitalWrite(RELAY,LOW);	
+		if(timeout(tInit)) digitalWrite(DISPLAY,LOW);
+	}
 }
 
-
-void startAlarmTimer()
+void startTimer(unsigned long &t_millis,unsigned long period)
 {
-   alarmMillis = millis() + alarmPeriod;  // initial setup
+   t_millis = millis() + period;  // initial setup
 }
 
-uint8_t alarmTimeout()
+uint8_t timeout(unsigned long t_millis)
 {
-   if( (long)( millis() - alarmMillis ) >= 0) return 1;
+   if( (long)( millis() - t_millis ) >= 0) return 1;
    else return 0;
 }
-void startOverTimer()
-{
-   overMillis = millis() + overPeriod;  // initial setup
-}
 
-uint8_t overTimeout()
-{
-   if( (long)( millis() - overMillis ) >= 0) return 1;
-   else return 0;
-}
 
 uint16_t avgAnalog(uint8_t pin) {
 	uint16_t sum = 0;

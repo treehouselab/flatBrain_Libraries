@@ -16,6 +16,7 @@ public:
 
 
 	void display(unsigned short *buf);
+	void displayDashes();
 
 	void setLumin( unsigned short OnDelay, unsigned short OffDelay);
 	void setAddress(unsigned short val);
