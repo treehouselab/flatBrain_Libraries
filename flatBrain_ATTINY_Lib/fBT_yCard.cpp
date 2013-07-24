@@ -14,13 +14,13 @@ fBT_yCard::fBT_yCard() {
 	bState = 0;
 	mapCount = 0;
 	buildCardMap();
-	altBut.bDg = 1;// Button  maps to D1,  ATTINY pin 3
-	altBut.sDg = 0;
-	altBut.mode = 0;
+	shiftBut.Bd = 1;// Button  maps to D1,  ATTINY pin 3
+	shiftBut.Yd = 0;
+	shiftBut.mode = 0;
 }
-void fBT_yCard::insertYmap(uint8_t buttonDg, uint8_t switchDg) {
-	yMap[mapCount].bDg = buttonDg;
-	yMap[mapCount].sDg = switchDg;
+void fBT_yCard::insertYmap(uint8_t dButton, uint8_t dRelay) {
+	yMap[mapCount].Bd = dButton;
+	yMap[mapCount].Yd = dRelay;
 	yMap[mapCount].mode = REG; // default
 	mapCount++;
 }
@@ -29,46 +29,38 @@ void fBT_yCard::setButtonMode(uint8_t bnum, uint8_t mod) {
 }
 
 void fBT_yCard::buildCardMap() {
-	/* VRELAY76  v3.2
-	insertYmap(12,6);	// Button 1 maps to D12, ATTINY pin 15, to switch D6, ATTINY pin 8 switch
-	insertYmap(13,3);	// Button 2 maps to D13, ATTINY pin 16, to switch D3, ATTINY pin 2 switch
-	insertYmap(11,2);	// Button 3 maps to D11, ATTINY pin 14, to switch D2, ATTINY pin 3 switch
-	insertYmap(10,4);	// Button 4 maps to D10, ATTINY pin 13, to switch D4, ATTINY pin 4 switch
-	insertYmap(9,7);	// Button 5 maps to D9,  ATTINY pin 12, to switch D7, ATTINY pin 5 switch
-	insertYmap(1,5);	// Button 6 maps to D1,  ATTINY pin 13, to switch D5, ATTINY pin 6 switch
-	*/
-	//YCARD V1.0
-	insertYmap(11,2);	// Button 1 maps to D11, ATTINY pin 14, to switch D2, ATTINY pin 4 switch
-	insertYmap(12,3);	// Button 2 maps to D12, ATTINY pin 15, to switch D3, ATTINY pin 5 switch
-	insertYmap(13,4);	// Button 3 maps to D13, ATTINY pin 16, to switch D4, ATTINY pin 6 switch
-	insertYmap(10,5);	// Button 4 maps to D10, ATTINY pin 13, to switch D5, ATTINY pin 7 switch
-	insertYmap(9,7);	// Button 5 maps to D9,  ATTINY pin 12, to switch D7, ATTINY pin 9 switch
-	insertYmap(8,6);	// Button 6 maps to D8,  ATTINY pin 11, to switch D6, ATTINY pin 8 switch
+	//YCARD V3.0
+	insertYmap(8,13);	// Button 1 maps to D8(ATTINY pin 11), RELAY/LED on D13, (ATTINY pin 16)
+	insertYmap(6,12);	// Button 2 maps to D6(ATTINY pin 8), RELAY/LED on D12, (ATTINY pin 15)
+	insertYmap(5,11);	// Button 3 maps to D5(ATTINY pin 7), RELAY/LED on D11, (ATTINY pin 14)
+	insertYmap(4,10);	// Button 4 maps to D4(ATTINY pin 6), RELAY/LED on D10, (ATTINY pin 13)
+	insertYmap(3,9);	// Button 5 maps to D3(ATTINY pin 5), RELAY/LED on D9, (ATTINY pin 12)
+	insertYmap(2,7);	// Button 6 maps to D2(ATTINY pin 4), RELAY/LED on D7, (ATTINY pin 9)
 }
 
 void fBT_yCard::initCard() {
 	int i;
 
 	for(i=0;i<mapCount;i++ ) {
-		pinMode(yMap[i].bDg,INPUT);			// init button pin
-		digitalWrite(yMap[i].bDg,HIGH);		// set pullup
-		pinMode(yMap[i].sDg,OUTPUT);		// init switch pin
-		digitalWrite(yMap[i].sDg,LOW);		// init switch pin
+		pinMode(yMap[i].Bd,INPUT);			// init button pin
+		digitalWrite(yMap[i].Bd,HIGH);		// set pullup
+		pinMode(yMap[i].Yd,OUTPUT);		    // init relay pin
+		digitalWrite(yMap[i].Yd,LOW);		// set relay pin
 	}
-	pinMode(altBut.bDg,INPUT);			// init alt button pin
-	digitalWrite(altBut.bDg,HIGH);		// set pullup
+	pinMode(shiftBut.Bd,INPUT);			// init shift button pin
+	digitalWrite(shiftBut.Bd,HIGH);		// set pullup
 }
 
 void fBT_yCard::getSstate() {
 	int i,j,powerState;
 	enableDelay = 0;
-	if(digitalRead(altBut.bDg) == LOW ) sState = 0;
+	if(digitalRead(shiftBut.Bd) == LOW ) sState = 0;
 	else {
 		powerState = 0;
 		for(i= 0; i<yC.mapCount; i++) {
-			if(digitalRead(yMap[i].bDg) == LOW ) {
+			if(digitalRead(yMap[i].Bd) == LOW ) {
 				if(!(bState & (0x01 << i))) { // if button not already down
-					if(digitalRead(yMap[i].sDg) == HIGH) sState &= ~(0x01 << i);
+					if(digitalRead(yMap[i].Yd) == HIGH) sState &= ~(0x01 << i);
 					else {
 						if(yMap[i].mode & RAD) 	for(j= 0; j<yC.mapCount; j++) if(yMap[j].mode & RAD  && i!=j && !(bState & 0x01 << j)) sState &= ~(0x01 << j);
 						sState |= 0x01 << i;
@@ -88,8 +80,8 @@ void fBT_yCard::applySstate() {
 	int i;
 	for(i= 0; i<yC.mapCount; i++) {
 
-		if(sState >> i & 0x01)  	digitalWrite(yMap[i].sDg,HIGH); 
-		else  digitalWrite(yMap[i].sDg,LOW); 
+		if(sState >> i & 0x01)  	digitalWrite(yMap[i].Yd,HIGH); 
+		else  digitalWrite(yMap[i].Yd,LOW); 
 	}
 }
 
@@ -99,20 +91,20 @@ void fBT_yCard::pollButtons() {
 	if(enableDelay) delay(200);
 	/*
 	int i;
-		digitalWrite(yMap[4].sDg,HIGH); 
+		digitalWrite(yMap[4].Yd,HIGH); 
 		delay(500);
-		digitalWrite(yMap[4].sDg,LOW); 
+		digitalWrite(yMap[4].Yd,LOW); 
 		delay(500);
 	for(i=0; i < yC.mapCount-2; i++) {
-		digitalWrite(yMap[i].sDg,HIGH); 
+		digitalWrite(yMap[i].Yd,HIGH); 
 		//delay(1000);
-		//digitalWrite(yMap[i].sDg,LOW); 
+		//digitalWrite(yMap[i].Yd,LOW); 
 		delay(500);
 	}
 	for(i=0; i < yC.mapCount-2; i++) {
-		digitalWrite(yMap[i].sDg,LOW); 
+		digitalWrite(yMap[i].Yd,LOW); 
 		//delay(1000);
-		//digitalWrite(yMap[i].sDg,LOW); 
+		//digitalWrite(yMap[i].Yd,LOW); 
 		delay(1000);
 	}
 

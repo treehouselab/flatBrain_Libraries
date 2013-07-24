@@ -50,11 +50,6 @@ void fB_Brain::init(uint8_t  i2cspeed ){
     digitalWrite(AT_SPISS,LOW);
 
 	status = 0;
-	_i2cspeed = i2cspeed;
-	i2c.begin();
-	i2c.setSpeed(_i2cspeed);
-	i2c.timeOut(I2CTIMEOUT);
-
 	alarm.play(ALARM_1);
 
 

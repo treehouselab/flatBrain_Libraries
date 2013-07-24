@@ -59,6 +59,13 @@
 #define Y5		105 
 #define Y6		106
 
+#define Y1S		107
+#define Y2S		108
+#define Y3S		109
+#define Y4S		110
+#define Y5S		111 
+#define Y6S		112
+
 
 // Page Tags, used as indices for tPage array in fB_TFT.cpp
 //#define P1	1

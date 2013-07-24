@@ -11,12 +11,17 @@ void setup(){
   
     pinMode(13,OUTPUT);
     digitalWrite(13,LOW);
- 
+    	_i2cspeed = i2cspeed;
+	i2c.begin();
+	i2c.setSpeed(_i2cspeed);
+	i2c.timeOut(I2CTIMEOUT);
+        i2c.begin();
+        //i2c.scan();
+
          alarm.enable();
          brain.init(I2CFAST);
          
-         //i2c.scan();
-
+ 
         tft.init(PORTRAIT);
         tft.clear();
   
@@ -63,10 +68,10 @@ void setup(){
          alarm.play(ALARM_INIT);
 	attachInterrupt(NAV_INT, navigate,FALLING);
 
-	Card(YCRD)->LED(HIGH);
+	//Card(YCRD)->LED(HIGH);
 	unsigned int msec;
 	msec = 200;
-
+/*
 	 Pin(Y1)->yButtonON();
 	 delay(1000);
 	 Pin(Y1)->yButtonOFF();
@@ -90,6 +95,7 @@ void setup(){
 	 Pin(Y6)->yButtonON();
 	 delay(1000);
 	 Pin(Y6)->yButtonOFF();
+	 */
 
  
 }
@@ -155,15 +161,22 @@ void loop() {
 void fB_Brain::defineElements() {
     // TWO PASSES!
     
-	createCard(YCRD,X76,C4,B1);		
   
-	createCard(YCRD,X76,C4,B1);		
-		createPin(Y1,YCRD,28,R,OUTPUT,LOW); 
-		createPin(Y2,YCRD,28,L,OUTPUT,LOW); 
+	createCard(YCRD,X76,C0,B1);		
+		createPin(Y1,YCRD,26,L,OUTPUT,LOW); 
+		createPin(Y2,YCRD,26,R,OUTPUT,LOW); 
 		createPin(Y3,YCRD,27,R,OUTPUT,LOW); 
 		createPin(Y4,YCRD,27,L,OUTPUT,LOW); 
-		createPin(Y5,YCRD,26,L,OUTPUT,LOW);
-		createPin(Y6,YCRD,26,R,OUTPUT,LOW);
+		createPin(Y5,YCRD,28,R,OUTPUT,LOW);
+		createPin(Y6,YCRD,28,L,OUTPUT,LOW);
+		createPin(YSHFT,YCRD,25,R,OUTPUT,LOW);
+
+		createPin(Y1S,YCRD,18,L,INPUT,LOW); 
+		createPin(Y2S,YCRD,19,R,INPUT,LOW); 
+		createPin(Y3S,YCRD,19,L,INPUT,LOW); 
+		createPin(Y4S,YCRD,20,R,INPUT,LOW); 
+		createPin(Y5S,YCRD,20,L,INPUT,LOW);
+		createPin(Y6S,YCRD,18,R,INPUT,LOW);
 
 
 
@@ -222,7 +235,6 @@ void fB_Brain::defineElements() {
 
    
  }
-
 
 
 
