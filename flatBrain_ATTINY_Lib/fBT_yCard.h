@@ -19,8 +19,9 @@ class fBT_yCard {
 	public:
 		uint8_t		mapCount;
 		uint8_t		enableDelay;
-		uint8_t	bState;
-		uint8_t	sState;
+		uint8_t	bState;  // button state 8-bit encoded
+		uint8_t	sState;	 // shift state 
+		uint8_t	aState;  // active state 8-bit encoded
 		fBT_yButton yMap[6];
 		fBT_yButton shiftBut;
 
@@ -30,8 +31,8 @@ class fBT_yCard {
 		void buildCardMap();
 		void initCard();
 		void pollButtons();
-		void getSstate();
-		void applySstate();
+		void getAstate();
+		void applyAstate();
 };
 
 #endif

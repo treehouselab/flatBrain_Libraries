@@ -11,7 +11,7 @@ Treehouselab.com - Mike Price */
 #define createCard(ctag,ctype,i2cAddr, aChan )  defineCard(ctag,#ctag,ctype,i2cAddr, aChan )  
 
 #define createGlobal(gTag,value,format,fTag,flags) defineGlobal(gTag,value,#gTag,format,fTag,flags);
-#define createGlobalPin(gTag,fTag,flags) defineGlobalPin(gTag,fTag,flags);
+#define createGlobalPin(gTag,format,fTag,flags) defineGlobalPin(gTag,format,fTag,flags);
 
 #define createLog(fTag) defineLog(fTag,#fTag);
 

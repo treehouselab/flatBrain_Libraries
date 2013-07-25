@@ -48,29 +48,40 @@
 #define	PRT1	4
 #define	VLVD	5
 
+
+// Page Tags, used as indices for tPage array in fB_TFT.cpp >19
+#define VANDUINO	20
+
 // Pin tags, unique, arbitrary MUST BE > 100
-
-// UTILITY BOARD PIN TAGS
-
 #define Y1		101 
 #define Y2		102 
 #define Y3		103 
 #define Y4		104 
 #define Y5		105 
 #define Y6		106
+#define YRST	107
+#define YSHFT	108
 
-#define Y1S		107
-#define Y2S		108
-#define Y3S		109
-#define Y4S		110
-#define Y5S		111 
-#define Y6S		112
+#define BY1		201 
+#define BY2		202 
+#define BY3		203 
+#define BY4		204 
+#define BY5		205 
+#define BY6		206
+#define BYRST	207
+#define BYSHFT	208
+
+#define Y1S		110
+#define Y2S		111
+#define Y3S		112
+#define Y4S		113
+#define Y5S		114 
+#define Y6S		115
 
 
-// Page Tags, used as indices for tPage array in fB_TFT.cpp
-//#define P1	1
-//#define	P2	2
-#define	G1	    231		// USER GLOBALS START AT 100
+
+
+#define	G1	    231		
 #define	G2QWE	232
 #define	G3	    233
 #define	G4	    234

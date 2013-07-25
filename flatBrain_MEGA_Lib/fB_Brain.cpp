@@ -200,13 +200,13 @@ void fB_Brain::createStack(char *text,float value) {
 	stack[0].value = value;
 	stackCount = min(stackCount++,MAXLISTROWS * MAXSTACKPAGES);
 }
-void fB_Brain::defineGlobalPin(uint16_t gTag, uint16_t fTag,uint8_t  flags) {
+void fB_Brain::defineGlobalPin(uint16_t gTag,uint8_t format, uint16_t fTag,uint8_t  flags) {
 	float value;
 	fB_Pin* pPin;
 	pPin = Pin(gTag);
 	if(pPin) {
 		value = (float) pPin->onVal;
-		defineGlobal(gTag,value, pPin->tagStr, TOGL,fTag, flags |= GPIN);	
+		defineGlobal(gTag,value, pPin->tagStr, format,fTag, flags |= GPIN);	
 	}
 
 }	

@@ -268,6 +268,8 @@ XCARDS		Ox20-27
 #define GARB 			150	// Action Type (atype)	
 #define SET 			152	// Action Type (atype)	    
 #define TOGL 			153	// Action Type (atype)	    
+#define PULSE 			154	// Action Type (atype)	    
+#define YPULSE 			155	// Action Type (atype)	    
 
 #define STACK			167	// Action Type (atype)    
 #define SDDIR			168	// Action Type (atype)    

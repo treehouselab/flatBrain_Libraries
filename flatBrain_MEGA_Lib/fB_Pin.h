@@ -18,9 +18,10 @@ class fB_Pin {
  		uint8_t  vdr;
  		uint8_t  gate;
 		void pull(unsigned int value);  // HIGH or LOW
-		void pulse(unsigned int value,unsigned int msec);
-		void yButtonON();
-		void yButtonOFF();
+		void pinMode(unsigned int iodir); //INPUT or OUTPUT
+		void pulse(unsigned int msecs); 
+		void YshiftPulse(unsigned int msecs); 
+		//void pulse(unsigned int value,unsigned int msec);
 
 
 		void write(unsigned int value);

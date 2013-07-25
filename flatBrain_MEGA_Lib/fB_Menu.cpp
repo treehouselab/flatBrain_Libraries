@@ -759,6 +759,7 @@ void fB_Row:: show(uint8_t  flag) {  //when flag ==1, page is being updated only
 				}
 			}
 			break;
+		case PULSE:
 		case TEXT:
 			tft.print( RIGHT, Y, text);
 			break;
@@ -895,6 +896,14 @@ void fB_Row::action(uint8_t  flag) {
 						value = LOW;
 						if(pG->flags & GPIN) if(pP) pP->write(~(pP->onVal));
 					}
+					show();
+					break;
+				case PULSE:
+					if((pG->flags & GPIN )&& pP) pP->pulse((unsigned int)value);
+					show();
+					break;
+				case YPULSE:
+					if((pG->flags & GPIN )&& pP) pP->YshiftPulse((unsigned int)value);
 					show();
 					break;
 				case JPAGE:

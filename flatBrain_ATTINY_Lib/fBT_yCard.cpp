@@ -51,43 +51,43 @@ void fBT_yCard::initCard() {
 	digitalWrite(shiftBut.Bd,HIGH);		// set pullup
 }
 
-void fBT_yCard::getSstate() {
-	int i,j,powerState;
+void fBT_yCard::getAstate() {
+	int i,j;
 	enableDelay = 0;
-	if(digitalRead(shiftBut.Bd) == LOW ) sState = 0;
-	else {
-		powerState = 0;
-		for(i= 0; i<yC.mapCount; i++) {
-			if(digitalRead(yMap[i].Bd) == LOW ) {
-				if(!(bState & (0x01 << i))) { // if button not already down
-					if(digitalRead(yMap[i].Yd) == HIGH) sState &= ~(0x01 << i);
-					else {
-						if(yMap[i].mode & RAD) 	for(j= 0; j<yC.mapCount; j++) if(yMap[j].mode & RAD  && i!=j && !(bState & 0x01 << j)) sState &= ~(0x01 << j);
-						sState |= 0x01 << i;
-					}
-					bState |= 0x01 << i;
-					enableDelay = 1;
+	if(digitalRead(shiftBut.Bd) == LOW ) sState =1;
+	else sState = 0;
+	for(i= 0; i<yC.mapCount; i++) {
+		if(digitalRead(yMap[i].Bd) == LOW ) {
+			if(!(bState & (0x01 << i))) { // if button not already down
+				if(digitalRead(yMap[i].Yd) == HIGH) aState &= ~(0x01 << i);
+				else {
+					//if(!sState && yMap[i].mode & RAD) 	for(j= 0; j<yC.mapCount; j++) if(yMap[j].mode & RAD  && i!=j && !(bState & 0x01 << j)) aState &= ~(0x01 << j);
+					if(!sState && yMap[i].mode & RAD) 	for(j= 0; j<yC.mapCount; j++) if(yMap[j].mode & RAD  && i!=j ) aState &= ~(0x01 << j);
+					aState |= 0x01 << i;
 				}
+				bState |= 0x01 << i;
+				enableDelay = 1;
 			}
-			else 	{
-				bState  &= ~(0x01 << i);
-				if(yMap[i].mode & MOM) 	sState &= ~(0x01 << i);
-			}
+		}
+		else 	{
+			bState  &= ~(0x01 << i);
+			if(yMap[i].mode & MOM) 	aState &= ~(0x01 << i);
 		}
 	}
 }
-void fBT_yCard::applySstate() {
+
+void fBT_yCard::applyAstate() {
 	int i;
 	for(i= 0; i<yC.mapCount; i++) {
 
-		if(sState >> i & 0x01)  	digitalWrite(yMap[i].Yd,HIGH); 
+		if(aState >> i & 0x01)  	digitalWrite(yMap[i].Yd,HIGH); 
 		else  digitalWrite(yMap[i].Yd,LOW); 
 	}
 }
 
 void fBT_yCard::pollButtons() {
-	getSstate();
-	applySstate();
+	getAstate();
+	applyAstate();
 	if(enableDelay) delay(200);
 	/*
 	int i;

@@ -19,16 +19,27 @@ fB_Pin::fB_Pin(uint16_t ptag,char* tStr,uint16_t ctag,uint8_t   rw,uint8_t   sid
 	switch(bcard->cType) {
 		case X50:
 		case X76:
-			if(mode == A) 	pinMode(bcard->aChan ,iodir); // unecessary, analog line mode set at each read/write
+			//if(mode == A) 	pinMode(bcard->aChan ,iodir); // unecessary, analog line mode set at each read/write
 			if(mode == D)   bcard->MCPd_pinMode(cpin,iodir);
 			break;
 		case BRAIN: 
-			pinMode(cpin,iodir);
+			//pinMode(cpin,iodir);
 			break;
 	}
 	pull(~onVal); // pulls to OFF for both input and output modes
 }
 
+void fB_Pin::pinMode(unsigned int iodir) {
+	switch(bcard->cType) {
+		case X50:
+		case X76:
+			if(mode== D)    bcard->MCPd_pinMode(cpin,iodir);
+			break;
+		case BRAIN: 
+			//if(mode== D)    pinMode(cpin,iodir);
+			break;
+	}
+}
 void fB_Pin::pull(unsigned int value) {
 	switch(bcard->cType) {
 		case X50:
@@ -41,51 +52,17 @@ void fB_Pin::pull(unsigned int value) {
 			break;
 	}
 }
-void fB_Pin::pulse(unsigned int value,unsigned int msec) {
-	switch(bcard->cType) {
-		case X50:
-		case X76:
-			//if(mode == A ) 	bcard->CD_analogWrite(cpin,value); 
-			if(mode== D)   {
-				bcard->MCPd_pinMode(cpin,OUTPUT);
-			    bcard->MCPd_digitalWrite(cpin,value);
-				delay(msec);
-				bcard->MCPd_pinMode(cpin,INPUT);
-				}
-			break;
-		//case BRAIN: 
-		//	if(mode== D)    digitalWrite(cpin,value);
-		//	break;
-	}
+void fB_Pin::YshiftPulse(unsigned int msecs) {
+		Pin(YSHFT)->pinMode(OUTPUT);
+		Pin(YSHFT)->write(Pin(YSHFT)->onVal);
+		pulse(msecs);
+		Pin(YSHFT)->pinMode(INPUT);
 }
-void fB_Pin::yButtonON() {
-	switch(bcard->cType) {
-		case X50:
-		case X76:
-			//if(mode == A ) 	bcard->CD_analogWrite(cpin,value); 
-			if(mode== D)   {
-				bcard->MCPd_pinMode(cpin,OUTPUT);
-			    bcard->MCPd_digitalWrite(cpin,HIGH);
-				}
-			break;
-		//case BRAIN: 
-		//	if(mode== D)    digitalWrite(cpin,value);
-		//	break;
-	}
-}
-void fB_Pin::yButtonOFF() {
-	switch(bcard->cType) {
-		case X50:
-		case X76:
-			//if(mode == A ) 	bcard->CD_analogWrite(cpin,value); 
-			if(mode== D)   {
-				bcard->MCPd_pinMode(cpin,INPUT);
-				}
-			break;
-		//case BRAIN: 
-		//	if(mode== D)    digitalWrite(cpin,value);
-		//	break;
-	}
+void fB_Pin::pulse(unsigned int msecs) {
+		pinMode(OUTPUT);
+		write(onVal);
+		delay(msecs);
+		pinMode(INPUT);
 }
 void fB_Pin::write(unsigned int value) {
 

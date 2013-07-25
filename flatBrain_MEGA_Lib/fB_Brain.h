@@ -94,7 +94,7 @@ class fB_Brain {
 		bool		SDinit(uint8_t  SSpin, uint8_t  SPIspeed);
 		void		createStack(char* text,float value);
 		void		defineGlobal(uint16_t gTag,float value, char *tagStr, uint8_t  format,uint16_t fTag,uint8_t  flags);	
-		void		defineGlobalPin(uint16_t gTag, uint16_t fTag,uint8_t  flags);	
+		void		defineGlobalPin(uint16_t gTag, uint8_t format,uint16_t fTag,uint8_t  flags);	
 		void		defineLog(uint16_t fTag, char *tagStr);
 		void		defineCard(uint16_t ctag,char *text, uint8_t  cType,uint8_t  i2cAddr, uint8_t  aChan );
 		void		definePin(uint16_t pTag, char *tagStr, uint16_t  cTag, uint8_t  row, uint8_t  side, uint8_t  iodir, uint8_t  ival=0);

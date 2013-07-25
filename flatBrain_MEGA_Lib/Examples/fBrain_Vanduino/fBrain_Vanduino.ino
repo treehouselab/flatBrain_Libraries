@@ -1,4 +1,3 @@
- 
 #include <flatBrain.h>
 #include <Wire.h>
 
@@ -11,11 +10,12 @@ void setup(){
   
     pinMode(13,OUTPUT);
     digitalWrite(13,LOW);
-    	_i2cspeed = i2cspeed;
+
+    //_i2cspeed = i2cspeed;
 	i2c.begin();
-	i2c.setSpeed(_i2cspeed);
-	i2c.timeOut(I2CTIMEOUT);
-        i2c.begin();
+	i2c.setSpeed(I2CFAST);
+	//i2c.timeOut(I2CTIMEOUT);
+    //    i2c.begin();
         //i2c.scan();
 
          alarm.enable();
@@ -163,21 +163,32 @@ void fB_Brain::defineElements() {
     
   
 	createCard(YCRD,X76,C0,B1);		
-		createPin(Y1,YCRD,26,L,OUTPUT,LOW); 
-		createPin(Y2,YCRD,26,R,OUTPUT,LOW); 
-		createPin(Y3,YCRD,27,R,OUTPUT,LOW); 
-		createPin(Y4,YCRD,27,L,OUTPUT,LOW); 
-		createPin(Y5,YCRD,28,R,OUTPUT,LOW);
-		createPin(Y6,YCRD,28,L,OUTPUT,LOW);
-		createPin(YSHFT,YCRD,25,R,OUTPUT,LOW);
+		createPin(Y1,YCRD,26,L,INPUT,LOW); 
+		createPin(Y2,YCRD,26,R,INPUT,LOW); 
+		createPin(Y3,YCRD,27,R,INPUT,LOW); 
+		createPin(Y4,YCRD,27,L,INPUT,LOW); 
+		createPin(Y5,YCRD,28,R,INPUT,LOW);
+		createPin(Y6,YCRD,28,L,INPUT,LOW);
+		createPin(YRST,YCRD,25,L,INPUT,LOW);
+		createPin(YSHFT,YCRD,25,R,INPUT,LOW);
 
+		createGlobalPin(Y1,PULSE,LOG2,NULL); 
+		createGlobalPin(Y2,PULSE,LOG2,NULL); 
+		createGlobalPin(Y3,PULSE,LOG2,NULL); 
+		createGlobalPin(Y4,PULSE,LOG2,NULL); 
+		createGlobalPin(Y5,PULSE,LOG2,NULL); 
+		createGlobalPin(Y6,PULSE,LOG2,NULL); 
+		createGlobalPin(YRST,PULSE,LOG2,NULL); 
+		createGlobalPin(YSHFT,PULSE,LOG2,NULL); 
+
+/*
 		createPin(Y1S,YCRD,18,L,INPUT,LOW); 
 		createPin(Y2S,YCRD,19,R,INPUT,LOW); 
 		createPin(Y3S,YCRD,19,L,INPUT,LOW); 
 		createPin(Y4S,YCRD,20,R,INPUT,LOW); 
 		createPin(Y5S,YCRD,20,L,INPUT,LOW);
 		createPin(Y6S,YCRD,18,R,INPUT,LOW);
-
+*/
 
 
 		//createPin(LRON,VLVD,18,R,OUTPUT,LOW);
@@ -187,13 +198,13 @@ void fB_Brain::defineElements() {
 
   	   //createPin(UTEST2,UTIL,32,R,OUTPUT,HIGH);
 
-       createGlobal(G2QWE,1,INT5,LOG1,GINIT | GINPUT );
-       createGlobal(G4,25.99,FLOAT1,LOG1,GINIT | GINPUT );
-       createGlobal(G5,3076,INT5,LOG1,GINIT);
+       //createGlobal(G2QWE,1,INT5,LOG1,GINIT | GINPUT );
+       //createGlobal(G4,25.99,FLOAT1,LOG1,GINIT | GINPUT );
+       //createGlobal(G5,3076,INT5,LOG1,GINIT);
 
-        createLog(LOG1);
+        //createLog(LOG1);
         createLog(LOG2);
-        createLog(LOG3);
+        //createLog(LOG3);
  
 
        
@@ -208,6 +219,16 @@ void fB_Brain::defineElements() {
             createRow(SYSTEM);
             createRow(GLOBALS);
             createRow(STACK);
+            createRow(VANDUINO);
+
+   	definePage(VANDUINO,"VANDUINO",HOME,NULL);
+		defineRow(BY1, YPULSE,"Y1",TEXT,Y1, 200);
+		defineRow(BY2, YPULSE,"Y2",TEXT,Y2, 200);
+		defineRow(BY3, YPULSE,"Y3",TEXT,Y3, 200);
+		defineRow(BY4, YPULSE,"Y4",TEXT,Y4, 200);
+		defineRow(BY5, YPULSE,"Y5",TEXT,Y5, 200);
+		defineRow(BY6, YPULSE,"Y6",TEXT,Y6, 200);
+		defineRow(BYRST, PULSE,"RESET",TEXT,YRST, 200);
 
         
  
