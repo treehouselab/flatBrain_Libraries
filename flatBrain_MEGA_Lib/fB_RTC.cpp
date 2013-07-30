@@ -51,18 +51,18 @@ uint8_t  fB_RTC::init() {
 
 	uint8_t  res;
 	res = i2c.write((uint8_t ) RTC_ADDRESS, (uint8_t )0);
-	if(res) { error = 1 ;dbug("%s","RTC WRITE ERROR"); }
+	if(res) { error = 1 ;dbug(F("RTC WRITE ERROR")); }
 
 	else {
 		res = i2c.read((uint8_t )RTC_ADDRESS, (uint8_t )1);
-		if(res){ error = 1 ;dbug("%s","RTC READ ERROR"); }
+		if(res){ error = 1 ;dbug(F("RTC READ ERROR")); }
 		else {
 			  //i2c.setSpeed(I2CSLOW);
 			  uint8_t  ss = i2c.receive();
 			  //i2c.setSpeed(_i2cspeed);
 			  if(ss>>7) {
 				  error = 1;
-				  dbug("RTC ERROR: %h",ss);
+				  dbug(F("RTC ERROR: %h"),ss);
 			  }
 		}
 	}

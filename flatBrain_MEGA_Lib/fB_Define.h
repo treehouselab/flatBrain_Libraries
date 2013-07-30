@@ -19,12 +19,13 @@ Treehouselab.com - Mike Price */
 
 #define createSystem(mTag)   defineSystem(mTag,#mTag);
 #define createGlobals(mTag)  defineGlobals(mTag,#mTag); 
-#define createStacks(sTag)	defineStacks(sTag,#sTag);
+#define createStacks(sTag)	defineStacks(sTag,F(#sTag));
 
-#define createRow(tTag)		defineJrow(tTag,#tTag);
-#define createPage(pTag)	definePage(pTag,#pTag,NULL);
-#define createPage(pTag,tagStr)	definePage(pTag,tagStr,NULL);
-#define stack(text,value)	brain.createStack(text,value);
+#define createRow(rTag)						defineJrow(rTag,F(#rTag));
+#define createArow(rTag,atype,tTag,value)	defineRow(rTag,F(#rTag),atype,tTag,NULL,value)
+#define createPage(pTag)					definePage(pTag,F(#pTag),NULL);
+#define createHome(pTag)	definePage(HOME,F(#pTag),NULL);
+#define createStack(text,value)	brain.defineStack(F(text),value);
 
 
 //#define defineGlobal(gTag,fTag,value,flags) createGlobal(gTag,#gTag,fTag value,format,flags)

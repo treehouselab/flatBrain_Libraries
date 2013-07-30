@@ -25,7 +25,7 @@ class fB_Global {
 class fB_Stack {
 	public:
 		float value;
-		char *text;
+		const __FlashStringHelper* pTitle;
 };
 class fB_Log {
 	public:
@@ -92,7 +92,7 @@ class fB_Brain {
 		char*		getLogName(uint16_t fTag);
 		void		init(uint8_t  i2cspeed = I2CSLOW);
 		bool		SDinit(uint8_t  SSpin, uint8_t  SPIspeed);
-		void		createStack(char* text,float value);
+		void		defineStack(const __FlashStringHelper* pTitle,float value);
 		void		defineGlobal(uint16_t gTag,float value, char *tagStr, uint8_t  format,uint16_t fTag,uint8_t  flags);	
 		void		defineGlobalPin(uint16_t gTag, uint8_t format,uint16_t fTag,uint8_t  flags);	
 		void		defineLog(uint16_t fTag, char *tagStr);

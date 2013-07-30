@@ -117,7 +117,7 @@ void fB_Card::openCDchan(uint8_t  chan) {
 }
 void fB_Card::VDselectR(uint8_t  chan) {
 	// Opens CD4051 channel by writing 3 or 4-bit address to CD address pins.
-	dbug("Card::selectVDR  chan %d",chan);
+	dbug(F("Card::selectVDR  chan %d"),chan);
 	if(!i2cAddr || chan > 7) return;
 	switch(cType) {
 		case X50:

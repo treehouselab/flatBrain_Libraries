@@ -13,7 +13,9 @@ extern fB_RTC		rtc;
 //extern fB_Seg		seg;
 extern uint8_t 		_i2cspeed;
 
-void dbug(char *fmt, ... );
+void getPtext(const __FlashStringHelper* pText,char *buffer );
+void dbug(const __FlashStringHelper* pData,... );
+//void dbug(char *fmt, ... );
 fB_Global * Global(uint16_t gTag);
 fB_Pin*	Pin(uint16_t pTag); 
 fB_Card* Card(uint16_t cTag); 

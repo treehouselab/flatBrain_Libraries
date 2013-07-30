@@ -56,22 +56,22 @@ void fB_Brain::init(uint8_t  i2cspeed ){
 	res = rtc.init();
 	if(res) {
 		alarm.play(ALARM_2);
-		dbug("RTC FAILED");
+		dbug(F("RTC FAILED"));
 	}
 	else {
 		status |= RTC;
-		dbug("BRAIN INIT RTC");
+		dbug(F("BRAIN INIT RTC"));
 	}
 
 
 	res = fat.initFAT(SD_SPISS ,SPISPEED);
 	if(res) {
-		dbug("SD ERROR 0X%h",res);
+		dbug(F("SD ERROR 0X%h"),res);
 		alarm.play(ALARM_2);
 	}
 	else {
 		status |= SD;
-		dbug("BRAIN INIT SD");
+		dbug(F("BRAIN INIT SD"));
 	}
 
 
@@ -84,13 +84,13 @@ void fB_Brain::init(uint8_t  i2cspeed ){
 	totalCards = 0;
 	totalStacks = MAXLISTROWS * MAXSTACKPAGES;
 
-dbug("BRAIN INIT PASS 1");
+dbug(F("BRAIN INIT PASS 1"));
 
 	passToggle =0;
 	createCard(BRAIN,BRAIN,0,0);
 	defineSystemGlobals();
 	defineElements(); // 1st pass with passtog = 0, determine array sizes
-dbug("BRAIN INIT MALLOC");
+dbug(F("BRAIN INIT MALLOC"));
 	pGlobal = (fB_Global **) malloc(sizeof(fB_Global*) * totalGlobals);
 	gSys = (uint8_t  *) malloc(totalGsys);
 	gUsr = (uint8_t  *) malloc(totalGusr);
@@ -107,14 +107,14 @@ dbug("BRAIN INIT MALLOC");
 	pinCount = 0;
 
 	passToggle = 1;
-dbug("BRAIN INIT PASS 2");
+dbug(F("BRAIN INIT PASS 2"));
 
 	createCard(BRAIN,BRAIN,0,0);
 	defineSystemGlobals();
 	
 	defineElements(); // 2nd pass with passtog = 1, execute
 
-dbug("BRAIN INIT EEPROM");
+dbug(F("BRAIN INIT EEPROM"));
 
 	pG = EEgetGlobal(Global(GBOO));
 	res = (uint8_t ) pG->value;
@@ -125,7 +125,7 @@ dbug("BRAIN INIT EEPROM");
 	//seg.test();  // set segmented display address if necessary;
 	//seg.displayDec(1434,2);
 
-dbug("BRAIN INIT COMPLETE");
+dbug(F("BRAIN INIT COMPLETE"));
 
 
 	// VDIV RESISTOR MAP TO CD4051 pin
@@ -190,13 +190,13 @@ void fB_Brain::defineSystemGlobals() {
 }
 
 
-void fB_Brain::createStack(char *text,float value) {	
+void fB_Brain::defineStack(const __FlashStringHelper* pTitle,float value) {	
 	if(!passToggle) return;
 	for(int i = stackCount;i>0;i--) {
-		stack[i].text = stack[i-1].text;
+		stack[i].pTitle = stack[i-1].pTitle;
 		stack[i].value = stack[i-1].value;
 	}
-	stack[0].text = text;
+	stack[0].pTitle = pTitle;
 	stack[0].value = value;
 	stackCount = min(stackCount++,MAXLISTROWS * MAXSTACKPAGES);
 }
@@ -434,7 +434,7 @@ void fB_Log::dump() {
    char buffer[MAXCHARSDUMP+1] = { NULL };
    if(fat.openFile(filename,FILEMODE_TEXT_READ)==NO_ERROR) {
 	 //Serial.begin(SERIALSPEED);
-     Serial.print("FILENAME: ");
+     Serial.print(F("FILENAME: "));
      Serial.println(filename);
      while(fat.readLn(buffer,MAXCHARSDUMP))  Serial.println(buffer);
      fat.closeFile();	
@@ -502,7 +502,7 @@ fB_Global* fB_Brain::EEgetGlobal( fB_Global* pG) {
 			data = (float*)fBuffer;
 			pG->factor = *data;
 			pG->flags = ee.readByte(gAddr);
-			dbug("EEREAD tag: %s  value: %f  fact: %f  flag: 0x%h",tBuffer,pG->value,pG->factor,pG->flags);
+			dbug(F("EEREAD tag: %s  value: %f  fact: %f  flag: 0x%h"),tBuffer,pG->value,pG->factor,pG->flags);
 			return pG;
 		}
 		

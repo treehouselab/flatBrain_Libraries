@@ -28,7 +28,6 @@ fB_Alarm    alarm;
 
 //fB_WTV   audio;
 //fB_VLVD   vlvd;
-void dbug(char *fmt, ... );
 
 ///////////////////// GLOBAL to main.c FUNCTIONS ////////////////////////////////////////////////////////////////
 
@@ -44,7 +43,7 @@ fB_Pin * Pin(uint16_t pTag) {
 }
 fB_Card * Card(uint16_t cTag) {	
 	for(int i=0;i < brain.cardCount;i++) if(brain.pCard[i]->cTag == cTag) return brain.pCard[i];
-dbug("CARD NULL");
+	//dbug("CARD NULL");
 	return NULL;
 }
 /*
@@ -67,7 +66,80 @@ void putTagState(uint16_t tTag,uint8_t  state) {
 		if(pG) pG->value = state;
 	}
 }
+
+void fBdbug(const __FlashStringHelper* pData ){
+  char buffer[ 20 ]; //Size array as needed.
+  int cursor = 0;
+  prog_char *ptr = ( prog_char * ) pData;
+
+  while( ( buffer[ cursor ] = pgm_read_byte_near( ptr + cursor ) ) != '\0' ) ++cursor;
+  Serial.println(buffer);
+
+}
 */
+
+void getPtext(const __FlashStringHelper* pText,char *buffer){
+  int cursor = 0;
+  prog_char *ptr = ( prog_char * ) pText;
+  while( ( buffer[ cursor ] = pgm_read_byte_near( ptr + cursor ) ) != '\0' ) ++cursor;
+}
+
+void dbug(const __FlashStringHelper* pTitle, ... ){
+  char fmt[ 40 ]; //Size array as needed.
+
+  getPtext(pTitle,fmt);
+  char prefix[ 41 ]; 
+  char sbuffer[41] = { '\0' };
+  int wid = 40;
+  float f;
+  char * s;
+  int i,j,n,k;
+  
+  va_list args;
+  va_start(args,fmt);
+  for( i=0,j=0;i<strlen(fmt);i++) {		
+	  if(fmt[i] == '%') {
+		prefix[j] = '\0'; 
+		Serial.print(prefix);
+		prefix[0]='\0';
+		j = 0;
+		i++;
+		if(fmt[i] == 'f') { 
+			f=va_arg(args,double);
+			Serial.print(f,DEC);
+		}
+		else if(fmt[i] == 's') { 
+			s=va_arg(args,char *);
+			for( k=0;k<wid && s[k] != '\0';k++) sbuffer[k] = s[k];
+			sbuffer[k] = '\0';
+			s = &sbuffer[0];
+			Serial.print(s);
+		}
+		else if(fmt[i] == 'd') { 
+			n=va_arg(args,int);
+			Serial.print(n,DEC);
+		}
+		else if(fmt[i] == 'b') { 
+			n=va_arg(args,int);
+			Serial.print(n,BIN);
+		}
+		else if(fmt[i] == 'h' || fmt[i] == 'x') { 
+			n=va_arg(args,int);
+			Serial.print(n,HEX);
+		}
+	  }
+	  else {
+		  if(j<20) {
+			  prefix[j] = fmt[i];
+			  j++;
+		  }
+	  }
+  }
+  prefix[j] = '\0';
+  va_end(args);
+  Serial.println(prefix);
+}
+/*
 void dbug(char *fmt, ... ){
   char prefix[41]; 
   char sbuffer[41] = { '\0' };
@@ -120,6 +192,7 @@ void dbug(char *fmt, ... ){
   va_end(args);
   Serial.println(prefix);
 }
+*/
 char* floatToStr(float value, int places,char *buffer) {
    // this is used to cast digits 
    int digit,dhit = 0;

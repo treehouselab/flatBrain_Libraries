@@ -20,6 +20,10 @@ void setup(){
 
          alarm.enable();
          brain.init(I2CFAST);
+
+    Serial.print("Free RAM(b):");
+    Serial.println(freeRAM());
+
          
  
         tft.init(PORTRAIT);
@@ -28,19 +32,15 @@ void setup(){
         menu.init();
   
         menu.show(HOME);
-        
-        stack("Cards", brain.cardCount);    
-        stack("Pins", brain.pinCount);    
-        stack("Globals", brain.globalCount);    
-        stack("Stacks", brain.totalStacks);    
-        stack("Logs", brain.logCount);    
-        stack("Pages", menu.totalPages);    
-        stack("Rows", menu.totalRows); 
-        stack("Free RAM",freeRAM()); 
-
-
-    //Serial.print("Free RAM(b):");
-    //Serial.println(freeRAM());
+   
+        createStack("Cards", brain.cardCount);   
+        createStack("Pins", brain.pinCount);    
+        createStack("Globals", brain.globalCount);    
+        createStack("Stacks", brain.totalsStacks);    
+        createStack("Logs", brain.logCount);    
+        createStack("Pages", menu.totalPages);    
+        createStack("Rows", menu.totalRows); 
+        createStack("Free RAM",freeRAM()); 
 
                
        //char buffer[30];       
@@ -64,8 +64,8 @@ void setup(){
   	Serial.print("*totalLogs ");
     	Serial.println(brain.logCount,DEC);
 */
-            alarm.disableBootBeep();
-         alarm.play(ALARM_INIT);
+         alarm.disableBootBeep();
+         //alarm.play(ALARM_INIT);
 	attachInterrupt(NAV_INT, navigate,FALLING);
 
 	//Card(YCRD)->LED(HIGH);
@@ -161,7 +161,7 @@ void loop() {
 void fB_Brain::defineElements() {
     // TWO PASSES!
     
-  
+  /*
 	createCard(YCRD,X76,C0,B1);		
 		createPin(Y1,YCRD,26,L,INPUT,LOW); 
 		createPin(Y2,YCRD,26,R,INPUT,LOW); 
@@ -181,14 +181,14 @@ void fB_Brain::defineElements() {
 		createGlobalPin(YRST,PULSE,LOG2,NULL); 
 		createGlobalPin(YSHFT,PULSE,LOG2,NULL); 
 
-/*
+
 		createPin(Y1S,YCRD,18,L,INPUT,LOW); 
 		createPin(Y2S,YCRD,19,R,INPUT,LOW); 
 		createPin(Y3S,YCRD,19,L,INPUT,LOW); 
 		createPin(Y4S,YCRD,20,R,INPUT,LOW); 
 		createPin(Y5S,YCRD,20,L,INPUT,LOW);
 		createPin(Y6S,YCRD,18,R,INPUT,LOW);
-*/
+
 
 
 		//createPin(LRON,VLVD,18,R,OUTPUT,LOW);
@@ -206,7 +206,7 @@ void fB_Brain::defineElements() {
         createLog(LOG2);
         //createLog(LOG3);
  
-
+*/
        
       //void createPin(uint16_t pTag, uint8_t  cTag, uint8_t row, uint8_t side, uint8_t iodir, uint8_t ival)
       //void createPin(uint16_t pTag, uint8_t pnum, uint8_t mode(D,A), uint8_t iodir(INPUT<OUTPUT), uint8_t ival)
@@ -215,22 +215,24 @@ void fB_Brain::defineElements() {
   void fB_Menu::defineMenu() {
    // TWO PASSES!
  
-   	createPage(HOME,"FLATBRAIN");
+   	createHome(FLATBRAIN);
             createRow(SYSTEM);
             createRow(GLOBALS);
             createRow(STACK);
+            
+            /*
             createRow(VANDUINO);
 
-   	definePage(VANDUINO,"VANDUINO",HOME,NULL);
-		defineRow(BY1, YPULSE,"Y1",TEXT,Y1, 200);
-		defineRow(BY2, YPULSE,"Y2",TEXT,Y2, 200);
-		defineRow(BY3, YPULSE,"Y3",TEXT,Y3, 200);
-		defineRow(BY4, YPULSE,"Y4",TEXT,Y4, 200);
-		defineRow(BY5, YPULSE,"Y5",TEXT,Y5, 200);
-		defineRow(BY6, YPULSE,"Y6",TEXT,Y6, 200);
-		defineRow(BYRST, PULSE,"RESET",TEXT,YRST, 200);
+   	createPage(VANDUINO);
+		createArow(BY1, YPULSE,Y1,200);
+		createArow(BY2, YPULSE,Y2, 200);
+		createArow(BY3, YPULSE,Y3, 200);
+		createArow(BY4, YPULSE,Y4, 200);
+		createArow(BY5, YPULSE,Y5, 200);
+		createArow(BY6, YPULSE,Y6, 200);
+		createArow(BYRST, PULSE,YRST, 200);
 
-        
+    */    
  
     //createDiagnostics(STKPAGE,"STACK");
            //createClock(DATE);

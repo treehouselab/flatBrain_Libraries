@@ -19,11 +19,14 @@ class fB_Block {
 		uint8_t 		atype;
 		uint8_t 		status;
 		uint8_t 		format;
-		char		*title;
-		char		*text;
+		const __FlashStringHelper* pTitle;
+		char			*text;
+		char			*textVal;
+		//char		*title;
+		//char		*text;
 		uint16_t	tag;	// this tag
 		uint16_t	tTag;	// target Tag ( Pins or Globals )
-		uint8_t 		state;
+		uint8_t 	state;
 		float		value;
 		//float		factor; // calibration factor
 		//uint8_t 		ftype;  // factor type ( AMPLIFY{*}, BIAS{+} )
@@ -31,6 +34,7 @@ class fB_Block {
 		void	unframe();
 		void	clearBlock1();
 		void	clearBlock();
+
 };
 
 class fB_Row: public fB_Block {
@@ -73,7 +77,7 @@ class fB_Page {
 		uint8_t 		pDex;
 		byte		currRowDex;
 		uint8_t 		status;
-		char        * title;
+		const __FlashStringHelper* pTitle;
 		fB_Row	    * pRow;
 		fB_Window	win;
 		int			farY; 
@@ -104,8 +108,7 @@ class fB_Menu {
 		void		jumpPage(uint16_t pTag);
 		void		defineMenu(); 
 		//void		definePage( uint16_t pTag,char *tagStr,uint8_t  type,uint16_t parentTag = NULL);
-		void		definePage( uint16_t pTag,char *tagStr,uint16_t parentTag = NULL,uint8_t  = NULL);
-
+		void		definePage( uint16_t pTag,const __FlashStringHelper* pTitle,uint16_t parentTag = NULL,uint8_t  = NULL);
 		void		defineStacks();
 		void		defineGlobals();
 		void		defineClock();
@@ -115,11 +118,11 @@ class fB_Menu {
 		
 		void        calibrate(uint16_t mTag,uint8_t  ftype,float value);
 
-		void        defineJrow(uint16_t tTag,char* text);
-		void        defineArow(uint8_t  atype,char* text);
-		void        defineDrow(char* text);
-		void	    defineRow(uint16_t mTag,uint8_t  atype,char* text,uint8_t  format=NULL);
-		fB_Row*     defineRow(uint16_t mTag,uint8_t  atype,char* text, uint8_t  format,uint16_t tTag, float value=0);
+		void        defineJrow(uint16_t tTag,const __FlashStringHelper* pText);
+		void        defineArow(uint8_t  atype,const __FlashStringHelper* pText);
+		void        defineDrow(const __FlashStringHelper* pText);
+		void	    defineRow(uint16_t mTag,const __FlashStringHelper* pTitle,uint8_t  atype,uint8_t  format=NULL);
+		fB_Row*     defineRow(uint16_t mTag,const __FlashStringHelper* pTitle,uint8_t  atype, uint8_t  format,uint16_t tTag, float value=0);
 		void        writeRow(uint16_t mTag,char* text,float value=NULL);
 		void		updateGauge(uint16_t mTag);
 		void		updateRow(uint16_t mTag);
