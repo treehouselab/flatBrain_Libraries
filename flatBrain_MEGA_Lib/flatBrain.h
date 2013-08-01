@@ -29,6 +29,10 @@ fB_Alarm    alarm;
 //fB_WTV   audio;
 //fB_VLVD   vlvd;
 
+const __FlashStringHelper* PstrRay[MAXPSTRCOUNT];
+
+
+
 ///////////////////// GLOBAL to main.c FUNCTIONS ////////////////////////////////////////////////////////////////
 
 fB_Global * Global(uint16_t gTag) {
@@ -78,21 +82,32 @@ void fBdbug(const __FlashStringHelper* pData ){
 }
 */
 
-void getPtext(const __FlashStringHelper* pText,char *buffer){
-  int cursor = 0;
-  prog_char *ptr = ( prog_char * ) pText;
-  while( ( buffer[ cursor ] = pgm_read_byte_near( ptr + cursor ) ) != '\0' ) ++cursor;
+
+void getPstr(uint16_t tag, char *buffer){
+   int cursor = 0;
+   prog_char *ptr = ( prog_char * ) PstrRay[tag];
+   while( ( buffer[ cursor ] = pgm_read_byte_near( ptr + cursor ) ) != '\0' && cursor < MAXCHARSTEXT ) ++cursor;
+   buffer[cursor] = '\0';
 }
 
-void dbug(const __FlashStringHelper* pTitle, ... ){
+void getPtext(const __FlashStringHelper* pText,char *buffer){
+  int cursor = 0;
+   prog_char *ptr = ( prog_char * ) pText;
+   while( ( buffer[ cursor ] = pgm_read_byte_near( ptr + cursor ) ) != '\0' && cursor < MAXCHARSTEXT ) ++cursor;
+   buffer[cursor] = '\0';
+}
+
+
+void dbug(const __FlashStringHelper* Ptitle, ... ){
   char fmt[ 40 ]; //Size array as needed.
 
-  getPtext(pTitle,fmt);
+  getPtext(Ptitle,fmt);
   char prefix[ 41 ]; 
   char sbuffer[41] = { '\0' };
   int wid = 40;
   float f;
   char * s;
+  const __FlashStringHelper* Ptext;
   int i,j,n,k;
   
   va_list args;
@@ -104,6 +119,12 @@ void dbug(const __FlashStringHelper* pTitle, ... ){
 		prefix[0]='\0';
 		j = 0;
 		i++;
+		if(fmt[i] == 'P') { 
+			Ptext =va_arg(args,const __FlashStringHelper*);
+			char pstr[MAXCHARSTEXT];
+			getPtext(Ptext,pstr);
+			Serial.print(pstr);
+		}
 		if(fmt[i] == 'f') { 
 			f=va_arg(args,double);
 			Serial.print(f,DEC);
@@ -139,6 +160,8 @@ void dbug(const __FlashStringHelper* pTitle, ... ){
   va_end(args);
   Serial.println(prefix);
 }
+
+
 /*
 void dbug(char *fmt, ... ){
   char prefix[41]; 
@@ -265,4 +288,6 @@ int freeRAM () {
 }
 
 #endif
+
+
 

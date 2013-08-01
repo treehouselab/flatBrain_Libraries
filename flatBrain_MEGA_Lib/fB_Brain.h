@@ -16,16 +16,16 @@ class fB_Global {
 		uint8_t  format;
 		float factor;
 		float value;
-		char *tagStr;
+		const __FlashStringHelper* Ptitle;
 		float getValue();
 		uint8_t  getFormat(float value);
-		fB_Global(uint16_t gTag,float value, char *tagStr, uint8_t  _format,uint16_t fTag,uint8_t  flags=0);	
+		fB_Global(uint16_t gTag,float value, const __FlashStringHelper* Ptitle, uint8_t  _format,uint16_t fTag,uint8_t  flags=0);	
 
 };
 class fB_Stack {
 	public:
 		float value;
-		const __FlashStringHelper* pTitle;
+		const __FlashStringHelper* Ptitle;
 };
 class fB_Log {
 	public:
@@ -71,10 +71,10 @@ class fB_Brain {
 		fB_Global	**pGlobal;				// sparse array of pointers 
 		fB_Pin		**pPin;				// sparse array of pointers to inited pins, built by initPin() 
 		fB_Card		**pCard;				// sparse array of pointers to inited cards, built by init_card() 
-		uint8_t 		x0Map[10];		    // map of expansion card bus pins to Mega Pins
-		uint8_t 		x2Map[16];		    // map of expansion card X2 chip pins to bus pins
-		uint8_t 		x3Map[32];		    // map of expansion card X3 chip pins to bus pins
-		uint8_t 		VDRmap[8];		    // map of expansion card CD B pins 1- VDIV resistors
+		//uint8_t 		x0Map[10];		    // map of expansion card bus pins to Mega Pins
+		//uint8_t 		x2Map[16];		    // map of expansion card X2 chip pins to bus pins
+		//uint8_t 		x3Map[32];		    // map of expansion card X3 chip pins to bus pins
+		//uint8_t 		VDRmap[8];		    // map of expansion card CD B pins 1- VDIV resistors
 
 		typedef struct		logStruc {	
 			uint16_t	tag;	 
@@ -93,11 +93,11 @@ class fB_Brain {
 		void		init(uint8_t  i2cspeed = I2CSLOW);
 		bool		SDinit(uint8_t  SSpin, uint8_t  SPIspeed);
 		void		defineStack(const __FlashStringHelper* pTitle,float value);
-		void		defineGlobal(uint16_t gTag,float value, char *tagStr, uint8_t  format,uint16_t fTag,uint8_t  flags);	
+		void		defineGlobal(uint16_t gTag,float value,const __FlashStringHelper* Ptitle,uint8_t  format,uint16_t fTag,uint8_t  flags);	
 		void		defineGlobalPin(uint16_t gTag, uint8_t format,uint16_t fTag,uint8_t  flags);	
-		void		defineLog(uint16_t fTag, char *tagStr);
-		void		defineCard(uint16_t ctag,char *text, uint8_t  cType,uint8_t  i2cAddr, uint8_t  aChan );
-		void		definePin(uint16_t pTag, char *tagStr, uint16_t  cTag, uint8_t  row, uint8_t  side, uint8_t  iodir, uint8_t  ival=0);
+		void		defineLog(uint16_t fTag, const __FlashStringHelper* Ptitle);
+		void		defineCard(uint16_t ctag,const __FlashStringHelper* Ptitle, uint8_t  cType,uint8_t  i2cAddr, uint8_t  aChan );
+		void		definePin(uint16_t pTag, const __FlashStringHelper* Ptitle, uint16_t  cTag, uint8_t  row, uint8_t  side, uint8_t  iodir, uint8_t  ival=0);
 		//void		createPin(uint16_t pTag, uint8_t  pnum, uint8_t  mode, uint8_t  iodir, uint8_t  ival=0);
 		fB_Card*	Card(uint16_t cTag);
 

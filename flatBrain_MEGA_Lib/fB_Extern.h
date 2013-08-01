@@ -13,8 +13,14 @@ extern fB_RTC		rtc;
 //extern fB_Seg		seg;
 extern uint8_t 		_i2cspeed;
 
-void getPtext(const __FlashStringHelper* pText,char *buffer );
-void dbug(const __FlashStringHelper* pData,... );
+extern uint8_t  VDRmap[];
+extern uint8_t  Xmap50[];
+extern uint8_t  Xmap76[];
+extern const __FlashStringHelper* PstrRay[];
+
+void getPstr(uint16_t tag, char *buffer);
+void getPtext(const __FlashStringHelper* Ptext,char *buffer );
+void dbug(const __FlashStringHelper* Pdata,... );
 //void dbug(char *fmt, ... );
 fB_Global * Global(uint16_t gTag);
 fB_Pin*	Pin(uint16_t pTag); 

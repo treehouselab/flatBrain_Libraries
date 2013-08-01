@@ -21,11 +21,11 @@ uint8_t  fB_Global::getFormat(float value) {
 	if(mod*10-int(mod*10) == 0) return FLOAT1;
 	return FLOAT2;
 }
-fB_Global::fB_Global(uint16_t _gTag,float _value, char *_tagStr, uint8_t  _format,uint16_t _fTag,uint8_t  _flags) {	
+fB_Global::fB_Global(uint16_t _gTag,float _value, const __FlashStringHelper* Ptit, uint8_t  _format,uint16_t _fTag,uint8_t  _flags) {	
 	
 	gTag = _gTag; 
 	value = _value;
-	tagStr = _tagStr;
+	Ptitle = Ptit;
 	if(!_format) format = getFormat(value);
 	else format = _format;
 	fTag = _fTag; 
@@ -75,7 +75,7 @@ void fB_Brain::init(uint8_t  i2cspeed ){
 	}
 
 
-	initXmaps();
+	//initXmaps();
 	totalGlobals = 0;
 	totalGsys = 0;
 	totalGusr = 0;
@@ -128,17 +128,6 @@ dbug(F("BRAIN INIT EEPROM"));
 dbug(F("BRAIN INIT COMPLETE"));
 
 
-	// VDIV RESISTOR MAP TO CD4051 pin
-
-	
-	VDRmap[0] =		 5; /// NCON
-	VDRmap[1] =		 0; /// no resistor
-	VDRmap[2] = 	 2; 
-	VDRmap[3] = 	 1; 
-	VDRmap[4] = 	 4; 
-	VDRmap[5] = 	 3; 
-	VDRmap[6] = 	 6; 
-
 	//set interrupt pins to high
 	pinMode(NAV_INTPIN,INPUT_PULLUP);
 	pinMode(K0_INTPIN,INPUT_PULLUP);
@@ -167,6 +156,7 @@ void fB_Brain::insertXmap(uint8_t mapCode,uint8_t  row, uint8_t  side, uint8_t  
 	//uint8_t  index = (row-17)*2 + side;
 	uint8_t  index;
 	index = getXmapIndex(mapCode,row,side); 
+	/*
 	switch(mapCode) {
 		case 0: 
 			x0Map[index] = pn;  // should set bits only in the lowest 6 bits, pin 0-63
@@ -181,22 +171,22 @@ void fB_Brain::insertXmap(uint8_t mapCode,uint8_t  row, uint8_t  side, uint8_t  
 			bitWrite(x3Map[index],6,type); // overlay  bit for type
 			break;
 	}
+	*/
 }
 
 void fB_Brain::defineSystemGlobals() {
-	defineGlobal(GBOO,HIGH,"BOOT GLOBALS", TOGL,SYSTEM,GSYS);
-
+	defineGlobal(GBOO,HIGH,F("BOOT GLOBALS"), TOGL,SYSTEM,GSYS);
 
 }
 
 
-void fB_Brain::defineStack(const __FlashStringHelper* pTitle,float value) {	
+void fB_Brain::defineStack(const __FlashStringHelper* Ptitle,float value) {	
 	if(!passToggle) return;
 	for(int i = stackCount;i>0;i--) {
-		stack[i].pTitle = stack[i-1].pTitle;
+		stack[i].Ptitle = stack[i-1].Ptitle;
 		stack[i].value = stack[i-1].value;
 	}
-	stack[0].pTitle = pTitle;
+	stack[0].Ptitle = Ptitle;
 	stack[0].value = value;
 	stackCount = min(stackCount++,MAXLISTROWS * MAXSTACKPAGES);
 }
@@ -206,12 +196,12 @@ void fB_Brain::defineGlobalPin(uint16_t gTag,uint8_t format, uint16_t fTag,uint8
 	pPin = Pin(gTag);
 	if(pPin) {
 		value = (float) pPin->onVal;
-		defineGlobal(gTag,value, pPin->tagStr, format,fTag, flags |= GPIN);	
+		defineGlobal(gTag,value, pPin->Ptitle, format,fTag, flags |= GPIN);	
 	}
 
 }	
 
-void fB_Brain::defineGlobal(uint16_t gTag,float value, char *tagStr, uint8_t  format,uint16_t fTag,uint8_t  flags) {	
+void fB_Brain::defineGlobal(uint16_t gTag,float value, const __FlashStringHelper* Ptitle, uint8_t  format,uint16_t fTag,uint8_t  flags) {	
 	if(!passToggle)	{
 		totalGlobals++;
 		if(flags & GSYS) totalGsys++;
@@ -219,7 +209,7 @@ void fB_Brain::defineGlobal(uint16_t gTag,float value, char *tagStr, uint8_t  fo
 	}
 
 	else{
-			pGlobal[globalCount] = new fB_Global(gTag,value, tagStr, format,fTag,flags);
+			pGlobal[globalCount] = new fB_Global(gTag,value, Ptitle, format,fTag,flags);
 			if(flags & GSYS) gSys[gSysCount++]=globalCount;
 			else gUsr[gUsrCount++]=globalCount;
 			globalCount++;
@@ -234,45 +224,20 @@ char * fB_Brain::getLogName(uint16_t fTag) {
 }
 
 // initcard() creates instance of fB_card in pcard array and puts in tag in cardTagMap array for lookup by tag by fcard()
-void fB_Brain::defineCard(uint16_t ctag,char *tagStr, uint8_t  cType,uint8_t  i2cAddr, uint8_t  aChan )  {
+void fB_Brain::defineCard(uint16_t ctag,const __FlashStringHelper* Ptitle, uint8_t  cType,uint8_t  i2cAddr, uint8_t  aChan )  {
 		if(!passToggle) {
 		totalCards++;
 		return;
 	}
-	pCard[cardCount++] = new fB_Card(ctag,tagStr,cardCount, cType,i2cAddr,aChan );
+	pCard[cardCount++] = new fB_Card(ctag,Ptitle,cardCount, cType,i2cAddr,aChan );
 }
 
-void fB_Brain::definePin(uint16_t pTag,char* tStr, uint16_t  cTag, uint8_t  row, uint8_t  side, uint8_t  iodir, uint8_t  ival) {
+void fB_Brain::definePin(uint16_t pTag,const __FlashStringHelper* Ptitle, uint16_t  cTag, uint8_t  row, uint8_t  side, uint8_t  iodir, uint8_t  ival) {
 	if(!passToggle) {
 		totalPins++;
 		return;
 	}
-	uint8_t  mode;
-	uint8_t  cpin;
-	uint8_t  index;
-	fB_Card *pCard = Card(cTag);
-
-
-	switch(pCard->cType) {
-		case BRAIN:
-			if(row>69) return;
-			cpin = row;
-			mode = side;
-			break;
-		case X50:
-			if(row>24 || row < 17) return;
-			index = getXmapIndex(2,row,side);
-			cpin = x2Map[index] & 0x3F; // read   chip pin address 0..63
-			mode = bitRead(x2Map[index],6); // read   bit for type (D/A)
-			break;
-		case X76:
-			if(row>32 || row < 17) return;
-			index = getXmapIndex(3,row,side);
-			cpin = x3Map[index] & 0x3F; // read   chip pin address 0..63
-			mode = bitRead(x3Map[index],6); // read   bit for type (D/A)
-			break;
-	}
-	pPin[pinCount++] = new fB_Pin(pTag,tStr,cTag,row,side,cpin,mode,iodir,ival);
+	pPin[pinCount++] = new fB_Pin(pTag,Ptitle,cTag,row,side,iodir,ival);
 }
 fB_Card * fB_Brain::Card(uint16_t cTag) {
 	for(int i=0;i < cardCount;i++) if(pCard[i]->cTag ==cTag) return pCard[i];
@@ -280,14 +245,16 @@ fB_Card * fB_Brain::Card(uint16_t cTag) {
 	}
 
 
-void fB_Brain::defineLog(uint16_t fTag, char *tagStr) {	
+void fB_Brain::defineLog(uint16_t fTag,const __FlashStringHelper* Ptitle ) {	
 	if(!passToggle) {
 		totalLogs++;
 		return;
 	}
 	char buffer[13] = { '\0'};
+	char title[MAXCHARSTEXT];
+	getPtext(Ptitle,title);
 	Logs[logCount].tag = fTag;
-	sprintf(Logs[logCount].name,"%.8s.TXT",tagStr);
+	sprintf(Logs[logCount].name,"%.8s.TXT",title);
 	fB_Log *pL;
 	pL = new fB_Log(fTag,Logs[logCount].name);
 	if((status & SD) && pL->create()) {  // using fB_Log object only long enough to create file, storing filename in logTags array.
@@ -303,6 +270,7 @@ void fB_Brain::createGdefLog() {
 	uint8_t  res;
 	char vBuf[13];
 	char buffer[100];
+	char title[MAXCHARSTEXT];
 	buffer[0] = '\0';
 	gLog = new fB_Log(GDEF,"GDEF.TXT");  // using fB_Log object only long enough to create file
 	if(status & SD) { 
@@ -317,7 +285,8 @@ void fB_Brain::createGdefLog() {
 				fat.writeLn(buffer);
 				for(int i=0;i < brain.totalGlobals;i++) {
 					pG = brain.pGlobal[i];
-					sprintf(buffer,"%s,%d,%s, %s,%s, %d,%d,%d,%d,%d",pG->tagStr,pG->gTag ,getLogName(pG->fTag),
+					getPtext(pG->Ptitle,title);
+					sprintf(buffer,"%s,%d,%s, %s,%s, %d,%d,%d,%d,%d",title,pG->gTag ,getLogName(pG->fTag),
 						floatToStr(pG->value,3,vBuf),floatToStr(pG->factor,3,vBuf),
 						1 && pG->flags & 0x01,
 						1 && pG->flags & 0x02,
@@ -361,12 +330,17 @@ void fB_Log::setDate() {
 
 void fB_Log::writeHeader() {
 	char buffer[brain.globalCount*10];
+	char title[MAXCHARSTEXT];
+
 	buffer[0] = '\0';
 	if(fat.openFile(filename,FILEMODE_TEXT_WRITE)==NO_ERROR) { 
 		sprintf(buffer,"DATE,TIME");
 		for(int i=0;i < brain.totalGlobals;i++) {
+			fB_Global* pG;
+			pG = brain.pGlobal[i];
+			getPtext(pG->Ptitle,title);
 			//if(brain.pGlobal[i]->flags |= LOG && brain.pGlobal[i]->fTag == fTag) sprintf(buffer,"%s,%s",buffer,brain.pGlobal[i]->tagStr);
-			if( brain.pGlobal[i]->fTag == fTag) sprintf(buffer,"%s,%s",buffer,brain.pGlobal[i]->tagStr);
+			if( pG->fTag == fTag) sprintf(buffer,"%s,%s",buffer,title);
 		}
 		fat.writeLn(buffer);
 		fat.closeFile();
@@ -447,12 +421,14 @@ void fB_Brain::EEwriteGlobals() {
 	if(!globalCount) return;
 	uint16_t tAddr,vAddr;
 	uint8_t  * data;
+	char title[MAXCHARSTEXT];
 	int j=0;
 	for(int i=0;i<globalCount;i++){
 		if(!(pGlobal[i]->flags & GINIT)) continue;
+		getPtext(pGlobal[i]->Ptitle,title);
 		tAddr = j*32+BASEGLOBAL;
 		ee.setBlock(tAddr,'\0',48); // leaves a zeroed 8 bits at end of glist to mark end
-		ee.writeBlock(tAddr,(uint8_t *)pGlobal[i]->tagStr,strlen(pGlobal[i]->tagStr));
+		ee.writeBlock(tAddr,(uint8_t *)title,strlen(title));
 		data = (uint8_t *)&(pGlobal[i]->value);
 		vAddr = tAddr+8;
 		ee.writeBlock(vAddr,data,4);
@@ -479,10 +455,12 @@ fB_Global* fB_Brain::EEgetGlobal( fB_Global* pG) {
 	uint8_t  vBuffer[4];
 	uint8_t  fBuffer[4];
 	uint8_t  gBuffer;
+	char title[MAXCHARSTEXT];
 	uint16_t tAddr,vAddr,fAddr,gAddr;
 	float *data;
 	char *tStr;
 	
+	getPtext(pG->Ptitle,title);
 	int j=0;
 	for(int i=0;i<MAXGLOBALS;i++){
 		tAddr = j++ *32 + BASEGLOBAL;
@@ -494,7 +472,7 @@ fB_Global* fB_Brain::EEgetGlobal( fB_Global* pG) {
 		tBuffer[8] = '\0';
 		tStr = (char *) tBuffer;
 
-		if(!strcmp(pG->tagStr,tStr)) {
+		if(!strcmp(title,tStr)) {
 			ee.readBlock(vAddr,vBuffer,4);
 			data = (float*)vBuffer ;
 			pG->value = *data + ROUNDOFF;
@@ -511,6 +489,7 @@ fB_Global* fB_Brain::EEgetGlobal( fB_Global* pG) {
 }
 
 //////////////////////////////// MISC BRAIN METHODS ////////////////////////////////////////
+/*
 void fB_Brain::initXmaps() {
 // in this block,  D coresponds to MCP pin, A to CD pin
 	insertXmap(0,12,L,A,8);  // BO
@@ -576,4 +555,4 @@ void fB_Brain::initXmaps() {
 	insertXmap(3,32,R,A,15);
 
 }
-
+*/

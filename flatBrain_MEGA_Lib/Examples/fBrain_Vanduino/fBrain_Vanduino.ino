@@ -21,14 +21,17 @@ void setup(){
          alarm.enable();
          brain.init(I2CFAST);
 
-    Serial.print("Free RAM(b):");
+    Serial.print("1Free RAM(b):");
     Serial.println(freeRAM());
 
          
  
         tft.init(PORTRAIT);
         tft.clear();
-  
+
+    Serial.print("2Free RAM(b):");
+    Serial.println(freeRAM());
+
         menu.init();
   
         menu.show(HOME);
@@ -36,7 +39,7 @@ void setup(){
         createStack("Cards", brain.cardCount);   
         createStack("Pins", brain.pinCount);    
         createStack("Globals", brain.globalCount);    
-        createStack("Stacks", brain.totalsStacks);    
+        createStack("Stacks", brain.totalStacks);    
         createStack("Logs", brain.logCount);    
         createStack("Pages", menu.totalPages);    
         createStack("Rows", menu.totalRows); 

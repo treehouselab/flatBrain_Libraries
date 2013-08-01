@@ -2,13 +2,13 @@
 #include "fB_Include.h"
 
 
-fB_Card::fB_Card(uint16_t ctag,char *tStr, uint8_t  dex, uint8_t  ctyp,uint8_t  i2c, uint8_t  al) {
+fB_Card::fB_Card(uint16_t ctag,const __FlashStringHelper* Ptit, uint8_t  dex, uint8_t  ctyp,uint8_t  i2c, uint8_t  al) {
+  Ptitle = Ptit;
   cTag = ctag;
   index = dex;
   cType = ctyp;
   i2cAddr = i2c;
   aChan  = al;
-  tagStr =tStr;
   init();
    
 }
@@ -31,7 +31,7 @@ void fB_Card::init() {
 			MCP->pinMode(X50GT, OUTPUT);  // pin maps to N-Chan fet gate
 			MCP->digitalWrite(X50GT, LOW);  //  gate off
 			MCPd = MCP;
-			VDselectR(brain.VDRmap[0]);  // default no connect
+			VDselectR(pgm_read_byte(&VDRmap[0])) ;  // default no connect
 
 			//MCP->digitalWrite(X50LED, HIGH);
 			break;
@@ -57,7 +57,7 @@ void fB_Card::init() {
 			MCP->pinMode(X76GT, OUTPUT);  // pin maps to N-Chan fet gate
 			MCP->digitalWrite(X76GT, LOW);  //  gate off
 
-			VDselectR(brain.VDRmap[0]);  // default no connect
+			VDselectR(pgm_read_byte(&VDRmap[0]));  // default no connect
 
 			break;
 	}

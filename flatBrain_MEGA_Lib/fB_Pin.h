@@ -4,15 +4,9 @@
 class fB_Pin {
 	public:
 		fB_Card *bcard;
-		//uint8_t  row;
-		//uint8_t  side;
 		uint16_t pTag;
-		char* tagStr;
-		uint8_t  mode;
-		//uint8_t  type; //?
-		uint8_t  row;
-		uint8_t  side;
-		uint8_t  cpin;
+		const __FlashStringHelper* Ptitle;
+		uint8_t  poff;
 		uint8_t  iodir;
  		uint8_t  onVal;
  		uint8_t  vdr;
@@ -23,6 +17,10 @@ class fB_Pin {
 		void YshiftPulse(unsigned int msecs); 
 		//void pulse(unsigned int value,unsigned int msec);
 
+		uint8_t		getCpin();  // get chip pin
+		uint8_t		getMode();
+		uint8_t		getRow();
+		uint8_t		getSide();
 
 		void write(unsigned int value);
 		void aWrite(unsigned int value);
@@ -31,8 +29,8 @@ class fB_Pin {
 		unsigned int aRead();
 		unsigned int dRead();
 		bool isLatched();
-		uint16_t avgAnalogIn(uint8_t  pnum);
-		fB_Pin(uint16_t ptag,char * tagStr, uint16_t ctag,uint8_t   row,uint8_t   side,uint8_t   pin,  uint8_t  mode, uint8_t  iodir, uint8_t  ival) ;
+		uint16_t avgAnalogIn();
+		fB_Pin(uint16_t ptag,const __FlashStringHelper* Ptitle, uint16_t ctag,uint8_t   row,uint8_t   side, uint8_t  iodir, uint8_t  ival) ;
 		~fB_Pin();
 	private:
 };

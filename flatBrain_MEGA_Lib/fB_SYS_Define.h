@@ -74,6 +74,7 @@ XCARDS		Ox20-27
 #define MAXLISTROWS		10 
 #define MAXCHARSTEXT	15 
 #define MAXVDRDEX		6 
+#define	MAXPSTRCOUNT	8
 
 // Bus to Arduino Mega pin mapping
 #define	B0		A8
