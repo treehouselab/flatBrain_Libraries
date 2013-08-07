@@ -5,6 +5,7 @@ fB_TFT::fB_TFT() { }
 
 void fB_TFT::init(uint8_t orientation=PORTRAIT)
 { 
+	/*
    //initTpin(uint8_t  tDex, uint8_t   cAddr, uint8_t  cPin, uint8_t  iodir);
 	initTpin(0, TL,  TLADDR,  0, OUTPUT); 
 	initTpin(1, TL,  TLADDR, 1, OUTPUT);
@@ -36,6 +37,40 @@ void fB_TFT::init(uint8_t orientation=PORTRAIT)
 	initTpin(TSW_LF,  TS,  TSADDR,1, INPUT);
 	initTpin(TSW_UP,  TS,  TSADDR,2, INPUT);
 	initTpin(TSW_DN,  TS,  TSADDR,3, INPUT);
+
+	*/
+	   //initTpin( index, uint8_t   cAddr, uint8_t  cPin);
+	initTpin(0, TLADDR,  0);  
+	initTpin(1,  TLADDR, 1); 	
+	initTpin(2,  TLADDR, 2);
+	initTpin(3,  TLADDR, 3);
+	initTpin(4,  TLADDR, 4);
+	initTpin(5,  TLADDR, 5);
+	initTpin(6,  TLADDR, 6);
+	initTpin(7,  TLADDR, 7);
+
+	initTpin(8,  THADDR, 0);
+	initTpin(9,  THADDR,1);
+	initTpin(10, THADDR,2);
+	initTpin(11, THADDR,3);
+	initTpin(12, THADDR,4);
+	initTpin(13, THADDR,5);
+	initTpin(14, THADDR,6);
+	initTpin(15, THADDR,7);
+
+    // new
+	initTpin(L_CS,  TCADDR,0);
+	initTpin(L_RST, TCADDR,1);
+	initTpin(T_CLK, TCADDR,4);
+	initTpin(T_CS,  TCADDR,5);
+	initTpin(T_DIN, TCADDR,6);
+	initTpin(T_OUT, TCADDR,7);
+	
+	initTpin(TSW_RT,   TSADDR,0);
+	initTpin(TSW_LF,   TSADDR,1);
+	initTpin(TSW_UP,   TSADDR,2);
+	initTpin(TSW_DN,   TSADDR,3);
+
 	i2c.write((uint8_t )TSADDR, (uint8_t )0xFF);// pullup all buttons
 			
 
@@ -107,8 +142,6 @@ void fB_TFT::init(uint8_t orientation=PORTRAIT)
 	resetDefColors();
 	setFont(BigFont);
 	currY = 1;
-	buttonTemp = 0;
-	buttonLast = 0;
 
 
 }
@@ -147,13 +180,13 @@ void fB_TFT::bangRS(uint8_t  value) {
 }
 
 // initTpin() creates element in tPin array
-void fB_TFT::initTpin(uint8_t  tDex, uint8_t   cDex, uint8_t  cAddr ,uint8_t  cPin, uint8_t  iodir)
+void fB_TFT::initTpin(uint8_t  tDex, uint8_t  cAddr ,uint8_t  cPin)
  {
 
-	tPin[tDex].cdex =	cDex;
+	//tPin[tDex].cdex =	cDex;
 	tPin[tDex].caddr =	cAddr;
 	tPin[tDex].cpin =	cPin;
-	tPin[tDex].iodir =	iodir;
+	//tPin[tDex].iodir =	iodir;
 
 	//if(cDex != TM) tPCF[cDex]->pinMode(cPin,iodir);
 
@@ -168,30 +201,55 @@ uint8_t  fB_TFT::readTpin(uint8_t  tDex) {
 }
 */
 uint8_t  fB_TFT::readButtons() {
+    static unsigned long last_interrupt_time = 0;
   	uint8_t  buffer = 0x00;
+	uint8_t button = 0;
+	static uint8_t  buttonTemp = 0;
+	static uint8_t  buttonLast = 0;
+
+  // If interrupts come faster than 200ms, assume it's a bounce and ignore
+	 unsigned long interrupt_time = millis();
+	 if (interrupt_time - last_interrupt_time > 300) {
+			if(!i2c.read((uint8_t )TSADDR,(uint8_t )1)) buffer = ~((uint8_t )i2c.receive() & 0xFF);
+			switch (buffer) {
+				case 0x00: buttonLast = buttonTemp;	   // Simple scheme, top button = 1, next button = 2, ...3...4
+						   buttonTemp = 0;			   // if 2 buttons pressed (dual), concat values (eg; if 1&2, return value = 12, 1&3 = 13, 3&4 = 34, etc)
+						   return(buttonLast);
+				case 0x03: buttonTemp =  12; break; 
+				case 0x05: buttonTemp =  13; break; 
+				case 0x06: buttonTemp =  23; break; 
+				case 0x09: buttonTemp =  14; break; 
+				case 0x0A: buttonTemp =  24; break; 
+				case 0x0C: buttonTemp =  34; break; 
+				default:
+					if(buttonTemp >4) break; // dual buttons trump singles
+					switch(buffer) {
+						case 0x01: buttonTemp =  1; break;
+						case 0x02: buttonTemp =  2; break;
+						case 0x04: buttonTemp =  3; break;
+						case 0x08: buttonTemp =  4; break;
+					}
+					break;
+			}
+			return 0;
+	}
+}
+	
+/*
 	if(!i2c.read((uint8_t )TSADDR,(uint8_t )1)) buffer = ~((uint8_t )i2c.receive() & 0xFF);
 	switch (buffer) {
-		case 0x00: buttonLast = buttonTemp;	   // Simple scheme, top button = 1, next button = 2, ...3...4
-				   buttonTemp = 0;			   // if 2 buttons pressed (dual), concat values (eg; if 1&2, return value = 12, 1&3 = 13, 3&4 = 34, etc)
-				   return(buttonLast);
-		case 0x03: buttonTemp =  12; break; 
-		case 0x05: buttonTemp =  13; break; 
-		case 0x06: buttonTemp =  23; break; 
-		case 0x09: buttonTemp =  14; break; 
-		case 0x0A: buttonTemp =  24; break; 
-		case 0x0C: buttonTemp =  34; break; 
-		default:
-			if(buttonTemp >4) break; // dual buttons trump singles
-		    switch(buffer) {
-				case 0x01: buttonTemp =  1; break;
-				case 0x02: buttonTemp =  2; break;
-				case 0x04: buttonTemp =  3; break;
-				case 0x08: buttonTemp =  4; break;
-			}
-			break;
+			case 0x08: button =  4; break;// Simple scheme, top button = 1, next button = 2, ...3...4
+			case 0x04: button =  3; break;
+			case 0x02: button =  2; break;
+			case 0x01: button =  1; break;
+			default: button = 0;
 	}
-	return 0;
-}
+  }
+  last_interrupt_time = interrupt_time;
+  return button;
+*/	
+
+
 /*
 uint8_t  fB_TFT::readTpinDbounce(uint8_t  tDex) {
 	 int iRegister = 0;

@@ -40,17 +40,14 @@ void fB_Menu::showRow(uint16_t mTag) {
 void fB_Menu::init(){
 	nullText[0] = '.';
 	nullText[1] = '\0';
-	pageCount   = 0;				// actual count of initialized pages
-	rowCount    = 0;				// actual count of initialized pages
-	totalFiles   = 0;				
-	pCurrPage   = NULL;	
+	// actual count of initialized pages
+	totalFiles   = 0;
 	sListStart = 0;
 	fListStart = 0;
 	gyListStart = 0;
 	guListStart = 0;
-	totalPages   =0;
-	totalRows    =0;
 	buttonCode = 0;
+	pCurrPage = &mPage[0];
 
 	PstrCount = 0;
 	#define P_LEFT 0
@@ -69,48 +66,37 @@ void fB_Menu::init(){
 	createPstr("AMP");
 	#define P_STRIKE 7
 	createPstr("----");
+	#define P_TOGGLE 8
+	createPstr("TOGGLE");
+	#define P_GATE 9
+	createPstr("GATE");
 	// Set MAXPSTRCOUNT in fB_SYS_Defines.h to highest N+1
 	// use getPstr(uint16_t tag, char *buffer)
 
 
-	passTog =0;
-	defineSystem();
-    defineGlobals();
-    defineStacks();
-	defineClock(); 
-
-	defineMenu(); // 1st pass with passtog = 0, determine array sizes
-	mPage = (fB_Page *) malloc(sizeof(fB_Page) * totalPages);
-	mRow =  (fB_Row *)   calloc(totalRows,sizeof(fB_Row));
-
-	passTog = 1;
-	defineSystem();
-    defineGlobals();
-    defineStacks();
-	defineClock(); 
-	defineMenu(); // 2nd pass with passtog = 1, execute
-	pCurrPage = &mPage[0];
-	//for(int i = 0;i < brain.globalCount;i++) dbug("MI GLOBAL tag %d tagstr %s",brain.pGlobal[i]->gTag,brain.pGlobal[i]->tagStr);
 
 }
 
-//void fB_Menu::definePage(uint16_t pTag,  char *tagStr, uint8_t  type,uint16_t parentTag)  {
-void fB_Menu::definePage(uint16_t pTag,const __FlashStringHelper* Ptitle, uint16_t parentTag, uint8_t  type)  {
+void fB_Menu::definePage(uint16_t pTag,const __FlashStringHelper* Ptitle, uint16_t parentTag)  {
 	if(!passTog) {
 		totalPages++;
 		totalRows++;
 		return;
 	}
-
 	fB_Page * p;
-	p->Ptitle = Ptitle;
+
 	p = &mPage[pageCount];
-	p->pTag = pTag;
-	p->parentTag = parentTag;
-	p->type = type;
+	if(pTag == HOME || pTag == NULL) {
+		if(pTag == NULL) Ptitle = F("FLATBRAIN");
+		p->parentTag = NULL;
+	}
+	else {
+		if(parentTag == NULL) p->parentTag = HOME;
+		else p->parentTag = parentTag;
+	}
+		p->pTag = pTag;
+	p->Ptitle = Ptitle;
 	p->pDex = pageCount;
-	//p->win.status = NOSTATUS;
-	//p->X =  STARTX;
 	p->Y =  STARTY;
 	p->currRowDex = 0;
 	p->pageStackCount = 0;
@@ -118,149 +104,174 @@ void fB_Menu::definePage(uint16_t pTag,const __FlashStringHelper* Ptitle, uint16
 	p->farY = 0;
 	p->status |= INITED;
 	pageCount++;  // next index of mPage array
-	defineRow(NULL,Ptitle,HEADER,(uint16_t) NULL,NULL);
+	defineRow(NULL,Ptitle,HEADER, NULL,NULL,NULL);
 
 
 }
 
 
-void fB_Menu::defineDrow(const __FlashStringHelper* Ptitle){  // dummy row
-	fB_Row *pR;
-	pR = defineRow(NULL, Ptitle,NOACT,TITLE,NULL, (float) NULL);
-	pR->status |= MARK;
+void fB_Menu::defineJump(uint16_t tag, const __FlashStringHelper* Ptitle,uint8_t  type,uint8_t  format,uint16_t tTag, float value){// general case, value defaults to NULL
 
+void fB_Menu::defineRow(const __FlashStringHelper* Ptitle, format, uint16_t tTag, float value){
+	defineRow(NULL, const __FlashStringHelper* Ptitle,uint8_t  type,uint8_t  format,uint16_t tTag, float value){// general case, value defaults to NULL
 }
+void fB_Menu::defineRow(uint16_t tag, const __FlashStringHelper* Ptitle,uint8_t  type,uint8_t  format,uint16_t tTag, float value){// general case, value defaults to NULL
+	
+	fB_Tag	*pT,*tT;
+	tT = Tag(tTag);
+	if(!tT) define(tTag);
+	pT = Tag(tag);
+	if(!pT) defineTag(tag,NULL,NULL,NULL);
+	if(!secondPass) rowCount++ ;
+	else if(pT) {
+		fB_Row *r;
+		r = &mRow[rowCount++];  // get next row in array
+		r->Ptitle =Ptitle;
+		r->Ptext =NULL;
+		r->ptitle = NULL;
+		r->ptext = NULL;
+		r->tag = tTag;
+		r->type = type;
+		r->format = type; // default
+		if(format) r->format = format;
+		r->status = VISIBLE;
+		//if(p->pTag == GPANEL) r->status |= (CREATED | INITED);
+		r->value = value;
+		r->tTag = tTag;
 
+		fB_Page *p;
+		p = &mPage[pageCount-1]; // get last initialized page in array
+		if(!p->pageRowCount)  p->pRow = r;  // first row for this page, set pRow
+		r->pPage = p;
+		r->pDex = pageCount-1;
+		r->Y = p->Y + (ROWHT) * p->pageRowCount; 
+		p->pageRowCount++;
+		p->farY =  (ROWHT) * p->pageRowCount;
+	}
 
-void fB_Menu::defineJrow(uint16_t tTag,const __FlashStringHelper* Ptitle){// 
-	defineRow(NULL, Ptitle,JPAGE,TITLE,tTag, (float) NULL);
-	Page(tTag)->parentTag = mPage[pageCount-1].pTag;
+	//char Pbuffer[20];
+	//getPtext(r->Ptitle,Pbuffer);
+	//dbug(F("%d, %s,c%d"),mTag,Pbuffer, p->pageRowCount);
+ 
 }
-void fB_Menu::defineArow(uint8_t  type,const __FlashStringHelper* Ptitle){// 
-	defineRow(NULL, Ptitle,type,TITLE,NULL, (float) NULL);
-}
-void fB_Menu::defineRow(uint16_t mTag,const __FlashStringHelper* Ptitle,uint8_t  type,uint8_t  format){// 
-	defineRow(mTag, Ptitle,type,format,(uint16_t) NULL, (float) NULL);
-}
+/*
+//fB_Row*     defineRow(uint16_t mTag,uint8_t  type,char* text, uint8_t  format,uint16_t tTag, float value=0);
 
-fB_Row * fB_Menu::defineRow(uint16_t mTag, const __FlashStringHelper* Ptitle,uint8_t  type,uint8_t  format,uint16_t tTag, float value){// general case, value defaults to NULL
+void fB_Menu::defineRow(uint16_t mTag, const __FlashStringHelper* Ptitle,uint8_t  type,uint8_t  format,uint16_t tTag, float value){// general case, value defaults to NULL
 	if(!passTog) {
 		totalRows++;
 		return NULL;
 	}
 	
+	char Pbuffer[20];
 
 	fB_Row *r;
 	r = &mRow[rowCount++];  // get next row in array
 	r->Ptitle =Ptitle;
-
 	r->Ptext =NULL;
 	r->ptitle = NULL;
 	r->ptext = NULL;
-	fB_Page *p;
-	p = &mPage[pageCount-1]; // get last initialized page in array
-	r->pPage = p;
-	r->pDex = pageCount-1;
 	r->tag = mTag;
-	if(!p->pageRowCount)  p->pRow = r;  // first row for this page, set pRow
-	//r->X = p->X ;
-	r->Y = p->Y + (ROWHT) * p->pageRowCount; 
-	p->pageRowCount++;
-	p->farY =  (ROWHT) * p->pageRowCount;
 	r->type = type;
 	r->format = type; // default
 	if(format) r->format = format;
-	r->status = NOSTATUS;
-	if(p->pTag == GPANEL) r->status = CREATED | INITED;
+	r->status = VISIBLE;
+	//if(p->pTag == GPANEL) r->status |= (CREATED | INITED);
 	r->value = value;
 	r->tTag = tTag;
-	return r;
- 
+
+	fB_Page *p;
+	p = &mPage[pageCount-1]; // get last initialized page in array
+	if(!p->pageRowCount)  p->pRow = r;  // first row for this page, set pRow
+	r->pPage = p;
+	r->pDex = pageCount-1;
+	r->Y = p->Y + (ROWHT) * p->pageRowCount; 
+	p->pageRowCount++;
+	p->farY =  (ROWHT) * p->pageRowCount;
+	//getPtext(r->Ptitle,Pbuffer);
+	//dbug(F("%d, %s,c%d"),mTag,Pbuffer, p->pageRowCount);
 }
-//fB_Row*     defineRow(uint16_t mTag,uint8_t  type,char* text, uint8_t  format,uint16_t tTag, float value=0);
+*/
+
+//defineRow(uint16_t mTag,const __FlashStringHelper* pTitle,uint8_t  type,uint8_t  format=NULL);
+//defineRow(uint16_t mTag,const __FlashStringHelper* pTitle,uint8_t  type, uint8_t  format,uint16_t tTag, float value=0);
 
 void fB_Menu::defineSystem()  {
+
 	definePage(SYSTEM,F("SYSTEM"),HOME);
-	defineJrow(CLOCK,F("CLOCK"));
-	defineJrow(ALARM,F("ALARM"));
-	defineJrow(VDIV,F("VDIV"));
+		defineJump(CLOCK);
+		defineJump(ALARM);
+		defineJump(PINS);
 
-	definePage(VDIV,F("VDIV"),SYSTEM);
-	defineRow(VDCRD,F("CARD"),VDCRD,TEXT);
-	//defineRow(VDCUT,NOACT,F("CUTOFF"),LAMP);
-	defineRow(VDPIN,F("PIN"),VDPIN,TEXT);
-	defineRow(VDROW,F("ROW"),NOACT,INT5);
-	defineRow(VDCOL,F("COL"),NOACT,TEXT);
-	defineRow(VDRES,F("RES"),VDRES,INT5);
-	defineRow(VDGAT,F("GATE"),VDGAT,LAMP);
-	defineRow(VDADC,F("ADC"),VDADC,INT5);
-	defineArow(VDSET,F("SET"));
+	definePage(PINS,F("PINS"),SYSTEM);
+		defineRow(PNCRD,F("CARD"),PNCRD,TEXT,NULL,NULL);
+		defineRow(PNPIN,F("PIN"),PNPIN,TEXT,NULL,NULL);
+		defineRow(PNROW,F("ROW"),NOACT,INT5,NULL,NULL);
+		defineRow(PNCOL,F("COL"),NOACT,TEXT,NULL,NULL);
+		//defineRow(PNRES,F("RESISTOR"),PNRES,INT5,NULL,NULL);
+		defineRow(PNTOG,F("GATE"),PNTOG,LAMP,NULL,NULL);
+		defineRow(PNADC,F("ADC"),PNADC,INT5,NULL,NULL);
+		//defineRow(PNSET,F("SET"),PNSET,TITLE,NULL,NULL);
+		if(passTog)Row(PNROW)->status |= MARK;
+		if(passTog)Row(PNCOL)->status |= MARK;
 
-	if(passTog)Row(VDROW)->status |= MARK;
-	if(passTog)Row(VDCOL)->status |= MARK;
 
 }
 
-void fB_Menu::defineGlobals()  {		
-	definePage(GLOBALS,F("GLOBALS"),HOME );
+void fB_Menu::defineGlobals()  {	
+	
+	definePage(GLOBALS );
 	defineRow(NULL,F("VAR LIST"),JPAGE,TITLE,GLIST,PGUS);
-	defineArow(GLAG,F("VAR LOG"));
+	defineRow(GLAG,F("VAR LOG"),GLAG,TITLE,NULL,NULL);
 	defineRow(NULL,F("SYS LIST"),JPAGE,TITLE,GLIST,PGSY);
-	defineArow(GDEF,F("SYS LOG"));
-	defineDrow(NULL);
-	defineArow(GSAG,F("EEPROM STORE"));
-	defineArow(GIAG,F("EEPROM READ"));
-	defineJrow(FILES,F("FILES"));
+	defineRow(GDEF,F("SYS LOG"),GDEF,TITLE,NULL,NULL); 
+	createRowSpace();
+	defineRow(GSAG,F("EEPROM STORE"),GSAG,TITLE,NULL,NULL);
+	defineRow(GIAG,F("EEPROM READ"),GIAG,TITLE,NULL,NULL);
+	defineJump(FILES);
 
-	definePage(GLIST,F("GLIST"),GLOBALS);
-	for(int i=0;i<min(brain.globalCount,MAXLISTROWS);i++) defineRow((uint8_t )GROW+i,NULL,(uint8_t )GROW,(uint16_t) GPANEL, (float) i);
+	
+	//createPage(GLIST,GLOBALS);
+	//for(int i=0;i<min(brain.globalCount,MAXLISTROWS);i++) defineRow((uint8_t )GROW+i,NULL,(uint8_t )GROW,NULL,(uint16_t) GPANEL, (float) i);
+
 	definePage(GPANEL,F("GPANEL"),GLIST);
-	defineRow(GLOG,NULL,NOACT);
-	defineRow(GINP,F("INPUT"),NOACT,VALUE);
-	defineRow(GVAL,F("VALUE"),GADJ,VALUE);
-	defineRow(GOPR,NULL,GARB,TEXT);
-	defineRow(GFAC,F("FACTOR"),GADJ,VALUE);
-	defineRow(GINC,F("INCR"),GINC,VALUE);
-	//defineRow(GSET,GSET,F("SET"),TITLE);
-	defineArow(GSET,F("SET"));
-	if(passTog){
-		Row(GLOG)->status |= MARK;
-	}
+	defineRow(GLOG,F("LOG"),NULL,NOACT,NULL,NULL);
+	defineRow(GINP,F("INPUT"),NOACT,VALUE,NULL,NULL);
+	defineRow(GVAL,F("VALUE"),GADJ,VALUE,NULL,NULL);
+	defineRow(GOPR,NULL,GARB,TEXT,NULL,NULL); 
+	defineRow(GFAC,F("FACTOR"),GADJ,VALUE,NULL,NULL);
+	defineRow(GINC,F("INCR"),GINC,VALUE,NULL,NULL);
+	defineRow(GSET,F("SET"),GSET,TITLE,NULL,NULL);
+	if(passTog)	Row(GLOG)->status |= MARK;
 
-definePage(FILES,F("FILES"),GLOBALS);
-	for(int i=0;i<MAXLISTROWS;i++) defineRow((uint16_t)FROW+i,NULL,(uint8_t )FROW,(uint16_t) FPANEL, (float) i);
-	definePage(FPANEL,NULL,FILES);
-	defineRow(FDATE,F("TIME"),NOACT);
-	defineRow(FSIZE,F("SIZE"),NOACT);
-	defineRow(FDUMP,F("DUMP"),FDUMP);
-	defineRow(FSTD,NULL,FSTD);
-	defineRow(FARCH,F("ARCHIVE"),FARCH);
+	definePage(FILES,F("FILES"),GLOBALS);
+	for(int i=0;i<MAXLISTROWS;i++) defineRow((uint16_t)FROW+i,NULL,(uint8_t )FROW,NULL,(uint16_t) FPANEL, (float) i);
+
+	definePage(FPANEL,F("PANEL"),FILES);
+	defineRow(FDATE,F("TIME"),NOACT,NULL,NULL,NULL);
+	defineRow(FSIZE,F("SIZE"),NOACT,TEXT,NULL,NULL);
+	defineRow(FDUMP,F("DUMP"),FDUMP,NULL,NULL,NULL);
+	defineRow(FSTD,NULL,FSTD,NULL,NULL,NULL);
+	defineRow(FARCH,F("ARCHIVE"),FARCH,NULL,NULL,NULL);
 	if(passTog)Row(FDATE)->status |= MARK;
 	if(passTog)Row(FSIZE)->status |= MARK;
 
 }
-void fB_Menu::defineStacks()  {
-	definePage(STACK,F("STACK"),HOME);
-	for(int i=0;i<MAXLISTROWS;i++) defineRow((uint16_t)SROW+i,NULL,NOACT,NULL,NULL,NULL);
-}
 
-//fB_Row*     defineRow(uint16_t mTag,uint8_t  type,char* text, uint8_t  format,uint16_t tTag, float value=0);
+//fB_Row*     defineRow(uint16_t mTag, const __FlashStringHelper* Ptitle,uint8_t  type,uint8_t  format,uint16_t tTag, float value);
 
 void fB_Menu::defineClock()  {
 
 	definePage(CLOCK,F("CLOCK"),SYSTEM);
-	defineRow(CLKYR,F("YEAR"),CLK,INT5);
-	defineRow(CLKMO,F("MONTH"),CLK,INT5);
-	defineRow(CLKDY,F("DAY"),CLK,INT5);
-	defineRow(CLKHH,F("HOUR"),CLK,INT5);
-	defineRow(CLKMM,F("MIN"),CLK,INT5);
-	defineArow(CLKGET,F("GET USB"));
-	defineArow(CLKSET,F("SET"));
+	defineRow(CLKYR,F("YEAR"),CLK,INT5,NULL,NULL);
+	defineRow(CLKMO,F("MONTH"),CLK,INT5,NULL,NULL);
+	defineRow(CLKDY,F("DAY"),CLK,INT5,NULL,NULL);
+	defineRow(CLKHH,F("HOUR"),CLK,INT5,NULL,NULL);
+	defineRow(CLKMM,F("MIN"),CLK,INT5,NULL,NULL);
+	defineRow(CLKGET,F("GET USB"),CLKGET,TITLE,NULL,NULL);
+	defineRow(CLKSET,F("SET"),CLKSET,TITLE,NULL,NULL);
 	//Row(FDATE)->status |= MARK;
-
-
 }
-
 
 void fB_Menu::erase() {
 	pCurrPage->hide();
@@ -275,7 +286,7 @@ void fB_Menu::jumpPage(uint16_t tTag) {
 	pP = Page(tTag);
 	if(!pP) return;
 	if(pCurrPage == pP) return;
-	//if(pCurrPage->pTag == VDIV) brain.pCard[(uint8_t )Row(VDCRD)->value]->VDcutoff(false);
+	//if(pCurrPage->pTag == PNIV) brain.pCard[(uint8_t )Row(PNCRD)->value]->VDcutoff(false);
 
 //bug(F("Jump from %d  %P"),pCurrPage->pTag,pCurrPage->Ptitle);
 	pCurrPage->hide();
@@ -286,11 +297,7 @@ void fB_Menu::jumpPage(uint16_t tTag) {
 }
 
 void fB_Menu::checkButtonCode() {
-	//fB_Page *p;
-	//fB_Row *r;
-	//p = pCurrPage;
 	if(!buttonCode) return;
-	dbug(F("Cbc cp %d"),pCurrPage->pTag);
 
 	switch(buttonCode) {
 		case 1: context(RIGHT);break;
@@ -359,6 +366,7 @@ void fB_Menu::listFiles(uint16_t x1,uint16_t y1,uint16_t x2,uint16_t y2) {
 	uint8_t  len,maxlines, linecount=0;
 	uint8_t res;
 	char strBuffer[81];
+	char Pbuffer[13];
 
 	tft.currY = y1 +1;
 	len = (int) ((x2-x1+1)/tft.cfont.x_size);
@@ -368,13 +376,13 @@ void fB_Menu::listFiles(uint16_t x1,uint16_t y1,uint16_t x2,uint16_t y2) {
 	while(linecount < maxlines) {
 		res = fat.findNextFile();
 		if (res==NO_ERROR){
-			sprintf(strBuffer,"%4.4s.%3s %d",fat.DE.basename,fat.DE.fileext,fat.DE.fileSize/1000);
+			sprintf(strBuffer,P("%4.4s.%3s %d"),fat.DE.basename,fat.DE.fileext,fat.DE.fileSize/1000);
 			if(!linecount) tft.printLine(strBuffer,len);
 			else tft.printNewLine(strBuffer,len);
 			linecount++;
 		}
 		else {
-			if(!linecount) tft.printNewLine("* NO FILE *",len);
+			if(!linecount) tft.printNewLine(P("* NO FILE *"),len);
 			return;
 		}
 	}
@@ -459,50 +467,49 @@ void fB_Page:: show() {
 			menu.Row(CLKDY)->value = rtc.d ;
 			menu.Row(CLKHH)->value = rtc.hh ;
 			menu.Row(CLKMM)->value = rtc.mm ;
-		
-			menu.Row(CLKYR)->status |= (CREATED | INITED) ;
-			menu.Row(CLKMO)->status |= (CREATED | INITED) ;
-			menu.Row(CLKDY)->status |= (CREATED | INITED) ;
-			menu.Row(CLKHH)->status |= (CREATED | INITED) ;
-			menu.Row(CLKMM)->status |= (CREATED | INITED) ;
 			break;
-		case VDIV:{
-	//dbug(F("ps brain totalCards %d"),brain.totalCards);
+		case PINS:{
 				if(brain.totalCards<2) menu.jumpPage(parentTag);
 				uint8_t  index;
-				index = (uint8_t )  menu.Row(VDCRD)->value;
+				index = (uint8_t )  menu.Row(PNCRD)->value;
 				if(index <1 || index >= brain.totalCards) index = 1;
 				fB_Card* pC;
 				pC = brain.pCard[index];
 
 				//brain.pCard[index]->VDcutoff(true);
-				menu.Row(VDCRD)->Ptext= pC->Ptitle;
-				menu.Row(VDCRD)->value= index;
-				//menu.Row(VDCUT)->value=(float) brain.pCard[index]->PCF->digitalRead(CUTOFF);
-				//menu.Row(VDPIN)->title= NULL;
-				menu.Row(VDPIN)->value=0;
-				menu.Row(VDRES)->value=0;
-				menu.Row(VDADC)->value=0;
-				
-				for( int i=0;i<brain.totalPins;i++) {
-					if(brain.pPin[i]->bcard->index == index) {
-						menu.Row(VDPIN)->Ptext= brain.pPin[i]->Ptitle;
-						menu.Row(VDPIN)->value= (float) i;
-						break;
-					}
+				menu.Row(PNCRD)->Ptext= pC->Ptitle;
+				menu.Row(PNCRD)->value= index;
+				//menu.Row(PNCUT)->value=(float) brain.pCard[index]->PCF->digitalRead(CUTOFF);
+				menu.Row(PNPIN)->value=0;
+				//menu.Row(PNRES)->value=0;
+				menu.Row(PNADC)->value=0;
+				int i;
+				for( i=0;i<brain.totalPins;i++) if(brain.pPin[i]->bcard->index == index) 	break;
+				menu.Row(PNPIN)->value= (float) i;
+				menu.Row(PNPIN)->Ptext= brain.pPin[i]->Ptitle;
+				menu.Row(PNROW)->value = brain.pPin[i]->getRow();
+				if(brain.pPin[i]->getSide() == L) menu.Row(PNCOL)->Ptext = PstrRay[P_LEFT];
+				else menu.Row(PNCOL)->Ptext = PstrRay[P_RIGHT];
+
+				if( brain.pPin[i]->getMode() == D) {
+					//menu.Row(PNSET)->status |= DISABLE;
+					//menu.Row(PNRES)->status |= DISABLE;
+					menu.Row(PNADC)->status |= DISABLE;
+					menu.Row(PNTOG)->type = TOGGLE;
+					menu.Row(PNTOG)->Ptitle=PstrRay[P_TOGGLE];
 				}
-				menu.Row(VDROW)->value = brain.pPin[i]->getRow();
-				if(brain.pPin[i]->getSide() == L) menu.Row(VDCOL)->Ptext = PstrRay[P_LEFT];
-				else menu.Row(VDCOL)->Ptext = PstrRay[P_RIGHT];
-				menu.Row(VDRES)->value = brain.pPin[i]->vdr;
-				pC->openCDchan(brain.pPin[i]->getCpin());
-				pC->VDselectR(pgm_read_byte(&VDRmap[brain.pPin[i]->vdr]));
+				else {
+					//menu.Row(PNSET)->status  &= ~DISABLE;
+					//menu.Row(PNRES)->status  &= ~DISABLE;
+					menu.Row(PNADC)->status  &= ~DISABLE;
+
+					menu.Row(PNTOG)->Ptitle = PstrRay[P_GATE];
+					menu.Row(PNTOG)->type = GATE;
+					//menu.Row(PNRES)->value = brain.pPin[i]->vdr;
+					pC->openCDchan(brain.pPin[i]->getCpin());
+					//pC->VDselectR(pgm_read_byte(&VDRmap[brain.pPin[i]->vdr]));
+				}
 	
-				//menu.Row(VDCUT)->status |= (CREATED | INITED) ;
-				menu.Row(VDCRD)->status |= (CREATED | INITED) ;
-				menu.Row(VDPIN)->status |= (CREATED | INITED) ;
-				menu.Row(VDRES)->status |= (CREATED | INITED) ;
-				menu.Row(VDADC)->status |= (CREATED | INITED) ;
 			}
 			break;
 
@@ -532,22 +539,22 @@ void fB_Page:: show() {
 						menu.Row(SROW+i)->Ptitle = brain.stack[i+menu.sListStart].Ptitle;
 						menu.Row(SROW+i)->value = brain.stack[i+menu.sListStart].value;	
 						menu.Row(SROW+i)->format = format;
-						menu.Row(SROW+i)->status |= (CREATED | INITED) ;
+						//dbug(F("ps %d , t%d,x%d,f%d,v%d"),i,menu.Row(SROW+i)->tag,menu.Row(SROW+i)->status,menu.Row(SROW+i)->format,(int)menu.Row(SROW+i)->value);
 						break;
 					case GLIST:
 						uint8_t  index;
 						if(type == PGSY) index = brain.gSys[i];
 						else index = brain.gUsr[i];
 						menu.Row(GROW+i)->Ptitle = brain.pGlobal[index]->Ptitle;
-						menu.Row(GROW+i)->tTag = brain.pGlobal[index]->gTag;
+						menu.Row(GROW+i)->tTag = brain.pGlobal[index]->tag;
 						menu.Row(GROW+i)->value = brain.pGlobal[index]->getValue();
 						menu.Row(GROW+i)->format = brain.pGlobal[index]->format;
 						switch(brain.pGlobal[index]->format) {
-							case TOGL:  menu.Row(GROW+i)->type = TOGL; break;
+							case TOGGLE:  menu.Row(GROW+i)->type = TOGGLE; break;
 							case LAMP:  menu.Row(GROW+i)->type = NOACT; break;
 							default:	menu.Row(GROW+i)->type = GROW; break;
 						}
-						menu.Row(GROW+i)->status |= (CREATED | INITED) ;
+						//menu.Row(GROW+i)->status |= (CREATED | INITED) ;
 						break;
 				}
 			}
@@ -555,19 +562,20 @@ void fB_Page:: show() {
 			pageRowCount = rows+1;
 			if(dr > 0) farY -= dr * ROWHT;
 			else farY = pageRowCount * ROWHT;
+
 			break;
 
 	}
+
 	selectHeader();
-	for(i=0;i < pageRowCount;i++) pRow[i].show();
-	//if(win.status & CREATED)  win.show();
+	for(i=0;i < pageRowCount;i++) 	pRow[i].show();
 	status |= VISIBLE;
 	//dbug(F("ps r %d i %d"),pageRowCount,i);
 
 }
 void fB_Page:: hide(uint8_t  flag) {
 	pRow[currRowDex].deselect();
-	for(int i=0;i < pageRowCount;i++)	pRow[i].status &= ~VISIBLE;
+	//for(int i=0;i < pageRowCount;i++)	pRow[i].status &= ~VISIBLE;
 	//if(win.status & CREATED) win.status &= ~VISIBLE;
 	currRowDex = 0;
 	status &= ~VISIBLE;
@@ -610,7 +618,6 @@ void fB_Page:: selectHeader() {
 
  ///////////////////////////////////////// ROW METHODS //////////////////////////////////////////////
 void fB_Row:: show(uint8_t  flag) {  //when flag ==1, page is being updated only
-	if( status & DISABLE) 	return;
 	fB_Global* pG;
 	int i;
 	char bufferTitle[MAXCHARSTEXT+1];
@@ -619,10 +626,7 @@ void fB_Row:: show(uint8_t  flag) {  //when flag ==1, page is being updated only
 	else {
 		if(Ptitle != NULL) getPtext(Ptitle,bufferTitle);
 		else bufferTitle[0] = '\0';	
-
-
 	}	
-
 	char bufferText[MAXCHARSTEXT+1];
 	char header[MAXCHARSTEXT+1];
 	if(ptext != NULL) strcpy(bufferText,ptext);  // use non-PROGMEM title (left side string) if avail
@@ -630,10 +634,14 @@ void fB_Row:: show(uint8_t  flag) {  //when flag ==1, page is being updated only
 		if(Ptext != NULL) getPtext(Ptext,bufferText);
 		else bufferText[0] = '\0';
 	}
-	if( flag != HIDE) 	tft.resetDefColors();
-	if( flag == HIDE ) 	tft.setAll2Bcolor();
-	if( (status & MARK) || (status & LOG))	tft.setColor(FCOLOR,HCOLOR);
+	if( flag != HIDE  ) 	tft.resetDefColors();
+	if( (flag == HIDE)  || (status & DISABLE)) 	tft.setAll2Bcolor();
+	else if( (status & MARK) || (status & LOG) )	tft.setColor(FCOLOR,HCOLOR);
 	if( flag != REFRESH && format != HEADER ) tft.print(STARTX +ROWTEXTX,Y,bufferTitle,MAXCHARSTEXT);
+//dbug(F("RS t%d,%s,x%x,f%d"),tag,bufferTitle,status,format);
+//dbug(F("40e t%d,x%d,f%d,v%d"),menu.Row(40)->tag,menu.Row(40)->status,menu.Row(40)->format,(int)menu.Row(40)->value);
+
+//dbug(F("rs2 %d,%d"),menu.Row(40)->tag,(int)menu.Row(40)->value);
 
 	switch(format) {
 		case HEADER:
@@ -656,7 +664,7 @@ void fB_Row:: show(uint8_t  flag) {  //when flag ==1, page is being updated only
 			if(status == NOSTATUS) tft.print( RIGHT, Y, menu.strikeStr);
 			else tft.printFloat(STARTX +MONX,Y,value,AR4_2,RIGHT);
 			break;
-		case TOGL:
+		case TOGGLE:
 		case LAMP: { 
 				pG = Global(tTag);
 				if(pG) {
@@ -687,20 +695,21 @@ void fB_Row:: show(uint8_t  flag) {  //when flag ==1, page is being updated only
 }
 
 void fB_Row::action(uint8_t  flag) {
+	if(status & DISABLE ) return;
 	//   value = index of the selected logfile, if coming from FLIST
-	fB_Log *pF;   //  ptr to selected logfile
-	fB_Global *pG;//  ptr to selected global, if coming from GLIST
-	fB_Pin *pP;//   ptr selected PIN, if coming from GLIST and global has targeted pin
+	fB_Log *pF = NULL;   //  ptr to selected logfile
+	fB_Global *pG = NULL;//  ptr to selected global, if coming from GLIST
+	fB_Pin *pP = NULL;//   ptr selected PIN, if coming from GLIST and global has targeted pin
 	pF = menu.mFile[(int)value];//   value = index of the selected logfile
 	pG = Global(tTag);  
-	pP = Pin(pG->gTag);  
+	pP = Pin(pG->tag);  
 	uint8_t  tstate;
-	dbug(F("ACTION flag %d , tTag %d,  type %d"),flag,tTag,type);
+	//dbug(F("ACTION flag %d , tTag %d,  type %d"),flag,tTag,type);
 
 	switch (flag)	{
 		case RIGHT:
 			switch(type) {
-				case VDCRD: {
+				case PNCRD: {
 						uint8_t  index;
 						index = (uint8_t )  value;
 						//brain.pCard[index++]->VDcutoff(false);
@@ -712,31 +721,44 @@ void fB_Row::action(uint8_t  flag) {
 						show();
 					}
 					break;
-				case VDPIN: {
-						brain.pCard[(uint8_t ) menu.Row(VDCRD)->value]->VDgate(OFF);
-						menu.Row(VDGAT)->value= LOW;
-						menu.Row(VDGAT)->show();
+				case PNPIN: {
+						brain.pCard[(uint8_t ) menu.Row(PNCRD)->value]->AnalogGate(OFF);
+						menu.Row(PNTOG)->value= LOW;
+						menu.Row(PNTOG)->show();
 
 						fB_Card* pC;
-						pC= brain.pCard[(uint8_t ) menu.Row(VDCRD)->value];
+						pC= brain.pCard[(uint8_t ) menu.Row(PNCRD)->value];
 						uint8_t  i,j,index;
 						index = (uint8_t )  value;
 						j = brain.totalPins;
 						if(index+1 < j) i = index+1;
 						else i = 0;
 						for(;i<j;i++) {
-							if( brain.pPin[i]->bcard->index== (uint8_t ) menu.Row(VDCRD)->value) {
+							if( brain.pPin[i]->bcard->index== (uint8_t ) menu.Row(PNCRD)->value) {
 								Ptext= brain.pPin[i]->Ptitle;
 								value = (float) i;
-								menu.Row(VDROW)->value = brain.pPin[i]->getRow();
-								if(brain.pPin[i]->getSide() == L) menu.Row(VDCOL)->Ptext = PstrRay[P_LEFT];
-								else menu.Row(VDCOL)->Ptext = PstrRay[P_RIGHT];
-								menu.Row(VDRES)->value = brain.pPin[i]->vdr;
-								pC->openCDchan(brain.pPin[i]->getCpin());
-								pC->VDselectR(pgm_read_byte(&VDRmap[brain.pPin[i]->vdr]));
+								menu.Row(PNROW)->value = brain.pPin[i]->getRow();
+								if(brain.pPin[i]->getSide() == L) menu.Row(PNCOL)->Ptext = PstrRay[P_LEFT];
+								else menu.Row(PNCOL)->Ptext = PstrRay[P_RIGHT];
 
-								//menu.Row(VDRES)->value = 0;
-								//pC->openCDchan(0);
+								if( brain.pPin[i]->getMode() == D) {
+									//menu.Row(PNSET)->status |= DISABLE;
+									//menu.Row(PNRES)->status |= DISABLE;
+									menu.Row(PNADC)->status |= DISABLE;
+									menu.Row(PNTOG)->Ptitle=PstrRay[P_TOGGLE];
+									menu.Row(PNTOG)->type=TOGGLE;
+								}
+								else {
+									//menu.Row(PNSET)->status  &= ~DISABLE;
+									//menu.Row(PNRES)->status  &= ~DISABLE;
+									menu.Row(PNADC)->status  &= ~DISABLE;
+
+									menu.Row(PNTOG)->Ptitle = PstrRay[P_GATE];
+									menu.Row(PNTOG)->type=GATE;
+									//menu.Row(PNRES)->value = brain.pPin[i]->vdr;
+									pC->openCDchan(brain.pPin[i]->getCpin());
+									//pC->VDselectR(pgm_read_byte(&VDRmap[brain.pPin[i]->vdr]));
+								}
 								break;
 							}
 							if(i == brain.totalPins-1) {
@@ -745,57 +767,61 @@ void fB_Row::action(uint8_t  flag) {
 							}
 						}
 						show();
-						menu.Row(VDROW)->show();
-						menu.Row(VDCOL)->show();
-						menu.Row(VDRES)->show();
+						menu.Row(PNROW)->show();
+						menu.Row(PNCOL)->show();
+						//menu.Row(PNRES)->show();
+						menu.Row(PNTOG)->show();
+						menu.Row(PNADC)->show();
 
 
 					}
 					break;
-				case VDRES: {
-						brain.pCard[(uint8_t ) menu.Row(VDCRD)->value]->VDgate(OFF);
-						menu.Row(VDGAT)->value= LOW;
-						menu.Row(VDGAT)->show();
+					/*
+				case PNRES: {
+						brain.pCard[(uint8_t ) menu.Row(PNCRD)->value]->VDgate(OFF);
+						menu.Row(PNTOG)->value= LOW;
+						menu.Row(PNTOG)->show();
 
 						uint8_t index = (uint8_t )  value;
 						if(++index > MAXVDRDEX) index = 0;
 						value = (float) index;
-						brain.pCard[(uint8_t ) menu.Row(VDCRD)->value]->VDselectR(pgm_read_byte(&VDRmap[index]));
+						//brain.pCard[(uint8_t ) menu.Row(PNCRD)->value]->VDselectR(pgm_read_byte(&VDRmap[index]));
 						show();
 						}
 					break;
-				case VDSET:
-						if(menu.Row(VDPIN)->ptitle != NULL) {
-							brain.pPin[(uint8_t) menu.Row(VDPIN)->value]->vdr = (uint8_t) menu.Row(VDRES)->value;
+				case PNSET:
+						if(menu.Row(PNPIN)->ptitle != NULL) {
+							brain.pPin[(uint8_t) menu.Row(PNPIN)->value]->vdr = (uint8_t) menu.Row(PNRES)->value;
 						}
 						pPage->selectHeader();
 						break;
-				case VDGAT:
+						*/
+				case GATE:
 					//putTagState(tTag,HIGH); // works for both Pin and Global tags
-					pP = brain.pPin[(uint8_t) menu.Row(VDPIN)->value];
-					if(pP->gate==OFF) { 
-						pP->gate = ON;
-						value = HIGH;
-						brain.pCard[(uint8_t ) menu.Row(VDCRD)->value]->VDgate(ON);
-						menu.Row(VDADC)->value = brain.pPin[(uint8_t) menu.Row(VDPIN)->value]->read();
+					pP = brain.pPin[(uint8_t) menu.Row(PNPIN)->value];
+					if(pP->onVal!=GATE) { 
+						pP->onVal = GATE;
+						//value = HIGH;
+						brain.pCard[(uint8_t ) menu.Row(PNCRD)->value]->AnalogGate(ON);
+						menu.Row(PNADC)->value = brain.pPin[(uint8_t) menu.Row(PNPIN)->value]->read();
 					}
 					else {
-						pP->gate = OFF;
-						value = LOW;
-						brain.pCard[(uint8_t ) menu.Row(VDCRD)->value]->VDgate(OFF);
-						menu.Row(VDADC)->value = 0;
+						pP->onVal = OFF;
+						//value = LOW;
+						brain.pCard[(uint8_t ) menu.Row(PNCRD)->value]->AnalogGate(OFF);
+						menu.Row(PNADC)->value = 0;
 
 					}
 					show();
-					menu.Row(VDADC)->show();
+					menu.Row(PNADC)->show();
 					break;
-				case VDADC:
+				case PNADC:
 					//putTagState(tTag,HIGH); // works for both Pin and Global tags
-					menu.Row(VDADC)->value = brain.pPin[(uint8_t) menu.Row(VDPIN)->value]->read();
+					menu.Row(PNADC)->value = brain.pPin[(uint8_t) menu.Row(PNPIN)->value]->read();
 					show();
 					break;
 					/*
-				case VDCUT: {
+				case PNCUT: {
 						uint8_t  
 
 					pCard(UTIL)->VDcutoff(true);
@@ -803,7 +829,7 @@ void fB_Row::action(uint8_t  flag) {
 					show();
 					break;
 */
-				case TOGL:
+				case TOGGLE:
 					//putTagState(tTag,HIGH); // works for both Pin and Global tags
 					if(pG->value==LOW) { 
 						value = HIGH;
@@ -817,11 +843,20 @@ void fB_Row::action(uint8_t  flag) {
 					show();
 					break;
 				case PULSE:
-					if((pG->flags & GPIN )&& pP) pP->pulse((unsigned int)value);
+					if((pG->flags & GPIN )&& pP) {
+						pP->pulse((unsigned int)value);
+					}
 					show();
 					break;
 				case YPULSE:
-					if((pG->flags & GPIN )&& pP) pP->YshiftPulse((unsigned int)value);
+						//dbug(F("yp %d, %d"),pG->tag,pG->flags);
+
+					//if((pG->flags & GPIN )&& pP) {
+					if( pP) {
+						//dbug(F("PULSE1"));
+
+						pP->YshiftPulse((unsigned int)value);
+					}
 					show();
 					break;
 				case JPAGE:
@@ -832,19 +867,19 @@ void fB_Row::action(uint8_t  flag) {
 						menu.Page(FPANEL)->pRow[0].ptitle = pF->filename;
 						//menu.Page(FPANEL)->ptitle = pF->filename;
 						pF->getAttributes();
-						menu.Row(FDATE)->ptext = pF->dateStr;
+						menu.Row(FDATE)->ptitle = pF->dateStr;
 						menu.Row(FSIZE)->ptext = pF->sizeStr;
 						menu.Row(FDUMP)->value = value;
 						menu.Row(FSTD)->value = value;
 						menu.Row(FARCH)->value = value;
 						if(status & LOG) {
-							menu.Row(FARCH)->status &= ~DISABLE;  // file is logfile
-							menu.Row(FSTD)->Ptext = PstrRay[P_STAMP];  
+							menu.Row(FARCH)->status |= VISIBLE;  // file is logfile
+							menu.Row(FSTD)->Ptitle = PstrRay[P_STAMP];  
 							menu.Row(FSTD)->type = FSTAMP;  
 						}
 						else {
-							menu.Row(FARCH)->status |= DISABLE;  // file is other file
-							menu.Row(FSTD)->Ptext = PstrRay[P_DELETE];  
+							menu.Row(FARCH)->status &= ~VISIBLE;  // file is other file
+							menu.Row(FSTD)->Ptitle = PstrRay[P_DELETE];  
 							menu.Row(FSTD)->type = FDEL;  
 						}
 						menu.jumpPage(FPANEL);
@@ -888,17 +923,17 @@ void fB_Row::action(uint8_t  flag) {
 						//sprintf(fbuffer,"%s.TXT",pG->tagStr);
 ////////////////////////menu.Row(GLOG)->title = brain.getLogName(pG->fTag);  // is this legal?
 						if(!menu.Row(GLOG)->ptext)  menu.Row(GLOG)->ptext = menu.noLogStr ;
-						menu.Row(GSET)->tTag = pG->gTag;
-						menu.Row(GFAC)->tTag = pG->gTag;
+						menu.Row(GSET)->tTag = pG->tag;
+						menu.Row(GFAC)->tTag = pG->tag;
 						menu.Row(GFAC)->value = pG->factor;
 						menu.Row(GFAC)->value = pG->factor;
-						menu.Row(GVAL)->tTag = pG->gTag;
+						menu.Row(GVAL)->tTag = pG->tag;
 						menu.Row(GVAL)->value = pG->getValue();
 						menu.Row(GVAL)->format = pG->format;
 						menu.Row(GINC)->format = FLOAT2;
 						menu.Row(GINC)->value = 0.01;
 						menu.Row(GINP)->value = pG->value;
-						menu.Row(GOPR)->tTag = pG->gTag;
+						menu.Row(GOPR)->tTag = pG->tag;
 						menu.Row(GINP)->status |= MARK;
 
 						switch(pG->format) {
@@ -979,16 +1014,16 @@ void fB_Row::action(uint8_t  flag) {
 							pPage->selectHeader();
 							menu.Row(GVAL)->show();
 							break;
-				case SET:
-							pG->value = menu.Row((uint16_t)value)->value;
-							pPage->selectHeader();
-							break;
+				//case SET:
+				//			pG->value = menu.Row((uint16_t)value)->value;
+				//			pPage->selectHeader();
+				//			break;
 				case VALUE:
 							//update();
 							show();
 							break;
 				case CLKSET:
-					dbug(F("clkset"));
+					//dbug(F("clkset"));
 					rtc.yOff = (uint8_t ) (menu.Row(CLKYR)->value - 2000);
 					rtc.m = (uint8_t ) menu.Row(CLKMO)->value ;
 					rtc.d = (uint8_t ) menu.Row(CLKDY)->value ;
@@ -1040,7 +1075,7 @@ void fB_Row::action(uint8_t  flag) {
 		case LEFT: 
 			switch(type) {
 
-				case TOGL:
+				case TOGGLE:
 					pG->value=LOW; 
 					value = LOW;
 					if(pG->flags & GPIN) if(pP) pP->write(~(pP->onVal));
@@ -1096,14 +1131,14 @@ void fB_Row:: select() {
 	tft.setColor(FCOLOR,GCOLOR);
 	tft.drawHLine(STARTX,Y+ROWHT-8,MAXPIXELWID);
 	tft.resetDefColors();	
-	status |= SELECTED;
+	//status |= SELECTED;
 }
 
 void fB_Row:: deselect() {
 	tft.setAll2Bcolor();
 	tft.drawHLine(STARTX,Y+ROWHT-8,MAXPIXELWID);
 	tft.resetDefColors();	
-	status &= ~SELECTED;
+	//status &= ~SELECTED;
 
 }
 

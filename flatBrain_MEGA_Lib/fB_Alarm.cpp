@@ -60,7 +60,6 @@ volatile uint8_t  *timer3pinPort;
 volatile uint8_t  timer3pinMask;
 
 ISR(TIMER4_OVF_vect) {
-   extern fB_Brain brain; 
    if(bootBeepEnabled && alarmEnabled) {   
 		bootBeepToggle = !bootBeepToggle;
 		digitalWrite(13,bootBeepToggle); 
@@ -86,7 +85,6 @@ ISR(TIMER3_COMPA_vect)
 
 fB_Alarm::fB_Alarm() {
     pin = ALARM_PIN;
-	alarmEnabled = brain.alarmEnabled;
     bootBeepEnabled = 0;
     bootBeepToggle = 0;
 	bootBeepNote = NOTE_C6;

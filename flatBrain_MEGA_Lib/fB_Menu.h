@@ -73,33 +73,26 @@ class fB_Menu {
 		void		show(uint16_t pTag);
 		void		erase();
 		void		context(uint8_t  hand); // RIGHT or LEFT
-		//void		nextSwitch();
-		//void		prevSwitch();
 		void		checkButtonCode();
-		//void		updateButtons();
 		void		jumpPage(uint16_t pTag);
 		void		defineMenu(); 
-		//void		definePage( uint16_t pTag,char *tagStr,uint8_t  type,uint16_t parentTag = NULL);
-		void		definePage( uint16_t pTag,const __FlashStringHelper* pTitle,uint16_t parentTag = NULL,uint8_t  = NULL);
-		void		defineStacks();
-		void		defineGlobals();
+		void		initGlobals();
 		void		defineClock();
 		void		defineSystem();
-		//void		definePageArchive( );
-
-		
 		void        calibrate(uint16_t mTag,uint8_t  ftype,float value);
 
-		void        defineJrow(uint16_t tTag,const __FlashStringHelper* pText);
-		void        defineArow(uint8_t  type,const __FlashStringHelper* pText);
-		void        defineDrow(const __FlashStringHelper* pText);
-		void	    defineRow(uint16_t mTag,const __FlashStringHelper* pTitle,uint8_t  type,uint8_t  format=NULL);
-		fB_Row*     defineRow(uint16_t mTag,const __FlashStringHelper* pTitle,uint8_t  type, uint8_t  format,uint16_t tTag, float value=0);
+		//void        defineJrow(uint16_t tTag,const __FlashStringHelper* pText);
+		//void        defineArow(uint8_t  type,const __FlashStringHelper* pText);
+		//void	    defineRow(uint16_t mTag,const __FlashStringHelper* pTitle,uint8_t  type,uint8_t  format=NULL);
+
+		void		initPage( uint16_t pTag=NULL,const __FlashStringHelper* pTitle=NULL,uint16_t parentTag = NULL);
+		void		initRow(uint16_t mTag,const __FlashStringHelper* pTitle,uint8_t  type, uint8_t  format,uint16_t tTag, float value=0);
 		void        writeRow(uint16_t mTag,char* text,float value=NULL);
 		void		updateGauge(uint16_t mTag);
 		void		updateRow(uint16_t mTag);
 		void		showGauge(uint16_t mTag);
 		void		showRow(uint16_t mTag);
+
 		//void        defineGauge(uint16_t mTag,uint8_t  type, char *text, uint16_t tTag);
 		//void		resetGauge(uint16_t mTag,uint8_t  type, char* text, uint16_t tTag);
 		//void		writeGauge(uint16_t mTag,uint8_t  type, char* text, float value);
@@ -108,7 +101,6 @@ class fB_Menu {
 		//void        writeWindow(uint16_t mTag,uint8_t  type, char* text, uint16_t tTag,float value);// general case
 		void		listFiles(uint16_t x1,uint16_t y1,uint16_t x2,uint16_t y2);
 		void		getFileList(); 
-//		int			compareFilename(const void *_x1, const void *_x2);
 
 		uint8_t 	    pageCount;				
 		uint8_t 	    rowCount;				

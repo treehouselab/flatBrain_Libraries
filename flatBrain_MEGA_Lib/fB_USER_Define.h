@@ -5,6 +5,7 @@
 ////////////////////////////////////////////////////////
 ////////// RESERVED ////////////////////////////////////
 ////////////////////////////////////////////////////////
+// 
 #define	ATAG	60000
 #define	ADATE	60002
 #define	ASIZE	60004
@@ -31,63 +32,55 @@
 #define ANALOGSAMPLEDELAY	50
 
 
+//////////////////////////////////////////////////////////
+//////////////  ALL TAGS MUST BE > 500 //////////////////
+////////////////////////////////////////////////////////
+
 
 // LOGS
 
-#define	GDEF	    40     // Reserved, Global Definition File
-#define	LOG1	    41
-#define	LOG2	    42
-#define	LOG3	    43
+#define	LOG1	    541
+#define	LOG2	    542
+#define	LOG3	    543
 
+// Card tags,unique
+#define VMCU	501
+#define TFTS	502
+#define YCRD	503
+#define	PRT1	504
+#define	VLVD	505
 
+// Pin tags, unique
+#define Y1		501 
+#define Y2		502 
+#define Y3		503 
+#define Y4		504 
+#define Y5		505 
+#define Y6		506
+#define YRST	507
+#define YSHFT	508
 
-// Card tags, unique
-#define VMCU	1
-#define TFTS	2
-#define YCRD	3
-#define	PRT1	4
-#define	VLVD	5
+#define Y1S		510
+#define Y2S		511
+#define Y3S		512
+#define Y4S		513
+#define Y5S		514 
+#define Y6S		515
 
+#define V1		520
+#define V2		521
+#define V3		522
+#define CZ		523
+#define CC		524
+#define CL		525 
 
-// Page Tags, used as indices for tPage array in fB_TFT.cpp >19
-#define VANDUINO	20
+// Page Tags, unique
 
-// Pin tags, unique, arbitrary MUST BE > 100
-#define Y1		101 
-#define Y2		102 
-#define Y3		103 
-#define Y4		104 
-#define Y5		105 
-#define Y6		106
-#define YRST	107
-#define YSHFT	108
+#define RELAYPULS	501
+#define RELAYSTAT	502
+#define SENSORS	503
 
-#define BY1		201 
-#define BY2		202 
-#define BY3		203 
-#define BY4		204 
-#define BY5		205 
-#define BY6		206
-#define BYRST	207
-#define BYSHFT	208
-
-#define Y1S		110
-#define Y2S		111
-#define Y3S		112
-#define Y4S		113
-#define Y5S		114 
-#define Y6S		115
-
-
-
-
-#define	G1	    231		
-#define	G2QWE	232
-#define	G3	    233
-#define	G4	    234
-#define	G5	    235
-#define	G6	    236
-
+// Row Tags, unique
 
 
 #endif

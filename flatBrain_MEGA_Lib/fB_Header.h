@@ -10,7 +10,6 @@
 
 #include "fB_PCF8574.h"
 #include "fB_MCP23017.h"
-#include "fB_Brain.h"
 #include "fB_Define.h"
 #include "fB_TFT_RY.h"
 #include "fB_tFAT.h"
@@ -20,8 +19,10 @@
 #include "fB_EEPROM.h"
 #include "fB_Alarm.h"
 #include "fB_I2C.h"
-#include "fB_Pin.h"
 #include "fB_Card.h"
+#include "fB_Pin.h"
+#include "fB_Tag.h"
+#include "fB_Record.h"
 //#include "fBT_Seg.h"
 #endif
 

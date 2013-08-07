@@ -198,9 +198,10 @@ void fB_RTC::now() {
 
 
 char *fB_RTC::stamp(char *buffer){
-    if(error) return "NO RTC,";
+	char Pbuffer[30];
+    if(error) return P("NO RTC,");
    // digital clock display of current time
 	now();
-	sprintf(buffer,"%d-%02d-%02d, %02d:%02d:%02d",yOff+2000,m,d,hh,mm,ss);
+	sprintf(buffer,P("%d-%02d-%02d, %02d:%02d:%02d"),yOff+2000,m,d,hh,mm,ss);
 	return buffer;
 }

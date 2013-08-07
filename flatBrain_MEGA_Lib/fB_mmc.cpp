@@ -1,18 +1,10 @@
 #include "fB_Include.h"
-#include "Sd2PinMap.h"
+//#include "Sd2PinMap.h"
 
+#define MOSI	2 // these correspond to bits on the respective port
+#define MISO	3
+#define SCK		1
 
-
-	uint8_t SSlegacy = 0;	// bit position of chip select on the legacy SPI port
-	uint8_t SSp;  
-	//uint8_t SSp= 5;  //using PL5 (D44) as SSp, pins 42-49 avail (7..0)
-	//volatile uint8_t  *SSPORT = &PORTL;
-	//volatile uint8_t  *SSDDR =  &DDRL;
-	volatile uint8_t  *SSPORT;
-	volatile uint8_t  *SSDDR;
-	#define MOSI	2 // these correspond to bits on the respective port
-	#define MISO	3
-	#define SCK		1
 
 static volatile diskstates disk_state;
 
@@ -73,12 +65,12 @@ static uint32_t spiTransferLong(const uint32_t data)
 
 void SPI_SS_HIGH()
 {
-	*SSPORT |= _BV(SSp);
+	SD_SSPORT |= _BV(SD_SSBIT);
 }
 
 void SPI_SS_LOW()
 {
-	*SSPORT &= ~_BV(SSp);
+	SD_SSPORT &= ~_BV(SD_SSBIT);
 }
 
 static void deselectCard(void) {
@@ -104,8 +96,8 @@ uint8_t mmc::initialize(uint8_t speed) {
   DDRB  &= ~_BV(MISO); 
 // set MISO as input
 
-  *SSPORT |=  _BV(SSp); // set SSp
-  *SSDDR  |=  _BV(SSp) ; // set SSp as output
+  SD_SSPORT |=  _BV(SD_SSBIT); // set SD_SSBIT
+  SD_SSDDR  |=  _BV(SD_SSBIT) ; // set SD_SSBITas output
 
 
   // setup SPI interface:
@@ -400,15 +392,15 @@ uint8_t mmc::writeSector(const uint8_t *buffer, uint32_t sector)
 	}
 	return RES_OK;
 }
-
+/*
 void mmc::setSSpin(const uint8_t  _pin) {
 			pin_map_t pm;
 
 			pm  = digitalPinMap[_pin];
-			SSp  = pm.bit;
-			SSPORT = pm.port;
-			SSDDR = pm.ddr;
-
-			
-		
+			SD_SSBIT = pm.bit;
+			SD_SSPORT = pm.port;
+			SD_SSDDR = pm.ddr;
 	}
+
+*/			
+		

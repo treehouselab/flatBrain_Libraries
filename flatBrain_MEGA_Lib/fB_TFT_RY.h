@@ -98,16 +98,23 @@ extern uint8_t  BigFont[];
 extern uint8_t  SegFont[];
 
 typedef struct TPIN {
-	uint8_t  cdex;  // index of PCF chip 
+	//uint8_t  cdex;  // index of PCF chip 
 	uint8_t  caddr;  // i2c address of PCF chip 
 	uint8_t  cpin;   // physical pin on PCC chip (0..7)
-	uint8_t  iodir;  // I/O direction
+	//uint8_t  iodir;  // I/O direction
 };
 
 
 class fB_TFT
 {
 	public:
+
+		unsigned int TP_X ,TP_Y, currY;
+		TPIN tPin[35];		
+		_current_font	cfont;
+		uint8_t fColor,gColor,hColor,bColor;
+
+
 		fB_TFT();
 		void init(uint8_t orient);
 		void clear(int ht=0);
@@ -145,7 +152,6 @@ class fB_TFT
 		friend class tPage;
 		friend class tBlock;
 
-		unsigned int TP_X ,TP_Y, currY;
 		void Touchpin(int tclk,int tcs,int tdin,int dout, int irq);
 		void printChar( int x, int y,uint8_t c);
 		void printSpecChar(int x, int y,uint8_t  ccode);
@@ -155,7 +161,11 @@ class fB_TFT
 		void bangWR(uint8_t  value);
 		void bangRS(uint8_t  value);
 
-		
+		uint8_t  readTouchPin(uint8_t  tDex);
+		uint8_t  readTpin(uint8_t  tDex);
+		uint8_t  readButtons();
+		uint8_t  readTpinDbounce(uint8_t  tDex);
+
 		bool TouchIRQ();
 		void initTouch();
 		void TouchWriteData(uint8_t data);
@@ -165,15 +175,6 @@ class fB_TFT
 
 		unsigned int TouchGetX();
 		unsigned int TouchGetY();
-		uint8_t  readTouchPin(uint8_t  tDex);
-		uint8_t  readTpin(uint8_t  tDex);
-		uint8_t  readButtons();
-		uint8_t  buttonTemp,buttonLast;
-		uint8_t  readTpinDbounce(uint8_t  tDex);
-		//void writeTpin(uint8_t  tDex, uint8_t   value);
-		TPIN tPin[35];		
-		_current_font	cfont;
-		uint8_t fColor,gColor,hColor,bColor;
 
 
 
@@ -202,7 +203,8 @@ class fB_TFT
 		volatile int tftTouchReg;
 		void WriteDataTo7843(unsigned char num);
 		unsigned int ReadDataFrom7843();
-		void initTpin(uint8_t  tDex, uint8_t   cDex, uint8_t  cAddr, uint8_t  cPin, uint8_t  iodir);
+		///void initTpin(uint8_t  tDex, uint8_t   cDex, uint8_t  cAddr, uint8_t  cPin, uint8_t  iodir);
+		void initTpin(uint8_t  tDex,  uint8_t  cAddr, uint8_t  cPin);
 		void bangTFTbit(uint8_t  tDex, int value);
 		void bangTouchBit(uint8_t  tDex, int value);
 		void WRbangLoHi();

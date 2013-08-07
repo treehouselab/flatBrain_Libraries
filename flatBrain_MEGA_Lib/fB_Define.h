@@ -7,37 +7,24 @@ Treehouselab.com - Mike Price */
 #include <fB_SYS_Define.h>
 #include <fB_USER_Define.h>
 
-#define createPin(tag,cardTag,row,side,iodir,onval) definePin(tag,F(#tag),cardTag,row,side,iodir,onval)  
-#define createCard(ctag,ctype,i2cAddr, aChan )  defineCard(ctag,F(#ctag),ctype,i2cAddr, aChan )  
+#define definePin(tag,ctag,row,side,dir,onval)	initPin(tag,F(#tag),ctag,row,side,dir,onval) 
+#define defineCard(ctag,ctype,i2cAddr, aChan )  initCard(ctag,F(#ctag),ctype,i2cAddr, aChan )  
+#define defineLog(fTag)							initLog(fTag,F(#fTag));
+#define defineTag(tag,format,fTag,flags)		initTag(tag,F(#fTag),format,fTag,flags)
+#define defineValue(tag,value,factor,offset)	initValue(tag,value,factor,offset)
 
-#define createGlobal(gTag,value,format,fTag,flags) defineGlobal(gTag,value,F(#gTag),format,fTag,flags);
-#define createGlobalPin(gTag,format,fTag,flags) defineGlobalPin(gTag,format,fTag,flags);
+//												definePage(uint16_t pTag=NULL,const __FlashStringHelper* Ptitle=NULL, uint16_t parentTag = NULL)  {
+#define menuHome(pTag)							definePage(HOME,F(#pTag));
+#define menuPage(pTag,parentTag)				definePage(pTag,F(#pTag),parentTag);
 
-#define createLog(fTag) defineLog(fTag,F(#fTag));
-#define createPstr(text) PstrRay[PstrCount++] = F(text);  // make sure sTag never exceeds MAXPSTRCOUNT
+ //												defineRow(uint16_t mTag, const __FlashStringHelper* Ptitle,uint8_t  type,uint8_t  format,uint16_t tTag, float value = NULL)
+#define menuJump(pTag)							defineRow(NULL,F(#pTag),JPAGE,NULL,pTag, NULL);
+#define menuRowSpace()							defineRow(NULL,NULL,NULL,NULL,NULL, NULL);
+#define menuRow(rTag,type,format,tTag,value)	defineRow(rTag,F(#rTag),type,format,tTag,value);
 
-//#define createSystem(mTag)   defineSystem(mTag,F(#mTag));
-//#define createGlobals(mTag)  defineGlobals(mTag,F(#mTag)); 
-#define createStacks(sTag)	 defineStacks(sTag,F(#sTag));
-
-#define createRow(rTag)						defineJrow(rTag,F(#rTag));
-#define createArow(rTag,atype,tTag,value)	defineRow(rTag,F(#rTag),atype,tTag,NULL,value)
-#define createPage(pTag)					definePage(pTag,F(#pTag),NULL);
-#define createHome(pTag)	definePage(HOME,F(#pTag),NULL);
-#define createStack(text,value)	brain.defineStack(F(text),value);
 #define P(str) (strcpy_P(Pbuffer, PSTR(str)), Pbuffer)
-//#define defineGlobal(gTag,fTag,value,flags) createGlobal(gTag,#gTag,fTag value,format,flags)
+#define createPstr(text) PstrRay[PstrCount++] = F(text); 
 
-//#define createFiles(mTag)    defineFiles(mTag,#mTag);
-//#define createDate(mTag)	 defineDate(mTag,#mTag);
-
-
-
-//#define stack(text)			brain.createStack(text,NULL);
-     //createDiagnostics(STKPAGE,"STACK");
-
-	 //void dbug(char *fmt, ... );
-	 //char* floatToStr(float value, int places,char *buffer);
 
 
 

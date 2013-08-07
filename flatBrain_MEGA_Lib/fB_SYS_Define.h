@@ -16,9 +16,12 @@
 #define RSPORT	PORTA // for port banging RS pin on TFT ( corresponds to ARDUINO D24  )
 #define RSDDR	DDRA // for port banging WR pin on TFT ( corresponds to ARDUINO D24  )
 
-// 
 #define AT_SPISS 		    53 //  dedicated Mega d53 pin for Chip Select pin for ATTINYs
-#define SD_SPISS 		    15 //  dedicated Mega d15 pin for Chip Select pin for TFT-SD card 
+
+#define SD_SSPIN 		    15 //  dedicated Mega d15 pin for Chip Select pin for TFT-SD card 
+#define SD_SSBIT 		    0 
+#define SD_SSPORT 		    PORTJ
+#define SD_SSDDR 		    DDRJ 
 #define SPISPEED			0x01 //(0-VERY HIGH....3-VERY SLOW)
 
 #define ALARM_PIN		11 // option: pin 45
@@ -62,19 +65,20 @@ XCARDS		Ox20-27
 #define ATAG		60000     // reserved for Archive Tag
 #define I2CFAST			1	  
 #define I2CSLOW			0	  
-#define I2CTIMEOUT		2000  //ms	  
+#define I2CSPEED		1
+#define I2CTIMEOUT		100  //ms	  
 #define SERIALSPEED		9600  
 #define ROUNDOFF		.0005  // added to calcs to round off displayed values
 #define BASEGLOBAL		0 // allows 25 gSys objects
 
 
 #define MAXGLOBALS		25  // for eeprom runaway only
-#define MAXPINXMAP		44     
+//#define MAXPINXMAP		44     
 #define MAXCHARSDUMP	256  // reduce this if logfile dump collides with heap 
 #define MAXLISTROWS		10 
 #define MAXCHARSTEXT	15 
 #define MAXVDRDEX		6 
-#define	MAXPSTRCOUNT	8
+#define	MAXPSTRCOUNT	11
 
 // Bus to Arduino Mega pin mapping
 #define	B0		A8
@@ -115,11 +119,11 @@ XCARDS		Ox20-27
 #define X50GT			0	// MCP PIN MAPS TO  opiso gate
 
 // CARD TYPE X76 
-#define X76AA			11	// MCP PIN MAPS TO CD4053 A ADDRESS PIN, FOR ANALOG CHANNEL
-#define X76AB			12	// MCP PIN MAPS TO CD4053 A ADDRESS PIN, FOR ANALOG CHANNEL
-#define X76AC			9	// MCP PIN MAPS TO CD4053 A ADDRESS PIN, FOR ANALOG CHANNEL
-#define X76AD			8	// MCP PIN MAPS TO CD4053 A ADDRESS PIN, FOR ANALOG CHANNEL
-#define X76IN			10	// MCP PIN MAPS TO CD4053 A INHIBIT PIN
+#define X76AA			11	// MCP PIN MAPS TO CD4067 A ADDRESS PIN, FOR ANALOG CHANNEL
+#define X76AB			12	// MCP PIN MAPS TO CD4067 A ADDRESS PIN, FOR ANALOG CHANNEL
+#define X76AC			9	// MCP PIN MAPS TO CD4067 A ADDRESS PIN, FOR ANALOG CHANNEL
+#define X76AD			8	// MCP PIN MAPS TO CD4067 A ADDRESS PIN, FOR ANALOG CHANNEL
+#define X76IN			10	// MCP PIN MAPS TO CD4067 A INHIBIT PIN
 #define X76BA			4	// MCP PIN MAPS TO CD4051 B ADDRESS PIN, FOR VD CHANNEL
 #define X76BB			3	// MCP PIN MAPS TO CD4051 B ADDRESS PIN, FOR VD CHANNEL
 #define X76BC			2	// MCP PIN MAPS TO CD4051 B ADDRESS PIN, FOR VD CHANNEL
@@ -158,6 +162,12 @@ XCARDS		Ox20-27
 #define MONX		   60
 #define ADJX		   52
 
+#define	NOFLAG			0x00  //  GLOBAL  flags, unique uint8_t bits
+#define	GPIN			0x01  // 
+#define	GSYS			0x02
+#define	GINIT			0x04  // store and init from eeprom
+#define	GINPUT			0x08  // 
+#define	GBIAS			0x10  // 
 
 
 #define GAUGEHT		    60
@@ -176,7 +186,7 @@ XCARDS		Ox20-27
 #define	SELECTED	0x08
 #define	MARK		0x10
 #define	LOG			0x20
-#define	DISABLE		0x40
+#define	DISABLE		0x80
 //#define	 		0x80
 
 #define	RTC			0x01   // brain status flags, unique uint8_t bits 
@@ -187,6 +197,32 @@ XCARDS		Ox20-27
 //#define MONITOR			112	// Block type	 
 #define WINDOW			2	// Block type	 
 
+#define	PGSY		1  // page type,8 bit
+#define	PGUS		2  
+
+#define	STRIKE			1	// row format  (unique from Action Types)
+#define FLOAT1			2	// format
+#define FLOAT2			3	// format
+#define INT5			4	// format
+#define TEXT			5	// format    
+#define TITLE			6	// format    
+#define LAMP			7	// format  
+
+#define BINARY			1	// EEPROM column format    
+
+#define	NOSTATE			9  //  Row state
+#define	ON				1
+#define	GATE				1
+#define	OFF				0
+
+#define	FORCE			0 // Row show states
+#define	REFRESH			1 
+#define	HIDE			2 
+
+
+////////////////////////////////////////////////////////////////////////
+////////////// ALL SYSTEM TAGS < 500 ///////////////////////////////////
+///////////////////////////////////////////////////////////////////////
 
 #define	HOME		0   // page tags,16 bit
 #define	SYSTEM		1
@@ -198,16 +234,21 @@ XCARDS		Ox20-27
 #define FILES		7
 #define	CLOCK		8
 #define	ALARM		9
-#define	VDIV		10
+#define	PINS		10
 
-#define	PGSY		1  // page type,8 bit
-#define	PGUS		2  
+
+#define TTAGS		20
+#define TPINS		21
+#define TLOGS		22
+#define TPAGES		23
+#define TROWS		24
+#define FRAM		25
 
 
 #define FROW			30   // 10 numbers RESERVED FOR FILE LIST ROW INDEXES
 #define SROW			40   // 10 numbers RESERVED FOR STACK LIST ROW INDEXES
 #define GROW			50   // 10 numbers RESERVED FOR GLOBAL LIST ROW INDEXES
-#define YROW			60   // 10 numbers RESERVED FOR GLOBAL LIST ROW INDEXES
+#define YROW			60   
 
 #define GLOG			81  // Global Tags
 #define GOPR			82
@@ -222,12 +263,6 @@ XCARDS		Ox20-27
 #define GDEF			93	// SD LOG all Globals
 #define GBOO			94	// BOOT GLOBALS ON INIT
 
-#define	NOFLAG			0x00  //  GLOBAL  flags, unique uint8_t bits
-#define	GPIN			0x01  // 
-#define	GSYS			0x02
-#define	GINIT			0x04  // store and init from eeprom
-#define	GINPUT			0x08  // 
-#define	GBIAS			0x10  // 
    
 
 
@@ -239,15 +274,16 @@ XCARDS		Ox20-27
 #define CLKSET			105	// Clock Set row index	    
 #define CLKGET			106	// Clock Set row index	    
 
-#define VDCUT 			120	// Action Type (atype)	    
-#define VDPIN 			121	// Action Type (atype)	    
-#define VDROW 			122	// Action Type (atype)	    
-#define VDCOL 			123	// Action Type (atype)	    
-#define VDRES 			124	// Action Type (atype)	    
-#define VDCRD 			125	// Action Type (atype)	    
-#define VDGAT 			126	// Action Type (atype)	    
-#define VDADC 			127	// Action Type (atype)	    
-#define VDSET 			128	// Action Type (atype)	    
+#define PNCUT 			120	// Action Type (atype)	    
+#define PNPIN 			121	// Action Type (atype)	    
+#define PNROW 			122	// Action Type (atype)	    
+#define PNCOL 			123	// Action Type (atype)	    
+//#define PNRES 			124	// Action Type (atype)	    
+#define PNCRD 			125	// Action Type (atype)	    
+#define PNTOG 			126	// Action Type (atype)	    
+#define PNADC 			127	// Action Type (atype)	    
+//#define PNSET 			128	// Action Type (atype)	    
+
 
 
 #define HEADER			130   // Action Type (atype)
@@ -267,8 +303,7 @@ XCARDS		Ox20-27
 #define NOACT			146	// Action Type (atype)	    
 #define GADJ			149	// Action Type (atype)	    
 #define GARB 			150	// Action Type (atype)	
-#define SET 			152	// Action Type (atype)	    
-#define TOGL 			153	// Action Type (atype)	    
+#define GATE 			152	// Action Type (atype)	    
 #define PULSE 			154	// Action Type (atype)	    
 #define YPULSE 			155	// Action Type (atype)	    
 
@@ -276,21 +311,6 @@ XCARDS		Ox20-27
 #define SDDIR			168	// Action Type (atype)    
 
 
-#define	STRIKE			1	// row format  (unique from Action Types)
-#define FLOAT1			2	// format
-#define FLOAT2			3	// format
-#define INT5			4	// format
-#define TEXT			5	// format    
-#define TITLE			6	// format    
-#define LAMP			7	// format    
-
-#define	NOSTATE			9  //  Row state
-#define	ON				1
-#define	OFF				0
-
-#define	FORCE			0 // Row show states
-#define	REFRESH			1 
-#define	HIDE			2 
 
 #endif
 

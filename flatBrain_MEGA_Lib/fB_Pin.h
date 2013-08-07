@@ -1,16 +1,18 @@
 #ifndef FP_PIN_H
 #define FP_PIN_H
 
+#include "fB_Header.h"
+
 class fB_Pin {
 	public:
 		fB_Card *bcard;
-		uint16_t pTag;
-		const __FlashStringHelper* Ptitle;
+		//uint16_t pTag;
+		//const __FlashStringHelper* Ptitle;
 		uint8_t  poff;
 		uint8_t  iodir;
  		uint8_t  onVal;
- 		uint8_t  vdr;
- 		uint8_t  gate;
+ 		//uint8_t  vdr;
+ 		//uint8_t  gate;
 		void pull(unsigned int value);  // HIGH or LOW
 		void pinMode(unsigned int iodir); //INPUT or OUTPUT
 		void pulse(unsigned int msecs); 
@@ -30,7 +32,7 @@ class fB_Pin {
 		unsigned int dRead();
 		bool isLatched();
 		uint16_t avgAnalogIn();
-		fB_Pin(uint16_t ptag,const __FlashStringHelper* Ptitle, uint16_t ctag,uint8_t   row,uint8_t   side, uint8_t  iodir, uint8_t  ival) ;
+		fB_Pin(uint16_t ctag,uint8_t   row,uint8_t   side, uint8_t  iodir, uint8_t  ival) ;
 		~fB_Pin();
 	private:
 };

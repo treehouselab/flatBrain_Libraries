@@ -21,7 +21,7 @@ public:
 		void LED(uint8_t val); // Turns HIGH/LOW pilot LED on card
 		void openCDchan(uint8_t  chan);
 		void VDselectR(uint8_t  chan);
-		void VDgate(bool logic);
+		void AnalogGate(bool logic);
         void MCP_pinMode(uint8_t  pin, unsigned int value);
         void MCPd_pinMode(uint8_t  pin, unsigned int value);
 		void MCP_digitalWrite(uint8_t  pin, unsigned int value);

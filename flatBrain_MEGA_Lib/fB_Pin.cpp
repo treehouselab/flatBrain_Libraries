@@ -3,13 +3,12 @@
 // This class manages the ioperations of the backplane bus pins. 
 // To read or write to a given bus pin, all that is needed to access the pin is its row and side.
 
-fB_Pin::fB_Pin(uint16_t ptag,const __FlashStringHelper* Ptit,uint16_t ctag,uint8_t   row,uint8_t   side,   uint8_t  dir, uint8_t  onval) {
-	pTag = ptag;
-	Ptitle = Ptit;
+fB_Pin::fB_Pin(uint16_t ctag,uint8_t   row,uint8_t   side,   uint8_t  dir, uint8_t  onval) {
 	iodir = dir;
-	onVal = onval;
-	vdr = 0;  // undefined resistor value
-	gate = OFF;  
+	onVal = 0;
+	if(onval) onVal = onval;
+	//vdr = 0;  // undefined resistor value
+	//gate = OFF;  
 
 	bcard = brain.Card(ctag);  // pointer into card array;
 	uint8_t start;
@@ -21,7 +20,7 @@ fB_Pin::fB_Pin(uint16_t ptag,const __FlashStringHelper* Ptit,uint16_t ctag,uint8
 	switch(bcard->cType) {
 		case X50:
 		case X76:
-			//if(getMode() == A) 	pinMode(bcard->aChan ,iodir); // unecessary, analog line getMode() set at each read/write
+			//if(getMode() == A ) 	pinMode(bcard->aChan ,iodir); // unecessary, analog line getMode() set at each read/write
 			if(getMode() == D)   bcard->MCPd_pinMode(getCpin(),iodir);
 			break;
 		case BRAIN: 
@@ -45,12 +44,13 @@ uint8_t fB_Pin::getCpin() {  // get chip pin
 	}
 }
 uint8_t fB_Pin::getMode() {  // get chip pin
+	//dbug(F("gM p %d, m %x"), poff, pgm_read_byte(&Xmap76[poff-1]));
 	switch(bcard->cType) {
 		case X50:
-			return pgm_read_byte(&Xmap50[poff]-1);
+			return pgm_read_byte(&Xmap50[poff-1]);
 			break;
 		case X76:
-			return pgm_read_byte(&Xmap76[poff]-1);
+			return pgm_read_byte(&Xmap76[poff-1]);
 			break;
 		case BRAIN: 
 			break;
@@ -59,10 +59,10 @@ uint8_t fB_Pin::getMode() {  // get chip pin
 uint8_t fB_Pin::getSide() {  // get chip pin
 	switch(bcard->cType) {
 		case X50:
-			return pgm_read_byte(&Xmap50[poff]-2);
+			return pgm_read_byte(&Xmap50[poff-2]);
 			break;
 		case X76:
-			return pgm_read_byte(&Xmap76[poff]-2);
+			return pgm_read_byte(&Xmap76[poff-2]);
 			break;
 		case BRAIN: 
 			break;
@@ -71,10 +71,10 @@ uint8_t fB_Pin::getSide() {  // get chip pin
 uint8_t fB_Pin::getRow() {  // get chip pin
 	switch(bcard->cType) {
 		case X50:
-			return pgm_read_byte(&Xmap50[poff]-3);
+			return pgm_read_byte(&Xmap50[poff-3]);
 			break;
 		case X76:
-			return pgm_read_byte(&Xmap76[poff]-3);
+			return pgm_read_byte(&Xmap76[poff-3]);
 			break;
 		case BRAIN: 
 			break;
@@ -123,11 +123,11 @@ void fB_Pin::write(unsigned int value) {
 		case X76:
 		//if(getMode() == A ) 	bcard->CD_analogWrite(this->CDchan(),value); 
 		//if(getMode()== D)    bcard->MCP_digitalWrite(this->MCPchan(),value);
-			if(getMode() == A ) 	bcard->CD_analogWrite(getCpin(),value); 
+			if(getMode() == A && onVal == GATE ) 	bcard->CD_analogWrite(getCpin(),value); 
 			if(getMode()== D)   bcard->MCPd_digitalWrite(getCpin(),value);
 			break;
 		case BRAIN:
-			if(getMode()== D) digitalWrite(getCpin(),value);
+			if(getMode()== D)  digitalWrite(getCpin(),value);
 			if(getMode()== A)  analogWrite(getCpin(),value);
 			break;
 
@@ -137,7 +137,7 @@ void fB_Pin::dWrite(unsigned int value) {
 	switch(bcard->cType) {
 		case X50:
 		case X76:
-			if(getMode() == A ) 	bcard->CD_digitalWrite(getCpin(),value);
+			if(getMode() == A )  bcard->CD_digitalWrite(getCpin(),value);
 			if(getMode()== D)    bcard->MCPd_digitalWrite(getCpin(),value);
 			break;
 		case BRAIN:
@@ -151,7 +151,7 @@ void fB_Pin::aWrite(unsigned int value) {
 	switch(bcard->cType) {
 		case X50:
 		case X76:
-			if(getMode() == A ) 	bcard->CD_analogWrite(getCpin(),value);
+			if(getMode() == A )  bcard->CD_analogWrite(getCpin(),value);
 			if(getMode()== D)    bcard->MCPd_analogWrite(getCpin(),value);
 			break;
 		case BRAIN:
@@ -167,7 +167,7 @@ unsigned int fB_Pin::read() {
 	switch(bcard->cType) {
 		case X50:
 		case X76:
-			if(getMode()== A) {
+			if(getMode()== A  && onVal == GATE) {
 					return(avgAnalogIn());
 			}
 			if(getMode()== D) {
@@ -198,7 +198,7 @@ unsigned int fB_Pin::dRead() {
 	switch(bcard->cType) {
 		case X50:
 		case X76:
-			if(getMode()== A) return (bcard->CD_digitalRead(getCpin())); 
+			if(getMode()== A  && onVal == GATE) return (bcard->CD_digitalRead(getCpin())); 
 			if(getMode()== D)bcard->MCPd_pinMode(getCpin(),INPUT);
 			break;
 		case BRAIN:
@@ -211,7 +211,7 @@ unsigned int fB_Pin::aRead() {
 	switch(bcard->cType) {
 		case X50:
 		case X76:
-			if(getMode()== A) return (bcard->CD_analogRead(getCpin())); 
+			if(getMode()== A && onVal == GATE) return (bcard->CD_analogRead(getCpin())); 
 			if(getMode()== D) return (bcard->MCPd_analogRead(getCpin())); 
 			break;
 		case BRAIN:
@@ -225,6 +225,7 @@ unsigned int fB_Pin::aRead() {
 
 uint16_t fB_Pin::avgAnalogIn() {
 	uint16_t  sum = 0;
+	if(onVal != GATE) return 0;
     for(int i = 0; i < ANALOGSAMPLESIZE; i++) {
         sum += bcard->CD_analogRead(getCpin());
 		delay(ANALOGSAMPLEDELAY);

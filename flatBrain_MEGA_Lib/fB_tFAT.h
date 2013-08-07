@@ -119,7 +119,8 @@ public:
 	byte				buffer[512]; // the buffer cannot be any smaller, SD cards are read/written in blocks of 512 bytes
 	fB_tFAT();
 		
-	byte		initFAT(uint8_t  SSpin, uint8_t  speed=SPISPEED_HIGH);
+//	byte		initFAT(uint8_t  SSpin, uint8_t  speed=SPISPEED_HIGH);
+	byte		initFAT( uint8_t  speed=SPISPEED_HIGH);
 	void		restartDir(){ DEcnt=0; };
 	byte		getFile(char *fn);
 	byte		openFile(char *fn, uint8_t mode=FILEMODE_BINARY);

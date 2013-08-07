@@ -36,10 +36,10 @@ fB_tFAT::fB_tFAT()
 	_inited=false;
 }
 
-uint8_t fB_tFAT::initFAT(uint8_t  SSpin,uint8_t  speed)
+uint8_t fB_tFAT::initFAT(uint8_t  speed)
 {
 	uint8_t res;
-	mmc::setSSpin(SSpin); // SPI chip select pin, this call sets PORT, DDR, and SS bit values
+	//mmc::setSSpin(SSpin); // SPI chip select pin, this call sets PORT, DDR, and SS bit values
 	res = mmc::initialize(speed);
 	if(res != RES_OK) return res;
 // Read MBR
@@ -766,11 +766,32 @@ char fB_tFAT::uCase(char c)
 
 boolean fB_tFAT::validChar(char c)
 {
-	char valid[]= "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!#$&'()-@^_`{}~.";
+	//char valid[]= "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!#$&'()-@^_`{}~.";
+	//for (int i=0; i<strlen(valid); i++)
+	//	if (c==valid[i])
+	//		return true;
 
-	for (int i=0; i<strlen(valid); i++)
-		if (c==valid[i])
-			return true;
+	// saves heap
+	uint8_t test;
+	test= (uint8_t) c;
+	if(test >63 && test < 91) return true;
+	if(test >47 && test < 58) return true;
+	switch(test) {
+		case 33:
+		case 35:
+		case 36:
+		case 38:
+		case 39:
+		case 40:
+		case 41:
+		case 45:
+		case 46:
+		case 94:
+		case 96:
+		case 123:
+		case 125:
+		case 126: return true;
+	}
 	return false;
 }
 
@@ -794,11 +815,4 @@ uint16_t fB_tFAT::findFreeCluster()
 		currSec++;
 	}
 }
-
-void fB_tFAT::setSSpin(uint8_t pin)
-{
-	if (_inited==false)
-		mmc::setSSpin(pin);
-}
-
 

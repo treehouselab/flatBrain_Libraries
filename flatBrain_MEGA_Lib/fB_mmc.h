@@ -149,7 +149,7 @@ namespace mmc
 	* control the SPI SS signal. Needed if you are using multiple SPI
 	* attached devices.
 	*/
-	void setSSpin(const uint8_t  _pin);
+	//void setSSpin(const uint8_t  _pin);
 };
 
 #endif // FP_MMC_H
