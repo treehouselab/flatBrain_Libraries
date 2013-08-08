@@ -23,6 +23,7 @@
 #include "fB_Pin.h"
 #include "fB_Tag.h"
 #include "fB_Record.h"
+#include "fB_Define.h"
 //#include "fBT_Seg.h"
 #endif
 

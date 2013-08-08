@@ -14,7 +14,6 @@ class fB_Row {
 		char		*ptitle;				// alternative non-PROGMEM title
 		char		*ptext;				// alternative non-PROGMEM text
 		uint16_t	tag;	// this tag
-		uint8_t 	pDex;
 		fB_Page		*pPage;
 		uint16_t	Y; // upper left of button
 		uint8_t 	type;
@@ -43,18 +42,16 @@ class fB_Page {
 	public:
 		
 		const __FlashStringHelper* Ptitle;
-		uint16_t	pTag; 
+		uint16_t	tag; 
 		uint16_t	parentTag; 
 		uint16_t	Y; // upper left 
 		uint8_t 	type;
-		uint8_t 	pDex;
 		byte		currRowDex;
-		uint8_t 	status;
+		//uint8_t 	status;
 		fB_Row	    * pRow;
 		//fB_Window	win;
 		int			farY; 
-		uint8_t 	pageStackCount;				
-		uint8_t 	pageRowCount;				
+		uint8_t 	pageRowCount;	
 
 		void		show();
 		void		hide(uint8_t  flag=0);
@@ -75,9 +72,7 @@ class fB_Menu {
 		void		context(uint8_t  hand); // RIGHT or LEFT
 		void		checkButtonCode();
 		void		jumpPage(uint16_t pTag);
-		void		defineMenu(); 
-		void		initGlobals();
-		void		defineClock();
+		//void		defineMenu(); 
 		void		defineSystem();
 		void        calibrate(uint16_t mTag,uint8_t  ftype,float value);
 
@@ -85,8 +80,10 @@ class fB_Menu {
 		//void        defineArow(uint8_t  type,const __FlashStringHelper* pText);
 		//void	    defineRow(uint16_t mTag,const __FlashStringHelper* pTitle,uint8_t  type,uint8_t  format=NULL);
 
-		void		initPage( uint16_t pTag=NULL,const __FlashStringHelper* pTitle=NULL,uint16_t parentTag = NULL);
-		void		initRow(uint16_t mTag,const __FlashStringHelper* pTitle,uint8_t  type, uint8_t  format,uint16_t tTag, float value=0);
+		void		definePage( uint16_t pTag=NULL,const __FlashStringHelper* pTitle=NULL,uint16_t parentTag = NULL);
+		void		defineRow(uint16_t mTag,const __FlashStringHelper* pTitle,uint8_t  type, uint8_t  format,uint16_t tTag, float value=0);
+		void		defineJump(uint16_t tTag); 
+		void		defineSpace(); 
 		void        writeRow(uint16_t mTag,char* text,float value=NULL);
 		void		updateGauge(uint16_t mTag);
 		void		updateRow(uint16_t mTag);
@@ -102,38 +99,26 @@ class fB_Menu {
 		void		listFiles(uint16_t x1,uint16_t y1,uint16_t x2,uint16_t y2);
 		void		getFileList(); 
 
-		uint8_t 	    pageCount;				
-		uint8_t 	    rowCount;				
 		uint8_t 	    mTagCount;	
 		uint16_t 	    PstrCount;	
+
 		int	    fListStart ;	// can go negative !	
-		int	    sListStart ;		
-		int	    gyListStart ;		
-		int	    guListStart ;		
+		//int	    sListStart ;		
+		int	    tSysListStart ;		
+		int	    tUsrListStart ;		
 		//uint8_t 		currPageDex;
 		fB_Page		*pCurrPage;
-		char stampStr[6];
-		char deleteStr[7];
-		char noLogStr[7];
-		char biasStr[5];
-		char ampStr[4];
-		char strikeStr[5];
 
 
 		uint8_t 		buttonCode;  // set by tft.readButtons in interrupt
-		uint8_t 		passTog;
-		uint8_t 		totalPages;
-		uint8_t 		totalRows;
-		//uint8_t 		totalMtags;
+		//uint8_t 		totalPages;
+		//uint8_t 		totalRows;
 		uint8_t 	    totalFiles ;		
 
 		fB_Page		*mPage;
 		fB_Row  	*mRow;
 		fB_Log		**mFile;
 		uint8_t 		*fSort; // pointer to array of sorted indexes of mFile
-		//fB_Page		*Page(uint8_t  index);
-		//fB_Window   *Gauge(uint16_t mTag);
-		//fB_Window   *Window(uint16_t mTag);
 		fB_Row		*Row(uint16_t mTag);
 		fB_Page		*Page(uint16_t tTag);
 

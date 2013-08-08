@@ -5,7 +5,7 @@
 
 class fB_Pin {
 	public:
-		fB_Card *bcard;
+		fB_Card *pCard;
 		//uint16_t pTag;
 		//const __FlashStringHelper* Ptitle;
 		uint8_t  poff;

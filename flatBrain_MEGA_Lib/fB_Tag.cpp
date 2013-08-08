@@ -2,20 +2,21 @@
 
 
 
-fB_Tag::fB_Tag(uint16_t _tag,const __FlashStringHelper* _Ptitle,uint8_t format, uint16t_t _fTag, uint8_t _flags) {	
+fB_Tag::fB_Tag(uint16_t _tag,const __FlashStringHelper* _Ptitle,uint8_t _format, uint16_t _fTag, uint8_t _flags) {	
 	
 	tag = _tag; 
-	value = _value;
-	factor = _factor;
-	offset = _offset;
-	Ptitle = _Ptitle
+	Ptitle = _Ptitle;
 
 	if(!_format) format = getFormat(value);
 	else format = _format;
 	fTag = _fTag; 
 	flags = _flags;
-	if(flags & GBIAS) factor = 0;
-	if(flags & GSYS) flags |= GINIT;
+	//if(flags & GBIAS) factor = 0;
+	if(flags & TSYS) {
+		flags |= TINIT;
+		pSysTagRay[sysTagCount++] = this;
+	}
+
 }
 
 float fB_Tag::getValue() {

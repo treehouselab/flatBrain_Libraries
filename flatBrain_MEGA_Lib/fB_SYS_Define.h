@@ -72,8 +72,7 @@ XCARDS		Ox20-27
 #define BASEGLOBAL		0 // allows 25 gSys objects
 
 
-#define MAXGLOBALS		25  // for eeprom runaway only
-//#define MAXPINXMAP		44     
+#define MAXEETAGS		25  // for eeprom runaway only
 #define MAXCHARSDUMP	256  // reduce this if logfile dump collides with heap 
 #define MAXLISTROWS		10 
 #define MAXCHARSTEXT	15 
@@ -162,12 +161,9 @@ XCARDS		Ox20-27
 #define MONX		   60
 #define ADJX		   52
 
-#define	NOFLAG			0x00  //  GLOBAL  flags, unique uint8_t bits
-#define	GPIN			0x01  // 
-#define	GSYS			0x02
-#define	GINIT			0x04  // store and init from eeprom
-#define	GINPUT			0x08  // 
-#define	GBIAS			0x10  // 
+#define	NOFLAG			0x00  //  Tag  flags, unique uint8_t bits
+#define	TSYS			0x01   // System Tag
+#define	TINIT			0x02  // store and init from eeprom
 
 
 #define GAUGEHT		    60
@@ -197,8 +193,8 @@ XCARDS		Ox20-27
 //#define MONITOR			112	// Block type	 
 #define WINDOW			2	// Block type	 
 
-#define	PGSY		1  // page type,8 bit
-#define	PGUS		2  
+#define	PSYS			1  // page type,8 bit
+#define	PUSR			2  // page type,8 bit
 
 #define	STRIKE			1	// row format  (unique from Action Types)
 #define FLOAT1			2	// format
@@ -227,17 +223,18 @@ XCARDS		Ox20-27
 #define	HOME		0   // page tags,16 bit
 #define	SYSTEM		1
 #define	GLOBALS 	2
-#define GPAGE		3	
-#define	GLIST		4   
-#define GDIR		5	
-#define	STACK   	6
+#define TPAGE		3	
+#define	TLIST		4   
+#define TPANEL		5	
+#define	DIAGNOSTICS	6
 #define FILES		7
 #define	CLOCK		8
 #define	ALARM		9
 #define	PINS		10
 
 
-#define TTAGS		20
+#define TSTAGS		19
+#define TUTAGS		20
 #define TPINS		21
 #define TLOGS		22
 #define TPAGES		23
@@ -246,22 +243,21 @@ XCARDS		Ox20-27
 
 
 #define FROW			30   // 10 numbers RESERVED FOR FILE LIST ROW INDEXES
-#define SROW			40   // 10 numbers RESERVED FOR STACK LIST ROW INDEXES
-#define GROW			50   // 10 numbers RESERVED FOR GLOBAL LIST ROW INDEXES
+#define TROW			50   // 10 numbers RESERVED FOR TAG LIST ROW INDEXES
 #define YROW			60   
 
-#define GLOG			81  // Global Tags
-#define GOPR			82
-#define GINP			83
-#define GVAL			84
-#define GFAC			85
-#define GINC			86
-#define GSET			87
-#define GIAG			90  // EEPROM Init all  Globals
-#define GSAG			91  // EEPROM Store all Globals
-#define GLAG			92	// SD LOG all Globals
-#define GDEF			93	// SD LOG all Globals
-#define GBOO			94	// BOOT GLOBALS ON INIT
+#define TLOG			81  //  Tags
+#define TOPR			82
+#define TINP			83
+#define TVAL			84
+#define TFAC			85
+#define TINC			86
+#define TSET			87
+#define TIAT			90  // EEPROM Init all  TAGS
+#define TSAT			91  // EEPROM Store all TAGS
+#define TLAS			92	// SD LOG all TAGS
+#define TLAU			93	// SD LOG all TAGS
+#define TBOOT			94	// BOOT TAGS ON INIT
 
    
 
@@ -278,18 +274,16 @@ XCARDS		Ox20-27
 #define PNPIN 			121	// Action Type (atype)	    
 #define PNROW 			122	// Action Type (atype)	    
 #define PNCOL 			123	// Action Type (atype)	    
-//#define PNRES 			124	// Action Type (atype)	    
 #define PNCRD 			125	// Action Type (atype)	    
 #define PNTOG 			126	// Action Type (atype)	    
 #define PNADC 			127	// Action Type (atype)	    
-//#define PNSET 			128	// Action Type (atype)	    
+#define PGATE 			128	// Action Type (atype)	    
 
 
 
 #define HEADER			130   // Action Type (atype)
 #define TOGGLE			131	// Action Type (atype)	    
 #define JPAGE			132  // Action Type (atype)
-#define GPANEL			135	// Action Type (atype)	    
 #define FPANEL			136	// Action Type (atype)	    
 #define FSTAMP			137	// Action Type (atype)	    
 #define FARCH			138	// Action Type (atype)	    
@@ -301,16 +295,11 @@ XCARDS		Ox20-27
 #define CLK				144	// Action Type (atype)	    
 #define VALUE			145	// Action Type (atype)	    
 #define NOACT			146	// Action Type (atype)	    
-#define GADJ			149	// Action Type (atype)	    
-#define GARB 			150	// Action Type (atype)	
+#define TADJ			149	// Action Type (atype)	    
+#define TARB 			150	// Action Type (atype)	
 #define GATE 			152	// Action Type (atype)	    
 #define PULSE 			154	// Action Type (atype)	    
 #define YPULSE 			155	// Action Type (atype)	    
-
-#define STACK			167	// Action Type (atype)    
-#define SDDIR			168	// Action Type (atype)    
-
-
 
 #endif
 

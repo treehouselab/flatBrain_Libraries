@@ -36,9 +36,9 @@ class fB_Log {
 class fB_Record {
 	public:
 		logStruc   *Logs;
-		void		createGdefLog();		
-		void		defineSystemGlobals();
-		void		defineElements();
+		void		createTagDefLog();		
+		//void		defineSystemGlobals();
+		//void		defineElements();
 		void		EEwriteTags();
 		void		EEinitTags();
 		fB_Tag*		EEgetTag(uint16_t tag);

@@ -24,8 +24,8 @@
 
 uint8_t bootBeepToggle;   
 uint16_t bootBeepNote;   
-uint8_t bootBeepEnabled;   
-uint8_t alarmEnabled;   
+uint8_t bootBeepEnabled = 1;   
+uint8_t alarmEnabled = 1;   
 
 prog_char alarm_0[] PROGMEM = ":d=16,o=5,b=140:g,f,c6";
 prog_char alarm_1[] PROGMEM = ":d=16,o=5,b=120:c,p,g";
@@ -85,15 +85,16 @@ ISR(TIMER3_COMPA_vect)
 
 fB_Alarm::fB_Alarm() {
     pin = ALARM_PIN;
-    bootBeepEnabled = 0;
+	alarmEnabled = 1;
+    bootBeepEnabled = 1;
     bootBeepToggle = 0;
 	bootBeepNote = NOTE_C6;
 }
 
-void fB_Alarm::enable()
+void fB_Alarm::init()
 {
 	//enabled = 1;
-	bootBeepEnabled = 1;
+	//bootBeepEnabled = 1;
 
     // Set timer specific stuff
     // All timers in CTC mode
@@ -114,21 +115,37 @@ void fB_Alarm::enable()
 		TIFR4  = 0x00;        //Timer4 INT Flag Reg: Clear Timer Overflow Flag
 		TIMSK4 = 0x01;        //Timer4 INT Reg: Timer4 Overflow Interrupt Enable
 		TCCR4A = 0x00;        //Timer4 Control Reg A: Wave Gen Mode normal
-		TCCR4B |= (1 << CS12);
-		//TCCR4B |= (1 << CS10);
+		//TCCR4B |= (1 << CS12);
+
+}
+void fB_Alarm::enable()
+{
+	if( alarmEnabled) {
+		init();	
+		TCCR4B = 0x00;        //Disbale Timer4 
+	}
 
 }
 void fB_Alarm::disable()
 {
-	//enabled = 0;
+	alarmEnabled = 0;
 	bootBeepEnabled = 0;
+	TCCR3B |= (1 << CS10);//Disbale Timer3 
+	TCCR4B = 0x00;        //Disbale Timer4 
 }
-void fB_Alarm::disableBootBeep()
+void fB_Alarm::bootBeepDisable()
 {
 	bootBeepEnabled = 0;
 	TCCR4B = 0x00;        //Disbale Timer4 
 
 }
+void fB_Alarm::bootBeepEnable()
+{
+	if(bootBeepEnabled)	TCCR4B |= (1 << CS12); //Enable Timer4 
+
+}
+
+
 
 // frequency (in hertz) and duration (in milliseconds).
 

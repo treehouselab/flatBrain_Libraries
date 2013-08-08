@@ -1,16 +1,4 @@
-#include "fB_Header.h"
-
-void defineTags() {
-//		defineTag(uint16_t tag,float value=NULL,float factor=NULL,float offset=NULL)
-
-		//defineTag(TCARDS);   
-		//defineTag(TPINS);    
-		//defineTag(TTAGS);    
-		//defineTag(TLOGS);    
-		//defineTag(TPAGES);    
-		//defineTag(TROWS); 
-		//defineTag(FRAM); 
-}
+#include "fB_Include.h"
 
 void definePins() {
 //		defineCard(ctag,ctype,i2cAddr, aChan )
@@ -41,38 +29,39 @@ void definePins() {
 		definePin(CC,YCRD,23,L,INPUT,LOW);
 		definePin(CL,YCRD,23,R,INPUT,LOW); 
 }
+
 void defineLogs() {
-//		defineRecord(tag,format,fTag,flags)
+//		defineRec(tag,format,fTag,flags)
 
         defineLog(LOG1);
         //defineLog(LOG2);
         //defineLog(LOG3);
 }
 
-void defineRecords() {
-//		defineRecord(tag,format,fTag,flags)
+void defineTags() {
+//		defineTag(tag,format,fTag,flags)
 
-		defineRecord(Y1S,BINARY,LOG1,NULL); 
-		defineRecord(Y2S,BINARY,LOG1,NULL); 
-		defineRecord(Y3S,BINARY,LOG1,NULL); 
-		defineRecord(Y4S,BINARY,LOG1,NULL); 
-		defineRecord(Y5S,BINARY,LOG1,NULL); 
-		defineRecord(Y6S,BINARY,LOG1,NULL); 
+		defineTag(Y1S,BINARY,LOG1,NULL); 
+		defineTag(Y2S,BINARY,LOG1,NULL); 
+		defineTag(Y3S,BINARY,LOG1,NULL); 
+		defineTag(Y4S,BINARY,LOG1,NULL); 
+		defineTag(Y5S,BINARY,LOG1,NULL); 
+		defineTag(Y6S,BINARY,LOG1,NULL); 
 /*
-		defineRecord(Y1,BINARY,LOG1,NULL); 
-		defineRecord(Y2,BINARY,LOG1,NULL); 
-		defineRecord(Y3,BINARY,LOG1,NULL); 
-		defineRecord(Y4,BINARY,LOG1,NULL); 
-		defineRecord(Y5,BINARY,LOG1,NULL); 
-		defineRecord(Y6,BINARY,LOG1,NULL); 
+		defineTag(Y1,BINARY,LOG1,NULL); 
+		defineTag(Y2,BINARY,LOG1,NULL); 
+		defineTag(Y3,BINARY,LOG1,NULL); 
+		defineTag(Y4,BINARY,LOG1,NULL); 
+		defineTag(Y5,BINARY,LOG1,NULL); 
+		defineTag(Y6,BINARY,LOG1,NULL); 
 */
 
-		defineRecord(V1,FLOAT1,LOG1,NULL); 
-		defineRecord(V2,FLOAT1,LOG1,NULL); 
-		defineRecord(V3,FLOAT1,LOG1,NULL); 
-		defineRecord(CZ,FLOAT2,LOG1,NULL); 
-		defineRecord(CC,FLOAT2,LOG1,NULL); 
-		defineRecord(CL,FLOAT2,LOG1,NULL); 
+		defineTag(V1,FLOAT1,LOG1,NULL); 
+		defineTag(V2,FLOAT1,LOG1,NULL); 
+		defineTag(V3,FLOAT1,LOG1,NULL); 
+		defineTag(CZ,FLOAT2,LOG1,NULL); 
+		defineTag(CC,FLOAT2,LOG1,NULL); 
+		defineTag(CL,FLOAT2,LOG1,NULL); 
        //defineGlobal(G2QWE,1,INT5,LOG1,GINIT | GINPUT );
  }
 
@@ -82,18 +71,17 @@ void defineRecords() {
 
    	menuHome();
 		menuJump(SYSTEM);
-		menuJump(GLOBALS);
-		menuJump(STACK);
 		menuJump(RELAYPULS);
 		menuJump(RELAYSTAT);
 		menuJump(SENSORS);
 
    	menuPage(DIAGNOSTICS,HOME);
-		menuRow(TTAGS, NOACT,INT5,TTAGS,200);
-		menuRow(TPINS, NOACT,INT5,TPINS,200);
-		menuRow(TLOGS, NOACT,INT5,TLOGS,200);
-		menuRow(TPAGES, NOACT,INT5,TPAGES,200);
-		menuRow(TROWS, NOACT,INT5,TROWS,200);
+		//menuRow(TSTAGS, NOACT,INT5,TSTAGS,200);
+		//menuRow(TUTAGS, NOACT,INT5,TUTAGS,200);
+		//menuRow(TPINS, NOACT,INT5,TPINS,200);
+		//menuRow(TLOGS, NOACT,INT5,TLOGS,200);
+		//menuRow(TPAGES, NOACT,INT5,TPAGES,200);
+		//menuRow(TROWS, NOACT,INT5,TROWS,200);
 		menuRow(FRAM, NOACT,INT5,FRAM,200);
 
    	menuPage(RELAYPULS,HOME);

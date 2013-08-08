@@ -4,9 +4,8 @@
 
 fB_Card::fB_Card(uint16_t ctag,const __FlashStringHelper* Ptit, uint8_t  dex, uint8_t  ctyp,uint8_t  i2c, uint8_t  al) {
   Ptitle = Ptit;
-  cTag = ctag;
-  index = dex;
-  cType = ctyp;
+  tag = ctag;
+  type = ctyp;
   i2cAddr = i2c;
   aChan  = al;
   init();
@@ -15,7 +14,7 @@ fB_Card::fB_Card(uint16_t ctag,const __FlashStringHelper* Ptit, uint8_t  dex, ui
 
 void fB_Card::init() {
 
-	switch(cType) {
+	switch(type) {
 		case X50:
 			MCP = new MCP23017;
 			MCP->begin(i2cAddr);  
@@ -67,7 +66,7 @@ void fB_Card::init() {
 
 void fB_Card::LED(uint8_t val) {
 	
-	switch(cType) {
+	switch(type) {
 		case X50:
 			MCP->digitalWrite(X50LD,val);
 			break;
@@ -81,8 +80,8 @@ void fB_Card::LED(uint8_t val) {
 
 void fB_Card::AnalogGate(bool logic) {
 	uint8_t gatePin;
-	if(cType == X50) gatePin = X50GT;
-	else if(cType == X76) gatePin = X76GT;
+	if(type == X50) gatePin = X50GT;
+	else if(type == X76) gatePin = X76GT;
 	else return;
 	if(logic) {
 		MCP->digitalWrite(gatePin,HIGH);
@@ -94,7 +93,7 @@ void fB_Card::AnalogGate(bool logic) {
 void fB_Card::openCDchan(uint8_t  chan) {
 	// Opens CD4051 channel by writing 3 or 4-bit address to CD address pins.
 	if(!i2cAddr) return;
-	switch(cType) {
+	switch(type) {
 		case X50:
 			if( chan & 1) MCP->digitalWrite(X50AA,HIGH);
 			else MCP->digitalWrite(X50AA,LOW);
@@ -117,11 +116,12 @@ void fB_Card::openCDchan(uint8_t  chan) {
 			break;
 	}
 }
+/*
 void fB_Card::VDselectR(uint8_t  chan) {
 	// Opens CD4051 channel by writing 3 or 4-bit address to CD address pins.
 	//dbug(F("Card::selectVDR  chan %d"),chan);
 	if(!i2cAddr || chan > 7) return;
-	switch(cType) {
+	switch(type) {
 		case X50:
 			if( chan & 1) MCP->digitalWrite(X50BA,HIGH);
 			else MCP->digitalWrite(X50BA,LOW);
@@ -142,7 +142,7 @@ void fB_Card::VDselectR(uint8_t  chan) {
 			break;
 	}
 }
-/*
+
 void fB_Card::PCF_openCDchan(uint8_t  chan) {
 	// Opens CD4067 channel by writing 4-bit address to CD address pins.
 	if(!i2cAddr) return;

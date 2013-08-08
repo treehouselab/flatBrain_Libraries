@@ -14,13 +14,13 @@ Treehouselab.com - Mike Price */
 #define defineValue(tag,value,factor,offset)	initValue(tag,value,factor,offset)
 
 //												definePage(uint16_t pTag=NULL,const __FlashStringHelper* Ptitle=NULL, uint16_t parentTag = NULL)  {
-#define menuHome(pTag)							definePage(HOME,F(#pTag));
-#define menuPage(pTag,parentTag)				definePage(pTag,F(#pTag),parentTag);
+#define menuHome(tag)							menu.definePage(HOME,F(#tag));
+#define menuPage(tag,parentTag)					menu.definePage(tag,F(#tag),parentTag);
 
  //												defineRow(uint16_t mTag, const __FlashStringHelper* Ptitle,uint8_t  type,uint8_t  format,uint16_t tTag, float value = NULL)
-#define menuJump(pTag)							defineRow(NULL,F(#pTag),JPAGE,NULL,pTag, NULL);
-#define menuRowSpace()							defineRow(NULL,NULL,NULL,NULL,NULL, NULL);
-#define menuRow(rTag,type,format,tTag,value)	defineRow(rTag,F(#rTag),type,format,tTag,value);
+#define menuJump(pTag)							menu.defineRow(NULL,F(#pTag),JPAGE,NULL,pTag, NULL);
+#define menuSpace()								menu.defineRow(NULL,NULL,NULL,NULL,NULL, NULL);
+#define menuRow(rTag,type,format,tTag,value)	menu.defineRow(rTag,F(#rTag),type,format,tTag,value);
 
 #define P(str) (strcpy_P(Pbuffer, PSTR(str)), Pbuffer)
 #define createPstr(text) PstrRay[PstrCount++] = F(text); 

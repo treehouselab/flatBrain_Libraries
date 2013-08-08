@@ -19,20 +19,21 @@ fB_Record   record;
 
 const __FlashStringHelper* PstrRay[MAXPSTRCOUNT];
 
-uint8_t		alarmEnabled;
-uint8_t 	SDstatus;
-uint16_t	pinCount;
-uint16_t	logCount;
-uint16_t	tagCount;
-uint16_t	cardCount;
-uint16_t	recordCount;
-uint16_t	pageCount;
-uint16_t	rowCount;
+uint8_t		logCount		= 0;
+uint8_t		sysTagCount		= 0;
+uint8_t		pinCount		= 0;
+uint8_t		cardCount		= 0;
+uint8_t		pageCount		= 0;
+uint16_t	usrTagCount		= 0;
+uint16_t	rowCount		= 0;
+
+uint8_t 	bootStatus;
 uint8_t		secondPass;
 
-fB_Tag		**pTag;				// sparse array of pointers 
-fB_Card		**pCard;			// sparse array of pointers 
-logStruc    *Logs;
+fB_Tag		**pUsrTagRay;				// sparse array of pointers 
+fB_Tag		**pSysTagRay;			// sparse array of pointers 
+fB_Card		**pCardRay;			// sparse array of pointers 
+logStruc    *logRay;
 
 void dbug(const __FlashStringHelper* Ptitle, ... );
 
@@ -45,11 +46,19 @@ void defineMenu();
 
 
 ///////////////////// GLOBAL to main.c FUNCTIONS ////////////////////////////////////////////////////////////////
-void getPstr(uint16_t tag, char *buffer){
+
+int freeRAM () {
+  extern int __heap_start, *__brkval; 
+  int v; 
+  return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval); 
+}
+
+char* getPstr(uint16_t tag, char *buffer){
    int cursor = 0;
    prog_char *ptr = ( prog_char * ) PstrRay[tag];
    while( ( buffer[ cursor ] = pgm_read_byte_near( ptr + cursor ) ) != '\0' && cursor < MAXCHARSTEXT ) ++cursor;
    buffer[cursor] = '\0';
+   return buffer;
 }
 
 void getPtext(const __FlashStringHelper* Ptext,char *buffer){
@@ -68,20 +77,43 @@ void getPtextU(const __FlashStringHelper* Ptext,char *buffer){
 
 
 fB_Tag* Tag(uint16_t tag) {
-	if(tag != NULL) for(int i=0;i < tagCount;i++) if(pTag[i]->tag == tag) return pTag[i];
+	if(tag != NULL) {
+		for(int i=0;i < usrTagCount;i++) if(pUsrTagRay[i]->tag == tag) return pUsrTagRay[i];
+		for(int i=0;i < sysTagCount;i++) if(pSysTagRay[i]->tag == tag) return pSysTagRay[i];
+	}
 	return NULL;
 }
 fB_Pin* Pin(uint16_t tag) {	
-	if(tag != NULL) for(int i=0;i <tagCount;i++) if(pTag[i]->tag == tag && pTag[i]->pPin) return pTag[i]->pPin;
+	if(tag != NULL) for(int i=0;i < usrTagCount;i++) if(pUsrTagRay[i]->tag == tag && pUsrTagRay[i]->pPin) return pUsrTagRay[i]->pPin;
 	return NULL;
 }
-fB_Card* Card(uint16_t cTag) {	
-	if(cTag != NULL)for(int i=0;i < cardCount;i++) if(pCard[i]->cTag == cTag) return pCard[i];
+fB_Card* Card(uint16_t tag) {	
+	if(tag != NULL)for(int i=0;i < cardCount;i++) if(pCardRay[i]->tag == tag) return pCardRay[i];
 	return NULL;
 }
-void initTag(uint16_t tag,const __FlashStringHelper* Ptitle,uint8_t format=NULL,uint16_t fTag=NULL,uint8_t flags=NULL) {
-	if(!secondPass) tagCount++;
-	else pTag[tagCount++] = new fB_Tag(tag,Ptitle,format,fTag,flags);
+fB_Tag* initTag(uint16_t tag,const __FlashStringHelper* Ptitle,uint8_t _format=NULL,uint16_t _fTag=NULL,uint8_t _flags=NULL) {
+	if(!secondPass && tag) {
+		if(_flags & TSYS) sysTagCount++;
+		else usrTagCount++;
+	}
+	else if(tag) {
+		fB_Tag * pT;
+		pT = Tag(tag);
+		if(!pT) 	pT = new fB_Tag(tag,Ptitle,_format,_fTag,_flags);
+		else { 
+			if(!_format) pT->format = pT->getFormat(pT->value);
+			else pT->format = _format;
+			pT->fTag = _fTag; 
+			pT->flags = _flags;
+			//if(_flags & GBIAS) pT->factor = 0;
+			//if(_flags & TSYS) pT->flags |= TINIT;
+		}
+		if(_flags & TSYS) pSysTagRay[sysTagCount++] = pT;
+		else pUsrTagRay[usrTagCount++] = pT;
+		return pT;
+	}
+	return NULL;
+
 }
 void initValue( uint16_t tag,float value, float factor=NULL,float offset=NULL) {
 	fB_Tag *pT;
@@ -96,12 +128,13 @@ void initPin( uint16_t tag,const __FlashStringHelper* Ptitle, uint16_t ctag,uint
 	pinCount++;
 	fB_Tag * pT;
 	pT = Tag(tag);
-	if(!pT) defineTag(tag,NULL,NULL,NULL);
-	if(secondPass && pT) pT->pPin = new fB_Pin(ctag,Ptitle,row,side,dir,onval) ;
+	if(!pT) initTag(tag,Ptitle,NULL,NULL,NULL);
+	if(secondPass && pT) pT->pPin = new fB_Pin(ctag,row,side,dir,onval) ;
 }
-void initCard(uint16_t ctag,const __FlashStringHelper* Ptitle, uint8_t  cType,uint8_t  i2cAddr, uint8_t  aChan )  {
+
+void initCard(uint16_t ctag,const __FlashStringHelper* Ptitle, uint8_t  type,uint8_t  i2cAddr, uint8_t  aChan )  {
 	if(!secondPass) cardCount++;
-	else pCard[cardCount++] = new fB_Card(ctag,Ptitle,cardCount, cType,i2cAddr,aChan );
+	else pCardRay[cardCount++] = new fB_Card(ctag,Ptitle,cardCount, type,i2cAddr,aChan );
 }
 
 void initLog(uint16_t fTag,const __FlashStringHelper* Ptitle ) {	
@@ -110,11 +143,11 @@ void initLog(uint16_t fTag,const __FlashStringHelper* Ptitle ) {
 		char buffer[13] = { '\0'};
 		char title[MAXCHARSTEXT];
 		getPtext(Ptitle,title);
-		Logs[logCount].tag = fTag;
-		sprintf(Logs[logCount].name,"%.8s.TXT",title);
+		logRay[logCount].tag = fTag;
+		sprintf(logRay[logCount].name,"%.8s.TXT",title);
 		fB_Log *pL;
-		pL = new fB_Log(fTag,Logs[logCount].name);
-		if((SDstatus & SD) && pL->create()) {  // using fB_Log object only long enough to create file, storing filename in lotags array.
+		pL = new fB_Log(fTag,logRay[logCount].name);
+		if((bootStatus & SD) && pL->create()) {  // using fB_Log object only long enough to create file, storing filename in lotags array.
 			pL->writeHeader();
 		}
 		delete pL;    // file system directory will be created later
@@ -124,14 +157,11 @@ void initLog(uint16_t fTag,const __FlashStringHelper* Ptitle ) {
 
 void navigate() {   menu.buttonCode = tft.readButtons(); }  // tft button interrupt handler
 
-void defineMenu() { 	menu.defineMenu(); } // for visual consistecy in .ino 
-
 void defineSystemTags() {
 	// Probably also need to define row in fB_Menu.cpp
-	initTag(GBOO,F("BOOTG"), BINARY,SYSTEM,GSYS);
+	initTag(TBOOT,F("BOOTG"), BINARY,SYSTEM,TSYS);
 
 }
-
 
 void flatBrainInit(){
 	i2c.begin();
@@ -141,14 +171,14 @@ void flatBrainInit(){
 	uint8_t  res=0;
 	fB_Tag* pT;
 
-	alarmEnabled = 1; // this should actually be toggled in fB_menu
-
 	// turn off legacy SPI SS pin ( Mega D53) so it does not conflict w/ SD card or other SPI	
 	// enable explicitly when you want to use (eg. ATTINY SPI uses legacy SS)
 	pinMode(AT_SPISS,OUTPUT);  
     digitalWrite(AT_SPISS,LOW);
 
-	SDstatus = 0;
+	bootStatus = 0;
+
+	alarm.enable();
 	alarm.play(ALARM_1);
 
 
@@ -158,8 +188,8 @@ void flatBrainInit(){
 		dbug(F("RTC FAILED"));
 	}
 	else {
-		SDstatus |= RTC;
-		dbug(F("flatBRAIN INIT RTC"));
+		bootStatus |= RTC;
+		dbug(F("INIT RTC"));
 	}
 
 
@@ -169,66 +199,91 @@ void flatBrainInit(){
 		alarm.play(ALARM_2);
 	}
 	else {
-		SDstatus |= SD;
+		bootStatus |= SD;
 		dbug(F("INIT SD"));
 	}
 
-	dbug(F("INIT PASS 1"));
+	menu.init();
+	dbug(F("INIT MENU"));
+
 	secondPass = 0;  // 1st pass , determine array sizes
 	defineCard(BRAIN,BRAIN,0,0);
 	defineSystemTags();
 	defineTags(); 
 	definePins(); 
-
 	menu.defineSystem();
-	menu.defineClock(); 
-	menu.defineMenu(); // 1st pass with passtog = 0, determine array sizes
+	defineMenu(); 
+
+	dbug(F("logCount %d"),logCount);
+	dbug(F("INIT PASS 1"));
+	dbug(F("pageCount %d"),pageCount);
+	dbug(F("rowCount %d"),rowCount);
+	dbug(F("row size %d"),sizeof(fB_Row));
+	dbug(F("tag size %d"),sizeof(fB_Tag*));
+	dbug(F("sysTagCount %d"),sysTagCount);
+	dbug(F("usrtCount %d"),usrTagCount);
+	dbug(F("cardCount %d"),cardCount);
+
+	dbug(F("free RAM %d"),freeRAM());
 	
-dbug(F("INIT MALLOC"));
-	Logs =  (logStruc *) calloc(logCount,sizeof(logStruc));
-	pTag = (fB_Tag **) malloc(sizeof(fB_Tag*) * tagCount);
-	pCard = (fB_Card **) malloc(sizeof(fB_Card*) * cardCount);
-	menu.mPage = (fB_Page *) malloc(sizeof(fB_Page) * pageCount);
+	menu.mPage = (fB_Page *)  calloc(pageCount,sizeof(fB_Page));
 	menu.mRow =  (fB_Row *)   calloc(rowCount,sizeof(fB_Row));
+	logRay =  (logStruc *) calloc(logCount,sizeof(logStruc));
+	pSysTagRay = (fB_Tag **) malloc(sizeof(fB_Tag*) * sysTagCount);
+	pUsrTagRay = (fB_Tag **) malloc(sizeof(fB_Tag*) * usrTagCount);
+	pCardRay = (fB_Card **) malloc(sizeof(fB_Card*) * cardCount);
+	dbug(F("INIT MALLOC"));
+	dbug(F("free RAM %d"),freeRAM());
 
 // reset counters
 	logCount = 0;
-	tagCount = 0;
-	//gSysCount = 0;
-	//gUsrCount = 0;
+	usrTagCount = 0;
+	sysTagCount = 0;
 	cardCount = 0;
-	pinCount = 0;
 	pageCount = 0;
 	rowCount = 0;
 
-dbug(F("INIT PASS 2"));
 	secondPass = 1;
+
 	defineCard(BRAIN,BRAIN,0,0);
 	defineSystemTags();
 	defineTags(); // 2nd pass, execute
 	definePins();
 	menu.defineSystem();
-	menu.defineClock();
-	menu.defineMenu(); // 2nd pass with passtog = 1, execute
+	defineMenu(); // 2nd pass with passtog = 1, execute
+	dbug(F("INIT PASS 2"));
 
-dbug(F("INIT EEPROM"));
 
-	pT = record.EEgetTag(GBOO);
+	pT = record.EEgetTag(TBOOT);
 	res = (uint8_t ) pT->value;
 	if(pT && res == HIGH) record.EEinitTags();     //initialize from eeprom globals defined with GINIT flag
 	pT->value = (float) res;
+	dbug(F("INIT EEPROM"));
 
 	//seg.setAddress(SEG_ADDR);  // set segmented display address if necessary;
 	//seg.test();  // set segmented display address if necessary;
 	//seg.displayDec(1434,2);
-	menu.init();
 
-dbug(F("INIT COMPLETE"));
+	tft.init(PORTRAIT);
+	alarm.bootBeepEnable();
+
+	tft.clear();
+	dbug(F("INIT TFT"));
+
+	menu.show(HOME);
+
+	alarm.play(ALARM_INIT);
+
+	attachInterrupt(NAV_INT, navigate,FALLING);
 
 	//set interrupt pins to high
 	pinMode(NAV_INTPIN,INPUT_PULLUP);
 	pinMode(K0_INTPIN,INPUT_PULLUP);
 	pinMode(K1_INTPIN,INPUT_PULLUP);
+
+	dbug(F("INIT COMPLETE"));
+	alarm.bootBeepDisable();
+	dbug(F("free RAM %d"),freeRAM());
 
 }
 
@@ -362,85 +417,12 @@ char* floatToStr(float value, int places,char *buffer) {
 // free RAM check for debugging. SRAM for ATmega328p = 2048Kb.
 //  1024 with ATmega168
  
-int freeRAM () {
-  extern int __heap_start, *__brkval; 
-  int v; 
-  return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval); 
-}
 
- void dumpEEPROM(unsigned int addr, unsigned int length)
-{
-   // block to 10
-   addr = addr / 10 * 10;
-   length = (length + 9)/10 * 10;
-
-   byte b = ee.readByte(addr); 
-   for (int i = 0; i < length; i++) 
-   {
-     if (addr % 10 == 0)
-     {
-       Serial.println();
-       Serial.print(addr);
-       Serial.print(":\t");
-     }
-     Serial.print(b);
-     b = ee.readByte(++addr); 
-     Serial.print("  ");
-   }
-   Serial.println();
-}
 
 #endif
 
 
 /*
-void fB_Brain::defineGlobal(uint16_t tag,float value, const __FlashStringHelper* Ptitle, uint8_t  format,uint16_t fTag,uint8_t  flags) {	
-	if(!passToggle)	{
-		totalGlobals++;
-		if(flags & GSYS) totalGsys++;
-		else  totalGusr++;
-	}
-
-	else{
-			pGlobal[globalCount] = new fB_Global(tag,value, Ptitle, format,fTag,flags);
-			if(flags & GSYS) gSys[gSysCount++]=globalCount;
-			else gUsr[gUsrCount++]=globalCount;
-			globalCount++;
-		}
-}
-
-
-
-uint8_t  getTagState(uint16_t tTag) {
-	fB_Pin *pP;
-	fB_Global *pG;
-	pP = Pin(tTag);
-	if(pP) return pP->dRead();
-	pG = Global(tTag);
-	if(pG)  if (pG->value >0.5) return HIGH;
-	return LOW;
-}
-void putTagState(uint16_t tTag,uint8_t  state) {
-	fB_Pin *pP;
-	fB_Global *pG;
-	pP = Pin(tTag);
-	if(pP) 	pP->dWrite(state);
-	else {
-		pG = Global(tTag);
-		if(pG) pG->value = state;
-	}
-}
-
-void fBdbug(const __FlashStringHelper* pData ){
-  char buffer[ 20 ]; //Size array as needed.
-  int cursor = 0;
-  prog_char *ptr = ( prog_char * ) pData;
-
-  while( ( buffer[ cursor ] = pgm_read_byte_near( ptr + cursor ) ) != '\0' ) ++cursor;
-  Serial.println(buffer);
-
-}
-*/
 
 /*
 void dbug(char *fmt, ... ){

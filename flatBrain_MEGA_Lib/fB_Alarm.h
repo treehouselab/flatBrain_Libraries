@@ -133,9 +133,11 @@
 class fB_Alarm
 {
   public:
+    void init();
     void enable();
     void disable();
-    void disableBootBeep();
+    void bootBeepEnable();
+    void bootBeepDisable();
     bool isPlaying();
     void playTone(uint16_t frequency, uint32_t duration = 0);
 	void play(uint8_t  alarmTag);
