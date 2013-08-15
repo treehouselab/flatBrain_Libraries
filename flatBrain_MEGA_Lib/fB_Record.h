@@ -10,12 +10,12 @@
 
 class fB_Log {
 	public:
-		uint16_t	fTag;
+		uint8_t	fTag;
 		char		filename[14];
 		//uint8_t 		enabled;
 		//char	fileext[4];
-		char		dateStr[MAXCHARSTEXT];
-		char		sizeStr[MAXCHARSTEXT];
+		//char		dateStr[MAXCHARSTEXT];
+		//char		sizeStr[MAXCHARSTEXT];
 		void		show();
 		bool		create(char *fname=NULL);
 		void		setDate();
@@ -25,11 +25,11 @@ class fB_Log {
 		void		remove();
 		void		getAttributes();
 		void		dump();
-		fB_Log(uint16_t	fTag, char * filename) ;
+		fB_Log(uint8_t	fTag, char * filename) ;
 };
 
 typedef struct		logStruc {	
-	uint16_t	tag;	 
+	uint8_t	tag;	 
 	char		name[13];
 	fB_Log*		pLog;			
 	};
@@ -43,10 +43,10 @@ class fB_Record {
 		void		EEwriteTags();
 		void		EEinitTags();
 		fB_Tag*		EEgetTag(uint16_t tag);
-		char*		getLogName(uint16_t fTag);
+		char*		getLogName(uint8_t fTag);
 		void		init();
 		bool		SDinit(uint8_t  SSpin, uint8_t  SPIspeed);
-		void		initLog(uint16_t fTag, const __FlashStringHelper* Ptitle);
+		void		initLog(uint8_t fTag, const __FlashStringHelper* Ptitle);
 
 	private:
 

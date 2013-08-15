@@ -17,11 +17,14 @@ fB_Curr		curr;
 
 //fB_WTV   audio;
 //fB_VLVD   vlvd;
+		char		dateStr[MAXCHARSTEXT];
+		char		sizeStr[MAXCHARSTEXT];
 
 const __FlashStringHelper* PstrRay[MAXPSTRCOUNT];
 
 uint8_t		logCount		= 0;
-uint8_t		tagCount		= 0;
+uint8_t		tagIndexCount	= 0;
+uint8_t		tagMemCount		= 0;
 uint8_t		pinCount		= 0;
 uint8_t		cardCount		= 0;
 uint8_t		pageCount		= 0;
@@ -32,7 +35,6 @@ uint16_t	farY =	0;
 uint8_t 	bootStatus;
 uint8_t		secondPass;
 fB_Tag		*Tag(uint16_t tag);
-fB_Row		*Row(uint16_t tag);
 
 fB_Tag		**pTagRay;				// sparse array of pointers 
 fB_Card		**pCardRay;			// sparse array of pointers 
@@ -76,22 +78,12 @@ void getPtextU(const __FlashStringHelper* Ptext,char *buffer){
    if(Ptext)while( ( buffer[ cursor ] = pgm_read_byte_near( ptr + cursor ) ) != '\0' ) ++cursor;
    buffer[cursor] = '\0';
 }
-
-
-//fB_Page* Page(uint16_t tag) {
-//	if(tag != NULL) for(int i=0;i < tagCount;i++) if((pPageRay[i]->flags & PAGE) && pTagRay[i]->tag == tag) return pTagRay[i]->mp.pPage;
-//	return NULL;
-//}
 fB_Tag* Tag(uint16_t tag) {
-	if(tag != NULL) for(int i=0;i < tagCount;i++) if(pTagRay[i]->tag == tag) return pTagRay[i];
-	return NULL;
-}
-fB_Row* Row(uint16_t tag) {
-	if(tag != NULL) for(int i=0;i < tagCount;i++) if(pTagRay[i]->tag == tag  && pTagRay[i]->pRow) return pTagRay[i]->pRow;
+	if(tag != NULL) for(int i=0;i < tagIndexCount;i++) if(pTagRay[i]->tag == tag) return pTagRay[i];
 	return NULL;
 }
 fB_Pin* Pin(uint16_t tag) {	
-	if(tag != NULL) for(int i=0;i < tagCount;i++) if(pTagRay[i]->tag == tag && pTagRay[i]->pPin) return pTagRay[i]->pPin;
+	if(tag != NULL) for(int i=0;i < tagIndexCount;i++) if(pTagRay[i]->tag == tag && pTagRay[i]->pPin) return pTagRay[i]->pPin;
 	return NULL;
 }
 fB_Card* Card(uint16_t tag) {	
@@ -100,80 +92,68 @@ fB_Card* Card(uint16_t tag) {
 }
 
 
-fB_Tag* initTag(uint16_t tag,const __FlashStringHelper* Ptitle,uint8_t fTag=NULL,uint8_t flags=NULL) {
-	if(!secondPass && tag) tagCount++;
+fB_Tag* initTag(uint16_t tag,const __FlashStringHelper* Ptitle,uint32_t flags,uint8_t fTag=NULL,uint16_t tTag=NULL) {
+	if(!secondPass) {
+		if(tag) { tagIndexCount++; tagMemCount++ ;}
+	}
 	else if(tag) {
 		fB_Tag * pT;
 		pT = Tag(tag);
-		if(!pT) 	{
-			pT = new fB_Tag(tag,Ptitle,fTag,flags);
-		}
+		if(!pT) pT = new fB_Tag(tag,Ptitle,flags,fTag,tTag);
 		if(pT) { 
-			pT->fTag = fTag; 
-			pT->putFlags(flags);
+			pTagRay[tagIndexCount++] = pT;
+			tagMemCount++;
+			return pT;
 		}
-		pTagRay[tagCount++] = pT;
-		return pT;
 	}
 	return NULL;
 }
+
 fB_Tag* initPage( uint16_t tag,const __FlashStringHelper* Ptitle, uint16_t parentTag){  
 	fB_Tag	*pT;
-	pT = Tag(tag);
-	if(!pT && tag) pT = initTag(tag,Ptitle,PAGE);  // for PAGE, fTag holds parentTag
+	pageCount++;
+	pT = initTag(tag,Ptitle,PAGE);  // for PAGE, fTag holds parentTag
 	if(secondPass && pT) { 
 		pT->fTag = parentTag;
-		menu.curr.setCurrPage(tag);
+		pT->iVal = tagIndexCount;  // index in pTagRay of first row of Page
+		curr.setCurrPage(tag);
+		curr.rowCount = 0;
 		pageCount++;
 	}
 	return pT;
 }
-void initRow(uint16_t tag, const __FlashStringHelper* Ptitle,uint8_t  format,uint8_t  flags,uint16_t tTag=NULL){
-	
-	fB_Tag	*pT;
-	pT = Tag(tag);
-	if(!pT && tag) pT = initTag(tag,Ptitle,NULL,format);
-	if(secondPass && pT) { 
-		fB_Row *r;
-		r = new fB_Row;	
-		pT->putFormat(format);
-		pT->pRow = r;
-		r->flags |= flags;
-		if(tTag) r->tTag = tTag; 
-		else r->tTag = tag;  // set to self-target
-		
 
-		if(!menu.curr.pTag->dp.iVal)  menu.curr.pRzero = pT;  // set pointer to first row for this page
-		menu.curr.pTag->dp.iVal++; // page iVal holds pageRowCount
-		//r->pPage = curr.pTag;
-		//p->farY =  (ROWHT) * p->pageRowCount;
-		rowCount++ ;
-		//dbug(F("DR1 tag %d, ttag %d, %P"),r->tag,r->tTag, Ptitle);
-		
-	}
-}
 void initJump(uint16_t tag) {			// insert ptr to page tag into pTagRay
-	if(!secondPass && tag) tagCount++;
+	if(!secondPass && tag) tagIndexCount++;
 	else if(tag) {
 		fB_Tag * pT;
 		pT = Tag(tag);
-		if(pT) pTagRay[tagCount++] = pT;
-		//pCurrPage->incRowCount();
+		if(pT) pTagRay[tagIndexCount++] = pT;
+		curr.incrRowCount();
 	}
 }
+void initRow(uint16_t tag, const __FlashStringHelper* Ptitle,uint32_t  flags,uint16_t tTag=NULL){
+	fB_Tag	*pT;
+	rowCount++ ;
+	pT = initTag(tag,Ptitle,flags,NULL,tTag);
+	if(secondPass) 	curr.incrRowCount(); // increment rowCount for this page, store in page flags
+}
 
-void initSpace() { 	pTagRay[tagCount++] = NULL; };
+
+void initSpace() { 	pTagRay[tagIndexCount++] = NULL; };
 
 void initPin( uint16_t tag,const __FlashStringHelper* Ptitle, uint16_t ctag,uint8_t   row,uint8_t   side,   uint8_t  dir, uint8_t  onval) {
 	fB_Tag * pT;
 	pT = Tag(tag);
-	if(!pT) initTag(tag,Ptitle,NULL,NULL);
+	if(!pT) initTag(tag,Ptitle,NULL,NULL,NULL);
 	if(secondPass && pT) pT->pPin = new fB_Pin(ctag,row,side,dir,onval) ;
 	pinCount++;
 }
 
 void  initCard(uint16_t tag,const __FlashStringHelper* Ptitle, uint8_t  type,uint8_t  i2cAddr, uint8_t  aChan ) {
-	if(secondPass ) pCardRay[cardCount] = new fB_Card(tag,Ptitle,type,i2cAddr,aChan );
+	if(secondPass ) {
+		pCardRay[cardCount] = new fB_Card(tag,Ptitle,type,i2cAddr,aChan );
+	}		
 	cardCount++;
 }
 
@@ -182,8 +162,8 @@ void Calibrate( uint16_t tag, double factor=NULL,double offset=NULL) {
 	pT = Tag(tag);
 	if(pT->isDouble()) {
 		if(!factor) factor=1;
-		pT->dp.pVal->factor = factor;
-		pT->dp.pVal->offset = offset;
+		pT->dVal->factor = factor;
+		pT->dVal->offset = offset;
 	}
 }
 void initLog(uint16_t fTag,const __FlashStringHelper* Ptitle ) {	
@@ -209,19 +189,14 @@ void navigate() {   menu.buttonCode = tft.readButtons(); }  // tft button interr
 void defineSystemTags() {
 	int i;
 	
-	definePage(TLIST,NULL);
-	for( i =0; i< MAXLISTROWS;i++) {  // blank tag pointers for last generation
-		if(secondPass)	{
-			if(!i) tListZeroIndex = tagCount;
-			pTagRay[tagCount] = NULL;
-		}
-		tagCount++;
-	}
-	definePage(FILES,NULL);
-	for(int i=0;i<MAXLISTROWS;i++) defineRow(FROW+i,NULL,NULL,NULL);
+	defineLog(LOG);
+	definePage(TLIST,SYSTEM);
+	for( i =0; i< MAXLISTROWS;i++) defineRow(TROW+i,NULL,NULL); 
+	definePage(FILES,SYSTEM);
+	for(int i=0;i<MAXLISTROWS;i++) defineRow(FROW+i,NULL,NULL);
 
-	defineRow(HEADER,NULL,NULL,NULL);
-	defineRecord(BOOTG,SYSTAG,TSYS);// Probably also need to define row in fB_Menu.cpp
+	defineRow(HEADER,NULL,NULL);
+	defineRecord(TBOOT,SYSTAG,TSYS);// Probably also need to define row in fB_Menu.cpp
 
 }
 
@@ -258,6 +233,7 @@ void flatBrainInit(){
 		dbug(F("INIT RTC"));
 	}
 
+	dbug(F("free RAM %d"),freeRAM());
 
 	res = fat.initFAT(SPISPEED);
 	if(res) {
@@ -281,29 +257,29 @@ void flatBrainInit(){
 	defineTags(); 
 	definePins(); 
 	menu.defineSystem();
-	//defineMenu(); 
+	defineMenu(); 
+	dbug(F("free RAM %d"),freeRAM());
 
 	dbug(F("INIT PASS 1"));
-	dbug(F("tagCount %d"),tagCount);
+	dbug(F("tagMemCount %d"),tagMemCount);
+	dbug(F("tagIndexCount %d"),tagIndexCount);
 	dbug(F("pageCount %d"),pageCount);
 	dbug(F("rowCount %d"),rowCount);
 	dbug(F("cardCount %d"),cardCount);
 	dbug(F("pinCount %d"),pinCount);
 	dbug(F("logCount %d"),logCount);
 	dbug(F("tag size %d"),sizeof(fB_Tag));
-	dbug(F("row size %d"),sizeof(fB_Row));
 	dbug(F("pin size %d"),sizeof(fB_Pin));
-	dbug(F("aval size %d"),sizeof(fB_Val));
+	dbug(F("log size %d"),sizeof(fB_Log));
 
 	logRay =  (logStruc *) calloc(logCount,sizeof(logStruc));
-	pTagRay = (fB_Tag **) malloc(sizeof(fB_Tag*) * tagCount);
+	pTagRay = (fB_Tag **) malloc(sizeof(fB_Tag*) * tagIndexCount);
 	dbug(F("INIT MALLOC"));
 	dbug(F("free RAM %d"),freeRAM());
 
 // reset counters
-	tagCount = 0;
+	tagIndexCount = 0;
 	pageCount = 0;
-	rowCount = 0;
 	cardCount = 0;
 	pinCount = 0;
 	logCount = 0;
@@ -315,16 +291,16 @@ void flatBrainInit(){
 	defineTags(); // 2nd pass, execute
 	definePins();
 	menu.defineSystem();
-	//defineMenu(); // 2nd pass with passtog = 1, execute
+	defineMenu(); // 2nd pass with passtog = 1, execute
 	dbug(F("INIT PASS 2"));
+	dbug(F("free RAM %d"),freeRAM());
 
 	//defineAnalogValues();
 
-
 	pT = record.EEgetTag(TBOOT);
-	res = (uint8_t ) pT->dp.iVal;
+	res = (uint8_t ) pT->iVal;
 	if(pT && res == HIGH) record.EEinitTags();     //initialize from eeprom globals defined with GINIT flag
-	pT->dp.iVal = res;
+	pT->iVal = res;
 	dbug(F("INIT EEPROM"));
 
 	//seg.setAddress(SEG_ADDR);  // set segmented display address if necessary;
@@ -333,11 +309,14 @@ void flatBrainInit(){
 
 	tft.init(PORTRAIT);
 	alarm.bootBeepEnable();
+	dbug(F("free RAM %d"),freeRAM());
 
 	tft.clear();
 	dbug(F("INIT TFT"));
+	//dbug(F("FBf  %P , flags:%x"),Tag(HOME)->Ptitle,Tag(HOME)->flags);
+	dbug(F("free RAM %d"),freeRAM());
 
-	menu.show(HOME);
+	menu.showPage(HOME);
 
 	alarm.play(ALARM_INIT);
 

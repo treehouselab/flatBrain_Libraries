@@ -70,6 +70,7 @@ XCARDS		Ox20-27
 #define SERIALSPEED		9600  
 #define ROUNDOFF		.0005  // added to calcs to round off displayed values
 #define BASEGLOBAL		0 // allows 25 gSys objects
+#define	PULSEMSECS		200
 
 
 #define MAXEETAGS		25  // for eeprom runaway only
@@ -94,8 +95,6 @@ XCARDS		Ox20-27
 #define	BRAIN			0
 #define X50				1
 #define X76				2
-
-
 
 // Pin sides
 #define	L		0
@@ -130,8 +129,6 @@ XCARDS		Ox20-27
 #define X76LD			1	// MCP PIN MAPS TO  BOARD LED
 #define X76GT			0	// MCP PIN MAPS TO  op-iso gate
 
-
-
 // Used when invoking analogRead/Write using an MPC digital line
 #define  AD_HIGH    1024   // returned when MPC_analogRead senses HIGH
 #define  AD_LOW     0      // returned when MPC_analogRead senses LOW
@@ -161,49 +158,6 @@ XCARDS		Ox20-27
 #define MONX		   60
 #define ADJX		   52
 
-//////////////////////////////////////////
-// Tag->flags is 8 bits, LAST 2bits IS MASKED FOR FORMAT
-#define	PAGE			0x01	// ROW PAGE JUMP
-
-#define	MASKP			0x1E	// next 4 bits overwritte in case of PAGE to hold pagerowcount
-
-#define	TSYS			0x02	// System Tag
-#define	STOREE			0x04	// store in eeprom
-#define	LOG				0x08	
-//#define	AVAIL		0x10	
-
-#define	MASKF			0xE0	// last 3 bits reserved for format, EXCLUSIVE
-#define	BLANK			0x00	
-#define	TEXT			0x20	// default
-#define	INT5			0x40	
-#define	FLOAT1			0x60
-#define	FLOAT2			0x80	
-#define	BINARY			0xB0	
-#define	STRIKE			0xC0	
-//#define	AVAIL		0xD0	
-
-//////////////////////////////////////////
-//////////////////////////////////////////
-// Row->flags is 8 bits, LAST 2bits is unused ( format defaults to Tag
-//#define	AVAIL		0x0O	
-#define	MARK			0x01	
-#define	VISIBLE			0x02	
-//#define	avail  		0x04
-//#define	avail  		0x08
-//#define	avail  		0x10
-
-#define	MASKA			0xE0	 // last 3 bits reserved for format, EXCLUSIVE
-#define	NOACT			0x00	
-#define	TOGGLE			0x20	
-#define	INCR			0x40	
-#define	SHFTPULSE		0x60	
-#define	PULSE			0x80
-#define	REFRESH			0xB0
-#define	CGATE			0xD0
-//#define AVAIL			0xE0	
-
-//////////////////////////////////////////
-
 
 #define GAUGEHT		    60
 #define GSTARTY			5
@@ -213,65 +167,114 @@ XCARDS		Ox20-27
 #define GTITLEY2		5
 #define GMAXCHARSTITLE	4
 
-#define	NOTYPE		0		// page/button/block type
-#define	NOSTATUS	0x00    // page/button/block status
-#define	CREATED		0x01   
-#define	INITED		0x02   
-//#define	VISIBLE		0x04
-#define	SELECTED	0x08
-//#define	MARK		0x10
-#define	LOG			0x20
-#define	DISABLE		0x80
-//#define	 		0x80
 
 #define	RTC			0x01   // brain status flags, unique uint8_t bits 
 #define	SD			0x02   
 
-#define	GAUGE			1   // Block type
-//#define SWITCH			111	// Block type	 
-//#define MONITOR			112	// Block type	 
-#define WINDOW			2	// Block type	 
 
-#define	STRIKE			1	// row format  (unique from Action Types)
-#define FLOAT1			2	// format
-#define FLOAT2			3	// format
-#define INT5			4	// format
-#define TEXT			5	// format    
-#define TITLE			6	// format    
-#define LAMP			7	// format  
-
-#define BINARY			1	// EEPROM column format    
-
-#define	NOSTATE			9  //  Row state
+#define	HIDE			1 
 #define	ON				1
-#define	GATE				1
+#define	GATE			1
 #define	OFF				0
 
-#define	FORCE			0 // Row show states
-#define	REFRESH			1 
-#define	HIDE			2 
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+// Tag->flags is 16 bits, top 4bits is used for fow count buffer
+#define	PAGE			0x0001	 
+#define	TSYS			0x0002	// System Tag
+#define	STOREE			0x0004	// EEPROM Store 
+#define	LOG				0x0008	// Log to SD card
+#define	MARK			0x0010	// Mark row
+#define	VISIBLE			0x0020
+#define	DISABLE			0x0040
+#define	UNDEF			0x0080
+#define	LJUST			0x0100
+//#define				0x0200
+//#define				0x0400
+//#define				0x0800
+#define	MASKP			0xF000	// 4 bits reserved ROWCOUNT
+#define	RCOFFSET		12	    // Offset of rowCount in Tag flag
 
+////////////////////////////////////////////////////////////////////////////////
+//Tag->format is 8 bits. The low 4bits of Tag->format contain one of 11 possible 
+// action codes (incl. zero) in decimal format. This code is converted to 32bit binary
+// for run-time comparisons (listed below). This allows for all the Tflag, format, and 
+// action flags to be entered on a single OR'd field at Tag definition arguments.
+
+// The high 4bits of  Tag->format containsoe of 11 possible format codes in similar scheme.
+
+//#define	AVAIL		0x0O	
+
+#define	MASK8A			0x0F	 
+#define	MASK32A			0x003FF000L
+#define	NOACT			0x00000000L	
+#define	TOGGLE			0x00001000L	
+#define	INCR			0x00002000L	
+#define	SHFTPULSE		0x00004000L	
+#define	PULSE			0x00008000L
+#define	REFRESH			0x00010000L
+#define	CGATE			0x00020000L
+//#define				0x00040000L
+//#define				0x00080000L
+//#define				0x00100000L
+//#define				0x00200000L
+
+#define	MASK8F			0xF0	 
+#define	MASK32F			0xFFC00000L
+#define	BLANK			0x00000000L	
+#define	TEXT			0x00400000L	
+#define	INT5			0x00800000L	
+#define	FLOAT1			0x01000000L
+#define	FLOAT2			0x02000000L	
+#define	BINARY			0x04000000L	
+#define	STRIKE			0x08000000L	
+#define	PTEXT			0x10000000L	
+//#define				0x20000000L
+//#define				0x40000000L
+//#define				0x80000000L
+
+////////////////////////////////////////////////////////////////////???
+////////////////////////////////////////////////////////////////////
+
+#define	ATAG	60000
+#define	ADATE	60002
+#define	ASIZE	60004
+#define	ADEL	60006
+#define	DTAG	60010
+#define	DIR		60012
+#define	LTAG	60020
+#define	LDATE	60022
+#define	LSIZE	60024
+#define	LSTAMP	60026
+#define	LARCH	60028
 
 ////////////////////////////////////////////////////////////////////////
 ////////////// ALL SYSTEM TAGS < 500 ///////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
 
-#define	SYSTAG		1	// LOG tags
+// LOG tags, Range 1-255
+#define	DEFLOG		1	
+#define	SYSTAG		2	
 
-#define	HOME		0   // page tags,16 bit
+///// TAG ARRAY tags, unique////////////////////////////////////////////
+///////////////////////////////////////////////////////////
+// PAGE tags
+#define	HOME		11   
 #define	SYSTEM		1
-#define	GLOBALS 	2
+#define	TLIST 		2
 #define FILES		7
 #define FPANEL		5	
-#define TPANEL		5	
+#define TPANEL		4	
 #define	DIAGNOSTICS	6
 #define	CLOCK		8
 #define	ALARM		9
 #define	PINS		10
 
-#define TLIST		20   // 10 numbers (MAXLISTROW)  RESERVED FOR LIST of TAG POINTER ARRAY INDEXES
+#define TROW		20   // 10 numbers (MAXLISTROW)  RESERVED FOR LIST of TAG POINTER ARRAY INDEXES
+#define FROW		20   // 10 numbers (MAXLISTROW)  RESERVED FOR LIST of TAG POINTER ARRAY INDEXES
 
 
+#define TBOOT		30	//SYSTEM TAGS
 #define TSTAGS		31
 #define TUTAGS		32
 #define TPINS		33
@@ -279,6 +282,7 @@ XCARDS		Ox20-27
 #define TPAGES		35
 #define TROWS		36
 #define FRAM		37
+#define HEADER		38
 
 #define TLOG			81  //  Tags
 #define TOPR			82
@@ -287,14 +291,12 @@ XCARDS		Ox20-27
 #define TFAC			85
 #define TINC			86
 #define TSET			87
-#define TIAT			90  // EEPROM Init all  TAGS
-#define TSAT			91  // EEPROM Store all TAGS
-#define TLAS			92	// SD LOG all TAGS
-#define TLAU			93	// SD LOG all TAGS
-#define TBOOT			94	// BOOT TAGS ON INIT
-
-   
-
+#define TIAT			90  
+#define TSAT			91  
+#define TLAS			92	
+#define TLAU			93	
+#define TADJ			95		    
+#define TARB 			96		
 
 #define CLKYR			100		    
 #define CLKMO			101		    
@@ -313,12 +315,7 @@ XCARDS		Ox20-27
 #define PNADC 			127		    
 #define PGATE 			128		    
 
-
-
-#define HEADER			130   
-#define TOGGLE			131		    
-#define JPAGE			132  
-#define FPANEL			136		    
+//#define HEADER			130   
 #define FSTAMP			137		    
 #define FARCH			138		    
 #define FSIZE			139	
@@ -327,13 +324,6 @@ XCARDS		Ox20-27
 #define FDUMP			142	
 #define	FSTD			143  // tag for FPANEL row that can hgouse either FSTAMP or FDELETE subtype
 #define CLK				144		    
-#define VALUE			145		    
-#define NOACT			146		    
-#define TADJ			149		    
-#define TARB 			150		
-#define GATE 			152		    
-#define PULSE 			154		    
-#define YPULSE 			155		    
 
 #endif
 

@@ -5,55 +5,68 @@ fB_Val::fB_Val() {
 	factor = 1;
 }
 
-fB_Tag::fB_Tag(uint16_t _tag,const __FlashStringHelper* _Ptitle, uint16_t _fTag, uint8_t _flags=NULL) {	
+fB_Tag::fB_Tag(uint16_t _tag,const __FlashStringHelper* _Ptitle, uint32_t flags = NULL, uint8_t _fTag=NULL, uint16_t _tTag=NULL) {	
 	
 	tag = _tag; 
 	Ptitle = _Ptitle;
-
-	fTag = _fTag; 
-	flags = _flags;
-	dp = NULL;
-	pRow = NULL;
+	text = NULL;
 	pPin = NULL;
+	fTag= _fTag;
+	tTag= _fTag;
+	flag8 = NULL;
+	flag16 = NULL;
+	putFlags( flags);
+	putFormat( flags);
+	putAction( flags);
 
 }
 
-// Tag->flags is 8 bits, LAST 2bits IS MASKED FOR FORMAT
-#define	PAGE			0x01	// ROW PAGE JUMP
+void		fB_Tag::putFlags(uint32_t flags32) { flag16 |= flags32; }
+uint16_t	fB_Tag::getFlags() { return flag16 & ~MASKP; }
+void		fB_Tag::clearFlags() { flag16 &= ~0x0FFF; }
 
-#define	MASKP			0x1E	// next 4 bits overwritte in case of PAGE to hold pagerowcount
-
-#define	TSYS			0x02	// System Tag
-#define	STOREE			0x04	// store in eeprom
-#define	LOG				0x08	
-//#define	AVAIL		0x10	
-
-#define	MASKF			0xE0	// last 3 bits reserved for format, EXCLUSIVE
-#define	BLANK			0x00	
-#define	TEXT			0x20	// default
-#define	INT5			0x40	
-#define	FLOAT1			0x60
-#define	FLOAT2			0x80	
-#define	BINARY			0xB0	
-#define	STRIKE			0xC0	
-//#define	AVAIL		0xD0	
-
-
-uint8_t fB_Tag::putFormat(uint8_t format) { 
-	if(format & MASKF)	{
-		flags &= ~MASKF; 
-		flags |= (format & MASKF);
+void	fB_Tag::putFormat(uint32_t flags32) {
+	uint8_t format8 = 0;
+	uint16_t format16 = 0;
+	format16 = (flags32 & MASK32F) >> 21;
+	for(int i=0;i< 10;i++) if(format16 >> i & 1) {
+			format8 = i << 4;
+			break;
 	}
+	flag8 |= format8;
 }
-uint8_t fB_Tag::putFlags(uint8_t _flags) {
-	flags |= _flags;
-	if(_flags & PAGE)	flags &= ~MASKP; 
+
+uint32_t	fB_Tag::getFormat() {
+	uint8_t j;
+	uint32_t format32 = 0;
+	j = (flag8 & MASK8F) >> 4;
+	return (format32 & (1 << j)) << 22 ;
 }
+
+void	fB_Tag::putAction(uint32_t flags32) {
+	uint8_t format8 = 0;
+	uint16_t format16 = 0;
+	format16 = (flags32 & MASK32A) >> 17;
+	for(int i=0;i< 10;i++) if(format16 >> i & 1) {
+			format8 = i << 4;
+			break;
+	}
+	flag8 |= format8;
+}
+
+uint32_t	fB_Tag::getAction() {
+	uint8_t j;
+	uint32_t format32 = 0;
+	j = (flag8 & MASK8A) >> 4;
+	return (format32 & (1 << j)) << 18 ;
+}
+
+
 uint8_t fB_Tag::isDouble() {
-	if(format() & FLOAT1  || format() & FLOAT2) return (1);
+	if(getFormat() == FLOAT1  || getFormat() == FLOAT2) return (1);
 	else return 0;
 }
-uint8_t  fB_Tag::assignFormat(double value) {
+uint32_t  fB_Tag::assignFormat(double value) {
 	double mod = 0;
 	mod = value-int(value);
 	if(mod==0) return INT5;
@@ -66,43 +79,67 @@ double fB_Tag::getValue() {  // if pin, get value from ADC
 	double dval;
 	if(pPin) {
 		if(isDouble()){
-			if(!data.pVal->factor) data.pVal->factor = 1;
-			return ((double) pPin->read() * data.pVal->factor) + data.pVal->offset;
+			if(!dVal->factor) dVal->factor = 1;
+			return ((double) pPin->read() * dVal->factor) + dVal->offset;
 		}
 		else return pPin->read();
 	}
 	else{
 		if(isDouble()) 	{
-			if(!data.pVal->factor) data.pVal->factor = 1;
-			return (data.pVal->value * data.pVal->factor) + data.pVal->offset;
+			if(!dVal->factor) dVal->factor = 1;
+			return (dVal->dVal * dVal->factor) + dVal->offset;
 		}
-		else return (double) data.iVal;
+		else return (double) iVal;
 	}
 }
 
 void fB_Tag::putValue(double value) { 
-	if(isDouble()) 	data.pVal->value = value;
-	data.iVal = (int) value;
+	if(isDouble()) 	dVal->dVal = value;
+	iVal = (int) value;
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+fB_Curr::fB_Curr() {
+	pageTag = NULL;
+	parentTag = NULL;
+	rowDex = 0;
+	rowCount = 1;
+}
 
-/*
-uint8_t getProwCount() { return ((flags & MASKP)>>1);
-void incProwCount() {
-	uint8_t count = getProwCount();
-	count++;
-	putProwCount(count);
-}
-void putProwCount(uint8_t count);
-	flags & ~MASKP;
-	flags &= (count << 1);
-}
-//uint8_t fB_Tag::getFormat() { 
-//	if(!(flags & INT5)) return TEXT; }
-//	if((flags & INT5) == INT5) return INT5; 
-//	return(flags & INT5);
+void fB_Curr::setCurrPage(uint16_t _tag) {
+	rowDex = 0;  // update when row selected
+	farY = STARTY + (ROWHT * rowCount);
+	if(_tag) {
+		pageTag = _tag;
+		pP = Tag(_tag);
+		parentTag = pP->fTag;
+		rowCount = getRowCount();
+	}
+}	
+
+fB_Tag* fB_Curr::tag() { 
+	if(!rowDex) return Tag(HEADER);
+	else return pTagRay[pP->iVal + rowDex-1]; 
+	}
+fB_Tag* fB_Curr::tag(uint8_t index) { 
+	if(!index) return Tag(HEADER);
+	else return pTagRay[pP->iVal + index-1]; 
+	}
 	
-//}
-*/
+uint8_t fB_Curr::getRowCount() { return ((pP->flag16 & MASKP)>>RCOFFSET); }  
+
+void fB_Curr::putRowCount(uint8_t count){							
+	pP->flag16 &= ~MASKP;
+	pP->flag16 |= (count << RCOFFSET);		
+	farY = STARTY + (ROWHT * count);
+	rowCount = count;
+	//dbug(F("PRC tag:%d, %P, rc:%d, f: %x"),pageTag, Tag(pageTag)->Ptitle,rowCount,pP->flag16);
+}
+
+void fB_Curr::incrRowCount() {
+	uint8_t count = getRowCount();
+	putRowCount(++count);
+}
+
 
 

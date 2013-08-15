@@ -5,20 +5,18 @@
 
 class fB_Pin {
 	public:
-		//fB_Card *pCard;
-		//uint16_t pTag;
-		//const __FlashStringHelper* Ptitle;
+		fB_Card *pCard;
 		uint8_t  flags; // roff-6bits, iodir - 1 bit, onVal-i bit
 		void pull(unsigned int value);  // HIGH or LOW
 		void pinMode(unsigned int iodir); //INPUT or OUTPUT
 		void pulse(unsigned int msecs); 
 		void YshiftPulse(unsigned int msecs); 
-		//void pulse(unsigned int value,unsigned int msec);
-
+		uint8_t		getOnVal();
+		uint8_t		getDirection() ;
 		uint8_t		getCpin();  // get chip pin
 		uint8_t		getOffset();
 		uint8_t		getMode();
-		uint8_t		getRow();
+		uint8_t		getRowBus();
 		uint8_t		getSide();
 
 		void write(unsigned int value);

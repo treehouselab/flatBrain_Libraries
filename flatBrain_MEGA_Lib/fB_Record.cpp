@@ -3,13 +3,10 @@
 #include "fB_Include.h"
 
 
-
-
 void fB_Record::createTagDefLog() {
 	fB_Log* tLog;
 	fB_Tag* pT;
 	uint8_t  res;
-	char vBuf[13];
 	char buffer[100];
 	char Pbuffer[40];
 	char title[MAXCHARSTEXT];
@@ -24,32 +21,29 @@ void fB_Record::createTagDefLog() {
 		if(!res) { 
 			if(fat.openFile(tLog->filename,FILEMODE_TEXT_WRITE)==NO_ERROR) { 
 				//sprintf(buffer,P("GLOBAL,GTAG,LOG, VALUE,FACTOR, GPIN, GSYS, GINIT,GINP, GBIAS"));
-				fat.writeLn(P("NAME,TAG,LOG, VALUE,FACTOR, TPIN, TSYS, TINIT"));
-				for(int i=0;i<sysTagCount;i++){
-					pT = pSysTagRay[i];
+				fat.writeLn(P("NAME,TAG,LOG, VALUE,FACTOR, OFFSET, TPIN, TSYS, STOREE"));
+				for(int i=0;i<tagIndexCount;i++){
+					pT = pTagRay[i];
 					if(!pT) continue;
 					getPtext(pT->Ptitle,title);
-					sprintf(buffer,P("%s,%d,%s, %s,%s, %d,%d,%d,%d,%d"),title,pT->tag ,getLogName(pT->fTag),
-						floatToStr(pT->value,3,vBuf),floatToStr(pT->factor,3,vBuf),
-						1 && pT->flags & 0x01
-						,1 && pT->flags & 0x02
-	//					,1 && pT->flags & 0x04
-	//					,1 && pT->flags & 0x08
-	//					,1 && pT->flags & 0x10
-						);
-					fat.writeLn(buffer);
-				}
-				for(int i=0;i<usrTagCount;i++){
-					pT = pUsrTagRay[i];
-					if(!pT) continue;
-					getPtext(pT->Ptitle,title);
-					sprintf(buffer,P("%s,%d,%s, %s,%s, %d,%d,%d,%d,%d"),title,pT->tag ,getLogName(pT->fTag),
-						floatToStr(pT->value,3,vBuf),floatToStr(pT->factor,3,vBuf),
-						1 && pT->flags & 0x01
-						,1 && pT->flags & 0x02
-	//					,1 && pT->flags & 0x04
-	//					,1 && pT->flags & 0x08
-	//					,1 && pT->flags & 0x10
+					char datastr[16];
+					switch(pT->getFormat()){
+						case BINARY:
+						case INT5:		sprintf(datastr,"%d",pT->iVal);break;
+						case FLOAT1:	
+						case FLOAT2:	doubleToStr(pT->dVal->dVal,3,datastr); break;	
+						case TEXT:		sprintf(datastr,"%s",pT->text); break;
+						case PTEXT:		getPtext(pT->Ptext, datastr);break;
+						case STRIKE:	sprintf(datastr,P("----"));break;
+						case BLANK:		datastr[0] = '\0' ;break;
+					}
+
+					sprintf(buffer,P("%s,%d,%s, %s,%s, %d,%d,%d,%d,%d"),title,pT->tag ,getLogName(pT->fTag),datastr	,doubleToStr(pT->dVal->factor,3,datastr),doubleToStr(pT->dVal->offset,3,datastr),
+						1 && pT->flag16 & TSYS
+						,1 && pT->flag16 & STOREE
+	//					,1 && pT->flag16 & 0x04
+	//					,1 && pT->flag16 & 0x08
+	//					,1 && pT->flag16 & 0x10
 						);
 					fat.writeLn(buffer);
 				}
@@ -62,7 +56,7 @@ void fB_Record::createTagDefLog() {
 }
 ///////////////////////////////////////// fB_Log Methods //////////////////////////////////////////////////////
 
-fB_Log::fB_Log(uint16_t	_fTag, char * _filename) {
+fB_Log::fB_Log(uint8_t	_fTag, char * _filename) {
 	fTag = _fTag;
 	sprintf(filename,"%s",_filename);
 }
@@ -91,9 +85,7 @@ void fB_Log::writeHeader() {
 	char title[MAXCHARSTEXT];
 	char Pbuffer[15];
 	uint8_t res =fat.openFile(filename,FILEMODE_TEXT_WRITE==NO_ERROR);
-	uint16_t tagCount;
-	tagCount = max(usrTagCount,sysTagCount);
-	char buffer[ tagCount*10];
+	char buffer[ tagIndexCount*10];
 	buffer[0] = '\0';
 	sprintf(buffer,P("DATE,TIME,%s"));
 	if(res!=NO_ERROR) {
@@ -101,14 +93,8 @@ void fB_Log::writeHeader() {
 		if(!create()) return;
 		writeHeader();
 	}
-	for(int k = 0;k<sysTagCount;k++) {	
-		pT = pSysTagRay[k];
-		if(!pT) continue;
-		getPtext(pT->Ptitle,title);
-		if( pT->fTag == fTag) sprintf(buffer,P("%s,%s"),buffer,title);
-	}
-	for(int k = 0;k<usrTagCount;k++) {	
-		pT = pUsrTagRay[k];
+	for(int k = 0;k<tagIndexCount;k++) {	
+		pT = pTagRay[k];
 		if(!pT) continue;
 		getPtext(pT->Ptitle,title);
 		if( pT->fTag == fTag) sprintf(buffer,P("%s,%s"),buffer,title);
@@ -119,13 +105,9 @@ void fB_Log::writeHeader() {
 }
 void fB_Log::writeData() {
 	fB_Tag * pT;
-	char fbuffer[10];
 	char Pbuffer[6];
-
+	char buffer[100];
 	uint8_t res =fat.openFile(filename,FILEMODE_TEXT_WRITE);
-	uint16_t tagCount;
-	tagCount = max(usrTagCount,sysTagCount);
-	char buffer[20 + tagCount*12];
 	buffer[0] = '\0';
 	rtc.stamp(buffer);
 	if(res!=NO_ERROR) {
@@ -133,15 +115,23 @@ void fB_Log::writeData() {
 		if(!create()) return;
 		writeHeader();
 	}
-	for(int k = 0;k<sysTagCount;k++) {	
-		pT = pSysTagRay[k];
+	for(int k = 0;k<tagIndexCount;k++) {	
+		pT = pTagRay[k];
 		if(!pT) continue;
-		if(pT->fTag == fTag) 	sprintf(buffer,P("%s,%s"),buffer,floatToStr(pT->getValue(), 3, fbuffer));
-	}
-	for(int k = 0;k<usrTagCount;k++) {	
-		pT = pUsrTagRay[k];
-		if(!pT) continue;
-		if(pT->fTag == fTag) 	sprintf(buffer,P("%s,%s"),buffer,floatToStr(pT->getValue(), 3, fbuffer));
+		if(pT->fTag == fTag){
+			char datastr[16];
+			switch(pT->getFormat()){
+				case BINARY:
+				case INT5:		sprintf(datastr,"%d",pT->iVal);break;
+				case FLOAT1:	
+				case FLOAT2:	doubleToStr(pT->dVal->dVal,3,datastr); break;	
+				case TEXT:		sprintf(datastr,"%s",pT->text);break;
+				case PTEXT:		getPtext(pT->Ptext, datastr);break;
+				case STRIKE:	sprintf(datastr,P("----"));break;
+				case BLANK:		datastr[0] = '\0' ;break;
+			}
+			sprintf(buffer,P("%s,%s"),buffer,datastr);
+		}
 	}
 	fat.writeLn(buffer);
 	fat.closeFile();
@@ -203,69 +193,43 @@ void fB_Log::dump() {
 /////////////////////////////// EEPROM METHODS /////////////////////////////////////////
 
 void fB_Record::EEwriteTags() {
-	if(!(usrTagCount + sysTagCount)) return;
+	if(!tagIndexCount) return;
 	fB_Tag * pT;
 	uint16_t tAddr,vAddr;
 	uint8_t  * data;
 	char title[MAXCHARSTEXT];
 	int j=0;
-	for(int i=0;i<sysTagCount;i++){
-		pT = pSysTagRay[i];
+	for(int i=0;i<tagIndexCount;i++){
+		pT = pTagRay[i];
 		if(!pT) continue;
-		if(!pT->flags & TINIT) continue;
+		if(!pT->flag16 & STOREE) continue;
 		getPtext(pT->Ptitle,title);
 		tAddr = j*32+BASEGLOBAL;
 		ee.setBlock(tAddr,'\0',48); // leaves a zeroed 8 bits at end of glist to mark end
 		ee.writeBlock(tAddr,(uint8_t *)title,strlen(title));
-		data = (uint8_t *)&(pT->value);
+		data = (uint8_t *)&(pT->dVal->dVal);
 		vAddr = tAddr+8;
 		ee.writeBlock(vAddr,data,4);
-		data = (uint8_t *)&(pT->factor);
+		data = (uint8_t *)&(pT->dVal->factor);
 		vAddr = tAddr+12;
 		ee.writeBlock(vAddr,data,4);
-		data = (uint8_t *)&(pT->flags);
+		data = (uint8_t *)&(pT->flag16);
 		vAddr  = tAddr+16;
 		ee.writeBlock(vAddr,data,1);
 		j++;
 	}	
-	for(int i=0;i<usrTagCount;i++){
-		pT = pUsrTagRay[i];
-		if(!pT) continue;
-		if(!pT->flags & TINIT) continue;
-		getPtext(pT->Ptitle,title);
-		tAddr = j*32+BASEGLOBAL;
-		ee.setBlock(tAddr,'\0',48); // leaves a zeroed 8 bits at end of glist to mark end
-		ee.writeBlock(tAddr,(uint8_t *)title,strlen(title));
-		data = (uint8_t *)&(pT->value);
-		vAddr = tAddr+8;
-		ee.writeBlock(vAddr,data,4);
-		data = (uint8_t *)&(pT->factor);
-		vAddr = tAddr+12;
-		ee.writeBlock(vAddr,data,4);
-		data = (uint8_t *)&(pT->flags);
-		vAddr  = tAddr+16;
-		ee.writeBlock(vAddr,data,1);
-		j++;
-	}
 
 	ee.dump(0,128);
 
 }
 void fB_Record::EEinitTags() {
 	fB_Tag * pT;
-	for(int k = 0;k<sysTagCount;k++) {	
-		pT = pSysTagRay[k];
+	for(int k = 0;k<tagIndexCount;k++) {	
+		pT = pTagRay[k];
 		if(!pT) continue;
-		if(!(pT->flags & TINIT)) continue;
+		if(!(pT->flag16 & STOREE)) continue;
 		EEgetTag(pT->tag);
 	}
-	for(int k = 0;k<usrTagCount;k++) {	
-		pT = pUsrTagRay[k];
-		if(!pT) continue;
-		if(!(pT->flags & TINIT)) continue;
-		EEgetTag(pT->tag);
-	}
-
 }
 fB_Tag* fB_Record::EEgetTag( uint16_t tag) {
 	uint8_t  tBuffer[9];
@@ -274,7 +238,7 @@ fB_Tag* fB_Record::EEgetTag( uint16_t tag) {
 	uint8_t  gBuffer;
 	char title[MAXCHARSTEXT];
 	uint16_t tAddr,vAddr,fAddr,gAddr;
-	float *data;
+	double *data;
 	char *tStr;
 	fB_Tag * pT;
 	pT = Tag(tag);
@@ -294,20 +258,20 @@ fB_Tag* fB_Record::EEgetTag( uint16_t tag) {
 
 		if(!strcmp(title,tStr)) {
 			ee.readBlock(vAddr,vBuffer,4);
-			data = (float*)vBuffer ;
-			pT->value = *data + ROUNDOFF;
+			data = (double*)vBuffer ;
+			pT->dVal->dVal = *data + ROUNDOFF;
 			ee.readBlock(fAddr,fBuffer,4);
-			data = (float*)fBuffer;
-			pT->factor = *data;
-			pT->flags = ee.readByte(gAddr);
-			dbug(F("EEREAD tag: %s  value: %f  fact: %f  flag: 0x%h"),tBuffer,pT->value,pT->factor,pT->flags);
+			data = (double*)fBuffer;
+			pT->dVal->factor = *data;
+			pT->flag16 = ee.readByte(gAddr);
+			dbug(F("EEREAD tag: %s  value: %f  fact: %f  flag: 0x%h"),tBuffer,pT->dVal->dVal,pT->dVal->factor,pT->flag16);
 			return pT;
 		}
 		
 	}
 	return NULL;
 }
-char* getLogName(uint16_t fTag) {	
+char* getLogName(uint8_t fTag) {	
 	for(int i=0;i < logCount;i++) if(logRay[i].tag == fTag) return logRay[i].name;
 	return NULL;
 }

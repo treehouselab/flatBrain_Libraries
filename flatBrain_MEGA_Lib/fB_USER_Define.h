@@ -2,23 +2,6 @@
 #define FP_USER_DEFINES_H
 
 
-////////////////////////////////////////////////////////
-////////// RESERVED ////////////////////////////////////
-////////////////////////////////////////////////////////
-// 
-#define	ATAG	60000
-#define	ADATE	60002
-#define	ASIZE	60004
-#define	ADEL	60006
-#define	DTAG	60010
-#define	DIR		60012
-#define	LTAG	60020
-#define	LDATE	60022
-#define	LSIZE	60024
-#define	LSTAMP	60026
-#define	LARCH	60028
-
-///
 /////////////////////////////////////////////////////////
 //  USER DEFINES.  EDIT FOR EACH FLATPLANE CONFIGURATION
 /////////////////////////////////////////////////////////
@@ -32,55 +15,56 @@
 #define ANALOGSAMPLEDELAY	50
 
 
-//////////////////////////////////////////////////////////
-//////////////  ALL TAGS MUST BE > 500 //////////////////
-////////////////////////////////////////////////////////
 
 
-// LOGS
+// LOG TAGS ("LOGDEF" IS RESERVED FOR DEFAULT LOG DEFINITION)
+// RANGE: 5-255
+#define	LOG2	    6
+#define	LOG3	    7
 
-#define	LOG1	    541
-#define	LOG2	    542
-#define	LOG3	    543
+// Card tags,unique, RANGE: 1-255
+#define VMCU	2
+#define TFTS	3
+#define YCRD	4
+#define	PRT1	5
+#define	VLVD	6
 
-// Card tags,unique
-#define VMCU	501
-#define TFTS	502
-#define YCRD	503
-#define	PRT1	504
-#define	VLVD	505
+///////////////////////////////////////////////////////////////////////////////
+//////////////  ALL USER-DEFINED TAG ARRAY Tags MUST BE > 500 //////////////////
+///////////////////////////////////////////////////////////////////////////////
 
-// Pin tags, unique
-#define Y1		501 
-#define Y2		502 
-#define Y3		503 
-#define Y4		504 
-#define Y5		505 
-#define Y6		506
-#define YRST	507
-#define YSHFT	508
 
-#define Y1S		510
-#define Y2S		511
-#define Y3S		512
-#define Y4S		513
-#define Y5S		514 
-#define Y6S		515
+// Pin , Page, Row Tags, unique
 
-#define V1		520
-#define V2		521
-#define V3		522
-#define CZ		523
-#define CC		524
-#define CL		525 
+#define RELAYPULS	600
 
-// Page Tags, unique
+#define Y1			601 
+#define Y2			602 
+#define Y3			603 
+#define Y4			604 
+#define Y5			605 
+#define Y6			606
+#define YRST		607
+#define YSHFT		608
 
-#define RELAYPULS	501
-#define RELAYSTAT	502
-#define SENSORS	503
+#define RELAYSTAT	620
 
-// Row Tags, unique
+#define Y1S			621
+#define Y2S			622
+#define Y3S			623
+#define Y4S			624
+#define Y5S			625 
+#define Y6S			626
+
+#define SENSORS		640
+
+#define V1			641
+#define V2			642
+#define V3			643
+#define CZ			644
+#define CC			645
+#define CL			646 
+
 
 
 #endif
