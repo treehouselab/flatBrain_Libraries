@@ -22,8 +22,8 @@ void fB_Record::createTagDefLog() {
 			if(fat.openFile(tLog->filename,FILEMODE_TEXT_WRITE)==NO_ERROR) { 
 				//sprintf(buffer,P("GLOBAL,GTAG,LOG, VALUE,FACTOR, GPIN, GSYS, GINIT,GINP, GBIAS"));
 				fat.writeLn(P("NAME,TAG,LOG, VALUE,FACTOR, OFFSET, TPIN, TSYS, STOREE"));
-				for(int i=0;i<tagIndexCount;i++){
-					pT = pTagRay[i];
+				for(int i=0;i<tagCount;i++){
+					pT = &tagRay[i];
 					if(!pT) continue;
 					getPtext(pT->Ptitle,title);
 					char datastr[16];
@@ -85,7 +85,7 @@ void fB_Log::writeHeader() {
 	char title[MAXCHARSTEXT];
 	char Pbuffer[15];
 	uint8_t res =fat.openFile(filename,FILEMODE_TEXT_WRITE==NO_ERROR);
-	char buffer[ tagIndexCount*10];
+	char buffer[ tagCount*10];
 	buffer[0] = '\0';
 	sprintf(buffer,P("DATE,TIME,%s"));
 	if(res!=NO_ERROR) {
@@ -93,8 +93,8 @@ void fB_Log::writeHeader() {
 		if(!create()) return;
 		writeHeader();
 	}
-	for(int k = 0;k<tagIndexCount;k++) {	
-		pT = pTagRay[k];
+	for(int k = 0;k<tagCount;k++) {	
+		pT = &tagRay[k];
 		if(!pT) continue;
 		getPtext(pT->Ptitle,title);
 		if( pT->fTag == fTag) sprintf(buffer,P("%s,%s"),buffer,title);
@@ -115,8 +115,8 @@ void fB_Log::writeData() {
 		if(!create()) return;
 		writeHeader();
 	}
-	for(int k = 0;k<tagIndexCount;k++) {	
-		pT = pTagRay[k];
+	for(int k = 0;k<tagCount;k++) {	
+		pT = &tagRay[k];
 		if(!pT) continue;
 		if(pT->fTag == fTag){
 			char datastr[16];
@@ -193,14 +193,14 @@ void fB_Log::dump() {
 /////////////////////////////// EEPROM METHODS /////////////////////////////////////////
 
 void fB_Record::EEwriteTags() {
-	if(!tagIndexCount) return;
+	if(!tagCount) return;
 	fB_Tag * pT;
 	uint16_t tAddr,vAddr;
 	uint8_t  * data;
 	char title[MAXCHARSTEXT];
 	int j=0;
-	for(int i=0;i<tagIndexCount;i++){
-		pT = pTagRay[i];
+	for(int i=0;i<tagCount;i++){
+		pT = &tagRay[i];
 		if(!pT) continue;
 		if(!pT->flag16 & STOREE) continue;
 		getPtext(pT->Ptitle,title);
@@ -224,8 +224,8 @@ void fB_Record::EEwriteTags() {
 }
 void fB_Record::EEinitTags() {
 	fB_Tag * pT;
-	for(int k = 0;k<tagIndexCount;k++) {	
-		pT = pTagRay[k];
+	for(int k = 0;k<tagCount;k++) {	
+		pT = &tagRay[k];
 		if(!pT) continue;
 		if(!(pT->flag16 & STOREE)) continue;
 		EEgetTag(pT->tag);

@@ -41,78 +41,6 @@ void fB_Menu::init(){
 }
 
 
-void fB_Menu::defineSystem()  {
-
-	definePage(SYSTEM,HOME);
-		defineJump(CLOCK);
-
-	definePage(CLOCK,SYSTEM);
-		defineRow(CLKYR, NULL,INCR | INT5);
-		defineRow(CLKMO, NULL,INCR | INT5);
-		defineRow(CLKDY, NULL,INCR | INT5);
-		defineRow(CLKHH, NULL,INCR | INT5);
-		defineRow(CLKMM, NULL,INCR | INT5);
-		defineRow(CLKGET, NULL,BLANK | INCR);
-		defineRow(CLKSET, NULL,BLANK | INCR);
-
-/*
-definePage(PINS,SYSTEM);
-		defineRow(PNPIN,TEXT,NULL);
-		defineRow(PNCRD,NOACT,NULL);
-		defineRow(PNROW,INT5,NULL);
-		defineRow(PNCOL,TEXT,NULL);
-		//defineRow(PNRES,F("RESISTOR"),PNRES,INT5,NULL,NULL);
-		defineRow(PNTOG,LAMP,NULL);
-		defineRow(PNADC,INT5,NULL);
-		//defineRow(PNSET,F("SET"),PNSET,TITLE,NULL,NULL);
-		if(secondPass)Row(PNROW)->status |= MARK;
-		if(secondPass)Row(PNCOL)->status |= MARK;
-
-
-	
-	definePage(GLOBALS,F("GLOBALS"),SYSTEM );
-		defineRow(NULL,F("VAR LIST"),JPAGE,TITLE,TLIST,PUSR);
-		defineRow(TLAU,F("VAR LOG"),TLAU,TITLE,NULL,NULL);
-		defineRow(NULL,F("SYS LIST"),JPAGE,TITLE,TLIST,PSYS);
-		defineRow(TLAS,F("SYS LOG"),TLAS,TITLE,NULL,NULL); 
-		defineSpace();
-		defineRow(TSAT,F("EEPROM STORE"),TSAT,TITLE,NULL,NULL);
-		defineRow(TIAT,F("EEPROM READ"),TIAT,TITLE,NULL,NULL);
-		defineJump(FILES);
-
-	
-		definePage(TLIST,F("TLIST"),GLOBALS);
-			//for(int i=0;i<min(globalCount,MAXLISTROWS);i++) defineRow((uint8_t )TROW+i,NULL,(uint8_t )TROW,NULL,(uint16_t) TPANEL, (float) i);
-
-			definePage(TPANEL,F("TPANEL"),TLIST);
-				defineRow(TLOG,F("LOG"),NULL,NOACT,NULL,NULL);
-				defineRow(TINP,F("INPUT"),NOACT,VALUE,NULL,NULL);
-				defineRow(TVAL,F("VALUE"),TADJ,VALUE,NULL,NULL);
-				defineRow(TOPR,NULL,TARB,TEXT,NULL,NULL); 
-				defineRow(TFAC,F("FACTOR"),TADJ,VALUE,NULL,NULL);
-				defineRow(TINC,F("INCR"),TINC,VALUE,NULL,NULL);
-				defineRow(TSET,F("SET"),TSET,TITLE,NULL,NULL);
-				if(secondPass)	Row(TLOG)->status |= MARK;
-*/
-	definePage(FILES,SYSTEM);
-			for(int i=0;i<MAXLISTROWS;i++) defineRow(FROW+i,NULL,TEXT);
- //		defineRow(tag,format,flags,tTag)	
-
-			definePage(FPANEL,FILES);
-				defineRow(FDATE,NULL,TEXT | NOACT);
-				defineRow(FSIZE,NULL,INT5 | NOACT);
-				defineRow(FDUMP,NULL,BLANK);
-				defineRow(FSTD,NULL,NULL);
-				defineRow(FARCH,NULL,BLANK);
-				if(secondPass)Tag(FDATE)->flag16 |= MARK;
-				if(secondPass)Tag(FSIZE)->flag16 |= MARK;
-					
-
-}
-
-//void fB_Menu::erase() {
-//	pCurrPageTag->mp.pPage->hide();
-//}
 
 void fB_Menu::jumpPage(uint16_t tag) {
 	fB_Tag *pT;
@@ -137,8 +65,8 @@ void fB_Menu::checkButtonCode() {
 	switch(buttonCode) {
 		case 1: context(RIGHT);break;
 		case 2: context(LEFT);break;
-		case 3: prevSwitch(); break;
-		case 4: nextSwitch(); break;
+		case 3: curr.prevSwitch(); break;
+		case 4: curr.nextSwitch(); break;
 		case 12: // dual buttons, see tft.readButtons()
 		case 13:
 		case 14:
@@ -158,7 +86,7 @@ void fB_Menu::context(uint8_t  hand) {
 		switch(curr.pageTag) {
 			case HOME:		return; break;
 			case FILES: 	pListStart = &fListStart; totalLines = totalFiles; break;
-			case TLIST: 	pListStart = &tListStart; totalLines = tagIndexCount;   break;
+			case TLIST: 	pListStart = &tListStart; totalLines = tagCount;   break;
 		}
 		if(hand==RIGHT) {
 			switch(curr.pageTag) {
@@ -187,40 +115,14 @@ void fB_Menu::context(uint8_t  hand) {
 	else curr.tag()->action(hand);
 }
 
-void fB_Menu:: nextSwitch() {
-	int i;
-	for(i=0;i < curr.rowCount;i++)	{
-		if(curr.tag(i)->flag16 & DISABLE) continue;
-		if((curr.tag(i)->getAction() != NOACT ) && i > curr.rowDex) {
-			curr.tag()->deselectRow();
-			curr.tag(i)->selectRow();
-			curr.rowDex = i;
-			break;
-		}
-	}
-}
-void fB_Menu:: prevSwitch() {
-	int i;
-	if(!curr.rowDex) return;
-	for(i=curr.rowCount-1;i >=0 ;i--)	{
-		if(curr.tag(i)->flag16 & DISABLE) continue;
-		if((curr.tag(i)->getAction() != NOACT ) && i < curr.rowDex) {
-			curr.tag()->deselectRow();
-			curr.tag(i)->selectRow();
-			curr.rowDex = i;
-			break;
-		}
-	}
-}
-
 void fB_Menu:: selectHeader() {
-	curr.tag()->deselectRow();
+	curr.deselectRow();
 	curr.rowDex = 0;			
-	curr.tag()->selectRow();
+	curr.selectRow();
 }
 
 void fB_Menu:: clearPage(uint8_t  full) {
-	curr.tag()->deselectRow();
+	curr.deselectRow();
 	curr.rowDex = 0;
 	if(!full) tft.clear(curr.farY);
 	else tft.clear();
@@ -306,7 +208,7 @@ void fB_Menu:: showPage(uint16_t tag) {
 			listStart = menu.fListStart;
 			break;
 		case TLIST:
-			count = tagIndexCount;
+			count = tagCount;
 			listStart = menu.tListStart;
 			break;
 		case CLOCK:
@@ -324,12 +226,12 @@ void fB_Menu:: showPage(uint16_t tag) {
 			fB_Tag* pT;
 			fB_Pin* pP;
 			fB_Card* pC;
-			for(index=0;index<tagIndexCount;index++) if(pTagRay[index]->pPin) break; // find first pin
-			if(i==tagIndexCount) break;
-			pT = pTagRay[index];
+			for(index=0;index<tagCount;index++) if(tagRay[index].pPin) break; // find first pin
+			if(i==tagCount) break;
+			pT = &tagRay[index];
 			pP = pT->pPin;
 			pC = pP->pCard;
-			pC = pTagRay[index]->pPin->pCard;
+			pC = tagRay[index].pPin->pCard;
 			Tag(PNPIN)->Ptext= pT->Ptitle;
 			Tag(PNPIN)->iVal= index;
 			Tag(PNCRD)->Ptext= pC->Ptitle;
@@ -379,7 +281,7 @@ void fB_Menu:: showPage(uint16_t tag) {
 						else Tag(FROW+i)->flag16 &= ~MARK; 
 						break;
 					case TLIST: // temporary test case for TLIST
-						pTagRay[tListZeroIndex + i] = pTagRay[listStart + i];
+						//tagRay[tListZeroIndex + i] = tagRay[listStart + i];
 						break;
 				}
 			}
@@ -395,10 +297,58 @@ void fB_Menu:: showPage(uint16_t tag) {
 
 	}
 
-	menu.selectHeader();
 	Tag(HEADER)->Ptitle = curr.pP->Ptitle; 
-	
-	for(curr.rowDex=0; curr.rowDex < curr.rowCount; curr.rowDex++) 	curr.tag()->showRow();
+	for(curr.rowDex=0; curr.rowDex <= curr.rowCount; curr.rowDex++) {	
+				dbug(F("SR %P ,crd:%d, ct:%P"),curr.tag()->Ptitle,curr.rowDex,curr.tag()->Ptitle);
+
+				curr.tag()->showRow();
+	}
+	menu.selectHeader();
+}
+
+
+void fB_Curr:: nextSwitch() {
+	int i;
+	fB_Tag* pT;
+	for(i=0;i <= rowCount;i++)	{
+		pT = tag(i);
+		if((pT->flag16 & DISABLE || pT->getAction() == NOACT)  && !(pT->flag16 & PAGE)) continue;
+		if( i > rowDex) {
+			deselectRow();
+			rowDex = i;
+			selectRow();
+			break;
+		}
+	}
+}
+void fB_Curr:: prevSwitch() {
+	int i;
+	fB_Tag* pT;
+	if(!rowDex) return;
+	for(i=rowCount;i >=0 ;i--)	{
+		pT = tag(i);
+		if((pT->flag16 & DISABLE || pT->getAction() == NOACT)  && !(pT->flag16 & PAGE)) continue;
+		if( i < rowDex) {
+			deselectRow();
+			rowDex = i;
+			selectRow();
+			break;
+		}
+	}
+}
+
+void fB_Curr::selectRow() {
+	tft.setColor(FCOLOR,GCOLOR);
+	tft.drawHLine(STARTX,curr.tag()->getY()+ROWHT-8,MAXPIXELWID);
+	tft.resetDefColors();	
+	//status |= SELECTED;
+}
+
+void fB_Curr::deselectRow() {
+	tft.setAll2Bcolor();
+	tft.drawHLine(STARTX,curr.tag()->getY()+ROWHT-8,MAXPIXELWID);
+	tft.resetDefColors();	
+	//status &= ~SELECTED;
 
 }
 
@@ -408,21 +358,24 @@ void fB_Menu:: showPage(uint16_t tag) {
 
 
 uint16_t fB_Tag::getY() {  return ( STARTY + (ROWHT) * curr.rowDex); }
+//uint16_t fB_Tag::getY(uint8_t) {  return ( STARTY + (ROWHT) * i); }
 
 void fB_Tag::showRow(uint8_t  hide) {  //when hide ==1, page is being updated only
 
-	int i;
+	int i=0;
 	char bufferTitle[MAXCHARSTEXT+1];
-	char Pbuffer[6];
+	char Pbuffer[MAXCHARSTEXT+1];
+	bufferTitle[0] = '\0';	
 		
-	if(Ptitle != NULL) getPtext(Ptitle,bufferTitle);
-	else bufferTitle[0] = '\0';	
-
-	if(!curr.rowDex) {
-		char header[MAXCHARSTEXT+1];
-		sprintf(header,"< %s >",bufferTitle);
-		tft.print(CENTER,getY(),header,MAXCHARSTEXT);
-		return;
+	if(Ptitle != NULL) {
+		getPtext(Ptitle,Pbuffer);
+		if(!curr.rowDex) {
+			sprintf(bufferTitle,"< %s >",Pbuffer);
+			tft.print(CENTER,getY(),bufferTitle,MAXCHARSTEXT);
+			return;
+		}
+		else if(curr.pP->flag16 & LIST)  sprintf(bufferTitle,"%s%d",Pbuffer,curr.rowDex);
+		else strcpy(bufferTitle,Pbuffer);
 	}
 
 	char bufferText[MAXCHARSTEXT+1];
@@ -435,8 +388,7 @@ void fB_Tag::showRow(uint8_t  hide) {  //when hide ==1, page is being updated on
 	if( (hide == HIDE)  || (flag16 & DISABLE)) 	tft.setAll2Bcolor();
 	else if(flag16 & MARK)	tft.setColor(FCOLOR,HCOLOR);
 	if( getAction() != REFRESH ) tft.print(STARTX +ROWTEXTX,getY(),bufferTitle,MAXCHARSTEXT);
-
-//dbug(F("Show Row tag %d, ttag %d, tit: %s"),tag,tTag,bufferTitle);
+//dbug(F("GA %d ,i:%d, f16: %d"),flag8,i,flag16);
 
 	if(getFormat() & BINARY) {
 		if(pPin) {
@@ -480,7 +432,7 @@ void fB_Tag::showRow(uint8_t  hide) {  //when hide ==1, page is being updated on
 	tft.resetDefColors();
 	flag16 |= VISIBLE;
 }
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 void fB_Tag::action(uint8_t  hand) {
 	if(flag16 & DISABLE ) return;
 	char Pbuffer[7];
@@ -500,8 +452,8 @@ void fB_Tag::action(uint8_t  hand) {
 			switch(pT->tag) {
 				case PNPIN: {
 					index = Tag(PNPIN)->iVal;
-					if(index++ >= tagIndexCount) index=0;
-					pT = pTagRay[index];
+					if(index++ >= tagCount) index=0;
+					pT = &tagRay[index];
 					pP = pT->pPin;
 					//pP->pCard->AnalogGate(OFF);
 					Tag(PNTOG)->iVal= LOW;
@@ -538,7 +490,7 @@ void fB_Tag::action(uint8_t  hand) {
 					Tag(PNADC)->showRow();
 					return;
 				case PNADC:
-					pP = pTagRay[ Tag(PNPIN)->iVal]->pPin;
+					pP = tagRay[ Tag(PNPIN)->iVal].pPin;
 					Tag(PNADC)->iVal = pP->read();
 					showRow();
 					return;
@@ -646,7 +598,7 @@ void fB_Tag::action(uint8_t  hand) {
 
 			switch(getAction()) {
 				case CGATE:
-					pP = pTagRay[Tag(PNPIN)->iVal]->pPin;
+					pP = tagRay[Tag(PNPIN)->iVal].pPin;
 					if(pT->iVal == LOW) pT->	iVal = HIGH;
 					else pT->iVal = LOW;
 					pP->pCard->AnalogGate(pT->iVal);
@@ -848,20 +800,6 @@ void fB_Tag::hideRow() {
 	flag16 &= ~VISIBLE;
 }
 
-void fB_Tag::selectRow() {
-	tft.setColor(FCOLOR,GCOLOR);
-	tft.drawHLine(STARTX,getY()+ROWHT-8,MAXPIXELWID);
-	tft.resetDefColors();	
-	//status |= SELECTED;
-}
-
-void fB_Tag::deselectRow() {
-	tft.setAll2Bcolor();
-	tft.drawHLine(STARTX,getY()+ROWHT-8,MAXPIXELWID);
-	tft.resetDefColors();	
-	//status &= ~SELECTED;
-
-}
 
 void fB_Tag::frame() {
 

@@ -18,8 +18,6 @@ class fB_Menu {
 		uint8_t 	*fSort; // pointer to array of sorted indexes of mFile
 
 		void        init();
-		void        nextSwitch();
-		void        prevSwitch();
 		void		showPage(uint16_t tag=NULL);
 		void		clearPage(uint8_t fullFlag=NULL);
 		void		erase();
@@ -28,7 +26,6 @@ class fB_Menu {
 		void		jumpPage(uint16_t tag);
 		void		jumpPage(fB_Tag* pT);
 		void		selectHeader();
-		void		defineSystem();
 		void		listFiles(uint16_t x1,uint16_t y1,uint16_t x2,uint16_t y2);
 		void		getFileList(); 
 

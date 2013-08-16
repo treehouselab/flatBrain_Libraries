@@ -15,6 +15,7 @@ Treehouselab.com - Mike Price */
 #define defineHome(tag)							initPage(HOME,F(#tag),NULL)
 #define definePage(tag,parentTag)				initPage(tag,F(#tag),parentTag)
 #define defineRow(tag,tTag,flags)				initRow(tag,F(#tag),flags,tTag)
+#define defineRowList(tag,count,tTag,flags)		initRowList(tag,F(#tag),count,flags,tTag)
 #define defineSpace()							initSpace()
 #define defineJump(tag)							initJump(tag);
 

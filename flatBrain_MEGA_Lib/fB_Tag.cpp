@@ -119,11 +119,11 @@ void fB_Curr::setCurrPage(uint16_t _tag) {
 
 fB_Tag* fB_Curr::tag() { 
 	if(!rowDex) return Tag(HEADER);
-	else return pTagRay[pP->iVal + rowDex-1]; 
+	else return rTP[pP->iVal + rowDex].p; 
 	}
 fB_Tag* fB_Curr::tag(uint8_t index) { 
 	if(!index) return Tag(HEADER);
-	else return pTagRay[pP->iVal + index-1]; 
+	else return rTP[pP->iVal + index].p; 
 	}
 	
 uint8_t fB_Curr::getRowCount() { return ((pP->flag16 & MASKP)>>RCOFFSET); }  

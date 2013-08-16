@@ -79,6 +79,7 @@ XCARDS		Ox20-27
 #define MAXCHARSTEXT	15 
 #define MAXVDRDEX		6 
 #define	MAXPSTRCOUNT	11
+#define	MAXTEMPTAG		500
 
 // Bus to Arduino Mega pin mapping
 #define	B0		A8
@@ -189,7 +190,7 @@ XCARDS		Ox20-27
 #define	DISABLE			0x0040
 #define	UNDEF			0x0080
 #define	LJUST			0x0100
-//#define				0x0200
+#define	LIST			0x0200
 //#define				0x0400
 //#define				0x0800
 #define	MASKP			0xF000	// 4 bits reserved ROWCOUNT
@@ -201,7 +202,7 @@ XCARDS		Ox20-27
 // for run-time comparisons (listed below). This allows for all the Tflag, format, and 
 // action flags to be entered on a single OR'd field at Tag definition arguments.
 
-// The high 4bits of  Tag->format containsoe of 11 possible format codes in similar scheme.
+// The high 4bits of  Tag->format contains one of 11 possible format codes in similar scheme.
 
 //#define	AVAIL		0x0O	
 
@@ -271,18 +272,18 @@ XCARDS		Ox20-27
 #define	PINS		10
 
 #define TROW		20   // 10 numbers (MAXLISTROW)  RESERVED FOR LIST of TAG POINTER ARRAY INDEXES
-#define FROW		20   // 10 numbers (MAXLISTROW)  RESERVED FOR LIST of TAG POINTER ARRAY INDEXES
+#define FROW		30   // 10 numbers (MAXLISTROW)  RESERVED FOR LIST of TAG POINTER ARRAY INDEXES
 
 
-#define TBOOT		30	//SYSTEM TAGS
-#define TSTAGS		31
-#define TUTAGS		32
-#define TPINS		33
-#define TLOGS		34
-#define TPAGES		35
-#define TROWS		36
-#define FRAM		37
-#define HEADER		38
+#define TBOOT		40	//SYSTEM TAGS
+#define TSTAGS		41
+#define TUTAGS		42
+#define TPINS		43
+#define TLOGS		44
+#define TPAGES		45
+#define TROWS		46
+#define FRAM		47
+#define HEADER		48
 
 #define TLOG			81  //  Tags
 #define TOPR			82

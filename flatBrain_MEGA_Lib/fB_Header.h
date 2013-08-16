@@ -4,6 +4,7 @@
 #include <avr/pgmspace.h>
 #include <pins_arduino.h>
 #include <stdio.h>
+#include <string.h>
 #include <stdarg.h>
 #include <Wire.h>
 //#include "..\Wire\Wire.h"

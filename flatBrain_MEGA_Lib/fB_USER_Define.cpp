@@ -1,18 +1,9 @@
 #include "fB_Include.h"
 
-// definePin(tag,ctag,row,side,dir,onval)		
-// defineCard(ctag,ctype,i2cAddr, aChan )		
-// defineLog(fTag)								
-// defineTag(tag,flags)						
-// defineRecord(tag,fTag,flags)				
 
-// defineHome(tag)						
-// definePage(tag,parentTag)				
-// defineRow(tag,format,flags,tTag)	
-// defineSpace()							
-// defineJump(tag)
+void defineUser() {
 
-void definePins() {
+	//////////// DEFINE CARDS AND PINS
 
 	defineCard(YCRD,X76,C0,B1);	
 
@@ -38,28 +29,22 @@ void definePins() {
 		definePin(CZ,YCRD,21,L,INPUT,LOW); 
 		definePin(CC,YCRD,23,L,INPUT,LOW);
 		definePin(CL,YCRD,23,R,INPUT,LOW); 
-}
 
-void defineLogs() {
-//		defineRec(tag,format,fTag,flags)
+	//////////// DEFINE MENU
 
-	    //defineLog(LOG2);
-        //defineLog(LOG3);
-}
+	//  SYNTAX: Tags can be user-defined, place tag in fB_USER_Define.h
+	//  defineHome(tag);					
+	//  definePage(tag,parentTag)	
+	//  defineRow(tag,targetTag,flags)	
+	//////////////////////////////////////////
 
-void defineTags() {
-//		defineTag(tag,flags)
- }
-
-  void defineMenu() {
- //		defineRow(tag,format,flags,tTag)	
-
-
-   	defineHome(FLATBRAIN);
-		defineJump(SYSTEM);
-		defineJump(RELAYPULS);
+	//////////////////////////////////////////
+   	defineHome(FLATBRAIN);			// MUST HAVE A HOME
+		defineJump(SYSTEM);			// SYSTEM Page created in fB_SYS_Defines.cpp
+		defineJump(RELAYPULS);		// OPTIONAL User-Defined Rows start here
 		defineJump(RELAYSTAT);
 		defineJump(SENSORS);
+	//////////////////////////////////////////
 /*
    	definePage(DIAGNOSTICS,HOME);
 		//defineRow(TSTAGS, NOACT,INT5,TSTAGS,200);
@@ -71,13 +56,13 @@ void defineTags() {
 		defineRow(FRAM, INT5,NOACT,NULL);
 */
    	definePage(RELAYPULS,HOME);
-		defineRow(Y1,BLANK, SHFTPULSE);
-		defineRow(Y2,BLANK, SHFTPULSE);
-		defineRow(Y3,BLANK, SHFTPULSE);
-		defineRow(Y4,BLANK, SHFTPULSE);
-		defineRow(Y5,BLANK, SHFTPULSE);
-		defineRow(Y6,BLANK, SHFTPULSE);
-		defineRow(YRST,BLANK, SHFTPULSE);
+		defineRow(Y1,NULL,BLANK | SHFTPULSE);
+		defineRow(Y2,NULL,BLANK | SHFTPULSE);
+		defineRow(Y3,NULL,BLANK | SHFTPULSE);
+		defineRow(Y4,NULL,BLANK | SHFTPULSE);
+		defineRow(Y5,NULL,BLANK | SHFTPULSE);
+		defineRow(Y6,NULL,BLANK | SHFTPULSE);
+		defineRow(YRST,NULL,BLANK | SHFTPULSE);
 
    	definePage(RELAYSTAT,HOME);
 		defineRow(Y1S, NULL, BINARY| REFRESH);
@@ -94,6 +79,16 @@ void defineTags() {
 		defineRow(CZ, NULL, FLOAT2);
 		defineRow(CC, NULL, FLOAT2);
 		defineRow(CL, NULL, FLOAT2);
+ 
+ 
+ 	//////////// DEFINE LOGS AND RECORDS
+	//// Tags flagged with LOG which do not have a Record Log specified
+	//// will be logged to LOGDEF.TXT
+
+	 ////defineLog(LOG2);
+     ////defineLog(LOG3);
+
+	////defineRecord(tag,fTag,flags)
  
  }
 

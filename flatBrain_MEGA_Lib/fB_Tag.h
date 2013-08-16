@@ -20,6 +20,11 @@ class fB_Curr {
 		void		putRowCount(uint8_t count); 
 		void		incrRowCount(); 
 		void		setCurrPage(uint16_t _tag);
+		void        nextSwitch();
+		void        prevSwitch();
+		void		selectRow();
+		void		deselectRow();
+
 		fB_Curr();
 };
 
@@ -50,7 +55,8 @@ class fB_Tag {
 		uint8_t		fTag;
 		uint16_t	tTag;	  // pointer to target Tag 
 
-		fB_Pin* pPin; 
+		fB_Pin* pPin;
+		
 
 		void		action(uint8_t hand);
 		void		showRow(uint8_t  hide=NULL);
@@ -60,8 +66,6 @@ class fB_Tag {
 		void		clearRow1();
 		void		clearRow();
 		void		hideRow();
-		void		selectRow();
-		void		deselectRow();
 
 		
 		void		clearFlags();
