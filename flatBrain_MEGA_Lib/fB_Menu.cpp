@@ -110,7 +110,7 @@ void fB_Menu::context(uint8_t  hand) {
 		jumpPage(curr.parentTag);
 		}
 	}
-	else curr.tag()->action(hand);
+	else curr.tag(curr.rowDex)->action(hand);
 }
 
 void fB_Curr:: nextSwitch() {
@@ -118,7 +118,7 @@ void fB_Curr:: nextSwitch() {
 	fB_Tag* pT;
 	for(i=0;i <= rowCount;i++)	{
 		pT = tag(i);
-//dbug(F("NX %P,  f16:%x , a:%L"),pT->Ptitle, pT->flag16,pT->getAction()) ;
+dbug(F("NX %P,  f16:%x , a:%L"),pT->Ptitle, pT->flag16,pT->getAction()) ;
 //Serial.println(pT->getAction(),DEC);
 		if((pT->flag16 & DISABLE || pT->getAction() == NOACT)  && !(pT->flag16 & PAGE)) continue;
 //dbug(F("NX2 %P,  f16:%x , a:%L"),pT->Ptitle, pT->flag16,pT->getAction()) ;
@@ -239,124 +239,86 @@ void fB_Menu:: showPage(uint16_t tag, uint8_t pageOption) {
 		curr.deselectRow();
 		curr.rowDex = 0;		
 		menu.selectHeader();
-	}
-	curr.setCurrPage(tag);
+		curr.setCurrPage(tag);
 
-	switch(tag) {
-		case FILES:
-			menu.getFileList();
-			count = menu.totalFiles;
-			listStart = menu.fListStart;
-			break;
-		case TLIST:
-			count = tagCount;
-			listStart = menu.tListStart;
-			break;
-		case CLOCK:
-			if(!(bootStatus & RTC)) return;
-			rtc.now();
-			Tag(CLKYR)->iVal = rtc.yOff+2000 ;
-			Tag(CLKMO)->iVal = rtc.m ;
-			Tag(CLKDY)->iVal = rtc.d ;
-			Tag(CLKHH)->iVal = rtc.hh ;
-			Tag(CLKMM)->iVal = rtc.mm ;
-			break;
-		case PINS:{
-			if(cardCount<2) jumpPage(SYSTEM);//jumpPage(curr.parentTag);
-			uint8_t  index, rowSide;
-			fB_Tag* pT;
-			fB_Card* pC;
-			for(index=0;index<tagCount;index++) if(tagRay[index].pin) break; // find first pin
-			if(i==tagCount) break;
-			pT = &tagRay[index];
-			pC = Card(pT->getCtag());
-			pT->getRowSide(rowSide); // stuff row,side encoded byte into this variable
-			Tag(PNPIN)->Ptext= pT->Ptitle;
-			Tag(PNPIN)->fTag = index;
-			Tag(PNCRD)->Ptext= pC->Ptitle;
-			Tag(PNADC)->iVal=0;
-			Tag(PNROW)->iVal = rowSide & 0x0F;
-			if((rowSide >> 7) == COL_L) Tag(PNCOL)->Ptext = PstrRay[P_LEFT];
-			else Tag(PNCOL)->Ptext = PstrRay[P_RIGHT];
+		switch(tag) {
+			case FILES:
+				menu.getFileList();
+				count = menu.totalFiles;
+				listStart = menu.fListStart;
+				break;
+			case TLIST:
+				count = tagCount;
+				listStart = menu.tListStart;
+				break;
+			case CLOCK:
+				if(!(bootStatus & RTC)) return;
+				rtc.now();
+				Tag(CLKYR)->iVal = rtc.yOff+2000 ;
+				Tag(CLKMO)->iVal = rtc.m ;
+				Tag(CLKDY)->iVal = rtc.d ;
+				Tag(CLKHH)->iVal = rtc.hh ;
+				Tag(CLKMM)->iVal = rtc.mm ;
+				break;
+			case PINS:
+				if(cardCount<2) jumpPage(SYSTEM);//jumpPage(curr.parentTag);
+				pinPageConstruct(0);
+				break;
 
-			if( pT->getMode() == IO_D) {
-				Tag(PNADC)->flag16 |= DISABLE;
-				Tag(PNTOG)->putAction(TOGGLE);
-				Tag(PNTOG)->Ptitle = PstrRay[P_TOGGLE];
-				//Tag(PNTOG)->Ptitle=PstrRay[P_TOGGLE];
-			}
-			else {
-				Tag(PNADC)->flag16  &= ~DISABLE;
-				//Tag(PNTOG)->Ptitle = PstrRay[P_GATE];
-				Tag(PNTOG)->Ptitle = PstrRay[P_GATE];
-				Tag(PNTOG)->putAction(CGATE);
-				pC->openCDchan(pT->getCpin());
-				if( pT->getOnVal() == GATE) {
-					Tag(GATE)->iVal= HIGH;
-					Tag(PNADC)->iVal= pT->read();
+		}
+
+		switch(tag) {
+			case FILES:
+			case TLIST:
+				if(count <= listStart)listStart = max(count - MAXLISTROWS,0);
+				if(MAXLISTROWS < count - listStart ) rows = MAXLISTROWS;
+				else rows = count - listStart;
+				for( i=0;i<rows;i++) {
+					switch(tag) {
+						case FILES:
+							x = menu.fSort[i+listStart];
+							Tag(FROW+i)->text = menu.mFile[x]->filename;
+							Tag(FROW+i)->fTag = x; // use fTag to store array index
+							if(menu.mFile[x]->fTag != NULL) Tag(FROW+i)->flag16 |= MARK; // |=log
+							else Tag(FROW+i)->flag16 &= ~MARK; 
+							break;
+						case TLIST: // temporary test case for TLIST
+							rTP[curr.pP->iVal + i+1].p = &tagRay[listStart + i];
+							break;
+					}
 				}
-				else {
-					Tag(PNADC)->iVal= 0;
-					Tag(GATE)->iVal= LOW;
-				}
-			}		
-			break;
-
-	}
-
-	switch(tag) {
-		case FILES:
-		case TLIST:
-			if(count <= listStart)listStart = max(count - MAXLISTROWS,0);
-			if(MAXLISTROWS < count - listStart ) rows = MAXLISTROWS;
-			else rows = count - listStart;
-			for( i=0;i<rows;i++) {
-				switch(tag) {
-					case FILES:
-						x = menu.fSort[i+listStart];
-						Tag(FROW+i)->text = menu.mFile[x]->filename;
-						Tag(FROW+i)->fTag = x; // use fTag to store array index
-						if(menu.mFile[x]->fTag != NULL) Tag(FROW+i)->flag16 |= MARK; // |=log
-						else Tag(FROW+i)->flag16 &= ~MARK; 
-						break;
-					case TLIST: // temporary test case for TLIST
-						//tagRay[tListZeroIndex + i] = tagRay[listStart + i];
-						break;
-				}
-			}
-			curr.putRowCount(rows+1);
-			/*
-			dr = curr.rowCount - (rows+1); // for page tags, pagerow count is stored in iVal
-			iVal = rows+1;
-			if(dr > 0) farY -= dr * ROWHT;
-			else farY = iVal * ROWHT;
-			*/
-			break;
+				curr.putRowCount(rows+1);
+				/*
+				dr = curr.rowCount - (rows+1); // for page tags, pagerow count is stored in iVal
+				iVal = rows+1;
+				if(dr > 0) farY -= dr * ROWHT;
+				else farY = iVal * ROWHT;
+				*/
+				break;
 		}
 
 	}
+
 	for(int i = 0; i <= curr.rowCount; i++)	curr.tag(i)->showRow(i,pageOption);
 }
 
 
  ///////////////////////////////////////// ROW METHODS //////////////////////////////////////////////
 
-
-
 uint16_t fB_Tag::getY(uint8_t rowIndex) {  return ( STARTY + (ROWHT) * rowIndex); }
-//uint16_t fB_Tag::getY(uint8_t) {  return ( STARTY + (ROWHT) * i); }
-/*
-void fB_Tag::showRow() {  
-	uint8_t buffer = curr.rowDex;
-	curr.row(tag);  // set rowDex to this tag on the current page
-	showRow();
-	curr.rowDex = buffer;
-}
-*/
 
-void fB_Tag::refreshRow(uint8_t rowIndex) {  
-	if(!rowIndex) rowIndex = curr.rowDex;
-	showRow(rowIndex,REFRESHPAGE);
+void fB_Menu::refreshRow(uint16_t tag) {  
+	uint8_t rowIndex;
+	fB_Tag* pT;
+	if(!tag){
+		rowIndex = curr.rowDex;
+		pT = curr.tag(rowIndex); 
+	}
+	else 	{
+		rowIndex = curr.row(tag);
+		pT = Tag(tag);
+	}
+	pT->showRow(rowIndex);
 }
 
 void fB_Tag::showRow(uint8_t  rowIndex, uint8_t  option) {  //when option == REFRESH, only right col data is updated
@@ -375,6 +337,7 @@ dbug(F("SR %P "),Ptitle);
 	format = getFormat();
 
 	if(option != REFRESHPAGE) {
+//dbug(F("SR2 %P "),Ptitle);
 		if(Ptitle != NULL) {
 			getPtext(Ptitle,Pbuffer);
 			if(!rowIndex) {
@@ -393,31 +356,27 @@ dbug(F("SR %P "),Ptitle);
 	}
 	//if( hide != HIDE  ) 	tft.resetDefColors();
 	//if( getAction() != UPDATE && option != REFRESHPAGE) tft.print(STARTX +ROWTEXTX,getY(rowIndex),bufferTitle,MAXCHARSTEXT);
-	if( option != REFRESHPAGE) tft.print(STARTX +ROWTEXTX,getY(rowIndex),bufferTitle,MAXCHARSTEXT);
+	if( option != REFRESHPAGE || format == TEXT || format == PTEXT) tft.print(STARTX +ROWTEXTX,getY(rowIndex),bufferTitle,MAXCHARSTEXT);
 		//dbug(F("SR format H: 0x%J"),format);
 		//Serial.println(format,DEC);
 		//Serial.println(format,HEX);
 
 	if(format == BLAMP) {
-		uint8_t bVal = LOW;
-		if(!pin || getMode()== IO_D) {
-			if(pin && (read() == getOnVal()))  bVal = HIGH;
-			else bVal = iVal;
+		//dbug(F("SR %P ival:%d "),Ptitle,iVal);
 			int x = STARTX +ROWSTATEX; int y = getY(rowIndex)+ROWSTATEY+2;
 			tft.drawCircle(x,y,8);
-			if(bVal) {
+			if(iVal) {
+				tft.setColor(FCOLOR,GCOLOR);
+				tft.fillCircle(x,y,6);
+			}
+			else  {
 				tft.setAll2Bcolor();
 				tft.fillCircle(x,y,6);
 				tft.resetDefColors();
 			}
-			else  {
-				tft.setColor(FCOLOR,GCOLOR);
-				tft.fillCircle(x,y,6);
-			}
-		}
+		//}
 	}
 	else {		
-		//dbug(F("SR format: %d"),getFormat());
 
 		switch(format) {
 
@@ -438,20 +397,92 @@ dbug(F("SR %P "),Ptitle);
 				tft.print( RIGHT, getY(rowIndex), bufferText);
 				break;
 			case PTEXT:
-				( RIGHT, getY(rowIndex), getPtext(Ptext,Pbuffer));
+				getPtext(Ptext,Pbuffer);
+				tft.print(  RIGHT, getY(rowIndex),Pbuffer );
 				break;
 		}
 	}
 	tft.resetDefColors();
 	flag16 |= VISIBLE;
 }
+
+void fB_Menu::pinPageConstruct(uint8_t startDex, uint8_t hand) {
+		int i;
+		fB_Tag* pT;
+		Tag(PNPIN)->Ptext=NULL;
+		Tag(PNPIN)->fTag = startDex; //  fTag avail to store index
+		Tag(PNCRD)->Ptext= NULL;
+		Tag(PNROW)->iVal = NULL;
+		Tag(PNCOL)->Ptext = NULL;
+		Tag(PNTOG)->iVal= LOW;
+		Tag(PNADC)->iVal=0;
+
+		if(hand == RIGHT) {
+			for( i = startDex+1;i<tagCount;i++) {
+				pT = &tagRay[i];
+				if(pT->pin) break;
+			}
+			if(i == tagCount) {
+				for( i = 0;i<tagCount;i++) {
+					pT = &tagRay[i];
+					if(pT->pin) break;
+				}
+			}
+		}
+		else {
+			for( i =startDex-1 ;i>=0;i--) {
+				pT = &tagRay[i];
+				if(pT->pin) break;
+			}
+			if(i < 0) {
+				for( i =tagCount-1 ;i>=0;i--) {
+					pT = &tagRay[i];
+					if(pT->pin) break;
+				}
+			}
+		}
+		pT = &tagRay[i];  // pT is Pointer to PIN
+		if(!pT->pin) return;
+		uint8_t rowSide;
+		pT->getRowSide(rowSide); // stuff row,side encoded byte into this variable
+		Tag(PNPIN)->Ptext=pT->Ptitle;
+		Tag(PNPIN)->fTag = i; //  fTag avail to store index
+	//dbug(F("%P tag->fTag: %d"),pT->Ptitle,Tag(PNPIN)->fTag);
+		Tag(PNTOG)->iVal= LOW;
+		Tag(PNCRD)->Ptext= Card(pT->getCtag())->Ptitle;
+		Tag(PNADC)->iVal=0;
+		Tag(PNROW)->iVal = rowSide & 0x1F;
+		if((rowSide >> 7) == COL_L) Tag(PNCOL)->Ptext = PstrRay[P_LEFT];
+		else Tag(PNCOL)->Ptext = PstrRay[P_RIGHT];
+		Tag(PNTOG)->putAction(TOGGLE);
+		if( pT->getMode() == IO_D) {
+			Tag(PNADC)->flag16 |= DISABLE;
+			Tag(PNTOG)->Ptitle=PstrRay[P_TOGGLE];
+			if(pT->isLatched()) Tag(PNTOG)->iVal = HIGH;
+			else Tag(PNTOG)->iVal = LOW;
+		}
+		else {
+			Tag(PNADC)->flag16  &= ~DISABLE;
+			Tag(PNTOG)->Ptitle = PstrRay[P_GATE];
+			Tag(PNTOG)->putAction(TGATE);
+			Card(pT->getCtag())->openCDchan(pT->getCpin());
+			if(pT->getOnVal() == PGATE) {
+				Tag(PNTOG)->iVal= HIGH;
+				Tag(PNADC)->iVal= pT->read();
+			}
+			else {
+				Tag(PNADC)->iVal= 0;
+				Tag(PNTOG)->iVal= LOW;
+			}
+		}
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 void fB_Tag::action(uint8_t  hand) {
 	if(flag16 & DISABLE ) return;
 	char Pbuffer[7];
 	fB_Tag *pT;
 	fB_Log *pF = NULL;   //  ptr to  logfile
-	uint16_t  index;
 	if(curr.pageTag == FPANEL)	pF = menu.mFile[fTag];//   value = index of the selected logfile
 	switch (hand)	{
 		case RIGHT:
@@ -459,50 +490,21 @@ void fB_Tag::action(uint8_t  hand) {
 			if(flag16 & PAGE) {	menu.jumpPage(tag); return; }
 			// then check tag
 			switch(tag) {
-				case PNPIN: {
-	dbug(F("ACTION %P , tag %d"),Ptitle,tag);
-					index = Tag(PNPIN)->fTag;
-					if(index++ >= tagCount) index=0;
-					pT = &tagRay[index];
-					uint8_t rowSide;
-					pT->getRowSide(rowSide); // stuff row,side encoded byte into this variable
-//	dbug(F("ACTION2 %P , tag %d"),Ptitle,tag);
-					//pP->pCard->AnalogGate(OFF);
-					Tag(PNTOG)->iVal= LOW;
-					Tag(PNCRD)->Ptext= Card(pT->getCtag())->Ptitle;
-					Tag(PNPIN)->Ptext=pT->Ptitle;
-					Tag(PNPIN)->fTag = index; //  fTag avail to store index
-					Tag(PNROW)->iVal = rowSide & 0x0F;
-					if((rowSide >> 7) == COL_L) Tag(PNCOL)->Ptext = PstrRay[P_LEFT];
-					else Tag(PNCOL)->Ptext = PstrRay[P_RIGHT];
-
-					if( pT->getMode() == IO_D) {
-						Tag(PNADC)->flag16 |= DISABLE;
-						Tag(PNTOG)->putAction(TOGGLE);
-						pT->Ptitle=PstrRay[P_TOGGLE];
-					}
-					else {
-						Tag(PNADC)->flag16  &= ~DISABLE;
-						pT->Ptitle = PstrRay[P_GATE];
-						Tag(PNTOG)->putAction(CGATE);
-						Card(pT->getCtag())->openCDchan(pT->getCpin());
-						if(pT->getOnVal() == GATE) {
-							Tag(PNTOG)->iVal= HIGH;
-							Tag(PNADC)->iVal= read();
-						}
-						else {
-							Tag(PNADC)->iVal= 0;
-							Tag(PNTOG)->iVal= LOW;
-						}
-					}
-					menu.showPage(curr.pP->tag,REFRESHPAGE);
+				case PNPIN: 
+					menu.pinPageConstruct(Tag(PNPIN)->fTag);
+					menu.refreshRow();
+					menu.refreshRow(PNCRD);
+					menu.refreshRow(PNROW);
+					menu.refreshRow(PNCOL);
+					menu.refreshRow(PNTOG);
+					menu.refreshRow(PNADC);
 					return;
 				case PNADC:
-					pT = &tagRay[ Tag(PNPIN)->iVal];
+					pT = &tagRay[ Tag(PNPIN)->fTag];
 					Tag(PNADC)->iVal = pT->read();
-					refreshRow();
+					menu.refreshRow();
 					return;
-				case FROW: {
+				case FROW: 
 					Tag(HEADER)->text = pF->filename;
 					pF->getAttributes();
 					//Tag(FDATE)->text = pF->dateStr;
@@ -532,9 +534,8 @@ void fB_Tag::action(uint8_t  hand) {
 					//Tag(FSIZE)->text = pF->sizeStr;
 					Tag(FDATE)->text = dateStr; // new atts
 					Tag(FSIZE)->text = sizeStr;
-					menu.showPage(curr.pP->tag,REFRESHPAGE);
-					//Tag(FDATE)->showRow();
-					//Tag(FSIZE)->showRow();
+					menu.refreshRow(FDATE);
+					menu.refreshRow(FSIZE);
 					return;
 				case FARCH:
 					if(pF->archive()){
@@ -544,9 +545,8 @@ void fB_Tag::action(uint8_t  hand) {
 						//Tag(FSIZE)->text = pF->sizeStr;
 						Tag(FDATE)->text = dateStr; // new atts
 						Tag(FSIZE)->text = sizeStr;
-						menu.showPage(curr.pP->tag,REFRESHPAGE);
-						//Tag(FDATE)->showRow();
-						//Tag(FSIZE)->showRow();
+						menu.refreshRow(FDATE);
+						menu.refreshRow(FSIZE);
 					}
 					return;
 				case FDEL:
@@ -558,7 +558,6 @@ void fB_Tag::action(uint8_t  hand) {
 					menu.selectHeader();
 					return;
 				case CLKSET:
-					//dbug(F("clkset"));
 					rtc.yOff = (uint8_t ) (Tag(CLKYR)->iVal - 2000);
 					rtc.m = (uint8_t ) Tag(CLKMO)->iVal ;
 					rtc.d = (uint8_t ) Tag(CLKDY)->iVal ;
@@ -572,30 +571,28 @@ void fB_Tag::action(uint8_t  hand) {
 					menu.showPage(curr.pP->tag,REFRESHPAGE);
 					break;
 				case CLKYR: 
-						dbug(F("ACTIONtag %P "),Ptitle);
-
 					iVal += 1;
-					refreshRow();
+					menu.refreshRow();
 					return;
 				case CLKMO: 
 					if(iVal < 12) iVal += 1;
 					else iVal = 1;
-					refreshRow();
+					menu.refreshRow();
 					return;
 				case CLKDY: 
 					if(iVal < 31) iVal += 1;
 					else iVal = 1;
-					refreshRow();
+					menu.refreshRow();
 					return;
 				case CLKHH: 
 					if(iVal < 23) iVal += 1;
 					else iVal = 1;
-					refreshRow();
+					menu.refreshRow();
 					return;
 				case CLKMM: 
 					if(iVal < 59) iVal += 1;
 					else iVal = 1;
-					refreshRow();
+					menu.refreshRow();
 					return;
 
 				//case TLAS:	createGdefLog() ; pPage->selectHeader();break;
@@ -609,51 +606,75 @@ void fB_Tag::action(uint8_t  hand) {
 			} // END SWITCH on Tag
 
 			switch(getAction()) {
-				case CGATE:
-					pT = &tagRay[Tag(PNPIN)->iVal];
-					if(pT->iVal == LOW) pT->iVal = HIGH;
-					else pT->iVal = LOW;
-					Card(pT->getCtag())->AnalogGate(pT->iVal);
-					if(pT->iVal = HIGH) Tag(PNADC)->iVal = pT->read();
-					else Tag(PNADC)->iVal = 0;
-					refreshRow();
-					refreshRow(curr.row(PNADC));
+				case TGATE:
+					pT = &tagRay[Tag(PNPIN)->fTag];
+					if(iVal == LOW) iVal = HIGH;
+					else iVal = LOW;
+dbug(F("tg %P ,  onval:%d  iVal:%d"),Ptitle,pT->getOnVal(),iVal);
+					Card(pT->getCtag())->AnalogGate(iVal);
+					if(iVal == HIGH) {
+						putOnVal(PGATE);
+						Tag(PNADC)->iVal = pT->read();
+dbug(F("tg2 %P ,  onval:%d  iVal:%d"),pT->Ptitle,pT->getOnVal(),iVal);
+					}
+					else {
+						putOnVal(LOW);
+						Tag(PNADC)->iVal = 0;
+dbug(F("tg3 %P ,  onval:%d  iVal:%d"),pT->Ptitle,pT->getOnVal(),iVal);
+					}
+					menu.refreshRow();
+					menu.refreshRow(PNADC);
 					return;
 				case TOGGLE:
+
+					pT = &tagRay[ Tag(PNPIN)->fTag];
+
 					if(iVal==LOW) { 
 						iVal = HIGH;
-						if(pin) write(getOnVal());
+						pT->write(getOnVal());
 					}
 					else {
 						iVal = LOW;
-						if(pin) write(~getOnVal());
+						pT->write(~getOnVal());
 					}
-					refreshRow();
+					menu.refreshRow();
 					return;
 				case PULSE:
 					if(pin)  pulse(PULSEMSECS);
-					refreshRow();
+					menu.refreshRow();
 					return;
 				case SHFTPULSE:
 					if(pin) YshiftPulse(PULSEMSECS);
-					refreshRow();
+					menu.refreshRow();
 					return;
 				case INCR:
 					iVal++;
-					refreshRow();
+					menu.refreshRow();
 					return;
 				case UPDATE:
 					if(pin) read();
-					refreshRow();
+					menu.refreshRow();
 					return;
 			} // END SWITCH on Action
-			break;
-		}// END SWITCH on Right
+			break; 	// END SWITCH on Right
+
 		case LEFT:
+		
+			switch(tag) {
+				case PNPIN: 
+					menu.pinPageConstruct(Tag(PNPIN)->fTag,LEFT);
+					menu.refreshRow();
+					menu.refreshRow(PNCRD);
+					menu.refreshRow(PNROW);
+					menu.refreshRow(PNCOL);
+					menu.refreshRow(PNTOG);
+					menu.refreshRow(PNADC);
+					return;
+			}
 			break;
 	}// END SWITCH ON HAND
 
-	}}
+}
 
 
 

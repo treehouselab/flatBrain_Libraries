@@ -15,8 +15,7 @@ class fB_Curr {
 		uint16_t	farY;			// used to determine max Y coord of page for refresh
 		uint8_t		rSelected;		// row is selected (highlighted)
 
-		fB_Tag*		tag();					    //  current row tag 
-		fB_Tag*		tag(uint8_t index);		// set current row
+		fB_Tag*		tag(uint8_t index = NULL);		// set current row
 		uint8_t     row(uint16_t tag);  // return index of tag's row on page
 		uint8_t		getRowCount(); 
 		void		putRowCount(uint8_t count); 
@@ -59,8 +58,6 @@ class fB_Tag {
 
 		void		action(uint8_t hand);
 		void		showRow(uint8_t rowIndex, uint8_t  pageOption=NULL);
-		void		refreshRow(uint8_t rowIndex=NULL);
-
 
 		uint16_t	getY(uint8_t rowIndex);
 		//void		frame();
@@ -95,6 +92,7 @@ class fB_Tag {
 		uint8_t getMode();
 		uint8_t getCtag() ;
 		uint8_t getCpin() ;
+		void putOnVal(uint8_t onval); // 3 options: HIGH, LOW, PGATE
 		void getRowSide(uint8_t &rowSide);
 		void write(unsigned int value);
 		void aWrite(unsigned int value);

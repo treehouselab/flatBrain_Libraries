@@ -16,9 +16,9 @@ void defineUser() {
  	//////////// DEFINE CARDS AND PINS
 		defineCard(YCRD,X76,C0,B1);	
 
-		definePin(Y1,YCRD,26,COL_L,INPUT,HIGH); 
-		definePin(Y2,YCRD,26,COL_R,OUTPUT,LOW); 
-		definePin(Y3,YCRD,27,COL_R,INPUT,LOW); 
+		definePin(Y1,YCRD,26,COL_L,OUTPUT,HIGH); 
+		definePin(Y2,YCRD,26,COL_R,OUTPUT,HIGH); 
+		definePin(Y3,YCRD,27,COL_R,OUTPUT,LOW); 
 		definePin(Y4,YCRD,27,COL_L,INPUT,LOW); 
 		definePin(Y5,YCRD,28,COL_R,INPUT,LOW);
 		definePin(Y6,YCRD,28,COL_L,INPUT,LOW);
@@ -32,10 +32,10 @@ void defineUser() {
 		definePin(Y5S,YCRD,20,COL_L,INPUT,LOW);
 		definePin(Y6S,YCRD,18,COL_R,INPUT,LOW);
 
-		definePin(V1,YCRD,22,COL_L,INPUT,LOW); 
-		definePin(V2,YCRD,24,COL_R,INPUT,LOW); 
+		definePin(V1,YCRD,22,COL_L,INPUT ,LOW); 
+		definePin(V2,YCRD,24,COL_R,INPUT,PGATE); 
 		definePin(V3,YCRD,22,COL_R,INPUT,LOW); 
-		definePin(CZ,YCRD,21,COL_L,INPUT,LOW); 
+		definePin(CZ,YCRD,21,COL_L,INPUT,PGATE); 
 		definePin(CC,YCRD,23,COL_L,INPUT,LOW);
 		definePin(CL,YCRD,23,COL_R,INPUT,LOW); 
 

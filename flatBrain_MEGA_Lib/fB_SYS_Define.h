@@ -179,8 +179,8 @@ XCARDS		Ox20-27
 
 
 #define	HIDE			1 
+#define	PGATE			2
 #define	ON				1
-#define	GATE			1
 #define	OFF				0
 
 //////////////////////////////////////////////////////////////////////////////
@@ -217,9 +217,9 @@ XCARDS		Ox20-27
 #define	SHFTPULSE		0x00004000L	
 #define	PULSE			0x00008000L
 #define	UPDATE			0x00010000L
-#define	CGATE			0x00020000L
+#define	TGATE			0x00020000L
 #define	NOACT			0x00040000L
-//#define				0x00080000L
+#define	PNTOG			0x00080000L
 //#define				0x00100000L
 //#define				0x00200000L
 
@@ -317,7 +317,6 @@ XCARDS		Ox20-27
 #define PNCRD 			125		    
 #define PNTOG 			126		    
 #define PNADC 			127		    
-#define PGATE 			128		    
 
 //#define HEADER			130   
 #define FSTAMP			137		    
