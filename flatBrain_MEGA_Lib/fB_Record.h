@@ -10,7 +10,7 @@
 
 class fB_Log {
 	public:
-		uint8_t	fTag;
+		uint8_t	    fTag;  // same fTag as in Tags
 		char		filename[14];
 		//uint8_t 		enabled;
 		//char	fileext[4];

@@ -9,11 +9,11 @@ int compareFilename(const void *x1, const void *x2) {
 	return strcmp(f1->filename,f2->filename);
 }
 
-fB_Menu::fB_Menu(){
+void fB_Menu::init(){
 
 	totalFiles   = 0;
 	fListStart = 0;
-	tListStart = 0;
+	sListStart = 0;
 	buttonCode = 0;
 	PstrCount = 0;	
 
@@ -37,6 +37,9 @@ fB_Menu::fB_Menu(){
 	createPstr("TOGGLE");
 	#define P_GATE 9
 	createPstr("GATE");
+
+	Tag(FPANEL)->flag16 |= TTITLE;  // for filename
+
 
 }
 
@@ -84,12 +87,10 @@ void fB_Menu::context(uint8_t  hand) {
 		switch(curr.pageTag) {
 			case HOME:		return; break;
 			case FILES: 	pListStart = &fListStart; totalLines = totalFiles; break;
-			case TLIST: 	pListStart = &tListStart; totalLines = tagCount;   break;
 		}
 		if(hand==RIGHT) {
 			switch(curr.pageTag) {
 				case FILES: 		
-				case TLIST: 
 					if(	totalLines >  *pListStart+MAXLISTROWS) {
 						*pListStart += MAXLISTROWS; 
 						jumpPage(curr.pageTag);
@@ -100,7 +101,6 @@ void fB_Menu::context(uint8_t  hand) {
 		else {
 			switch(curr.pageTag) {
 				case FILES: 		
-				case TLIST: 	
 					if(	*pListStart >= MAXLISTROWS) {
 						*pListStart -= MAXLISTROWS;	
 						jumpPage(curr.pageTag); 
@@ -146,8 +146,6 @@ void fB_Curr:: prevSwitch() {
 		}
 	}
 }
-
-
 void fB_Menu:: selectHeader() {
 	curr.deselectRow();
 	curr.rowDex = 0;			
@@ -161,11 +159,6 @@ void fB_Menu:: clearPage(uint8_t  full) {
 	curr.rowDex = 0;
 
 }
-
-
-
-
-
 void fB_Menu::listFiles(uint16_t x1,uint16_t y1,uint16_t x2,uint16_t y2) {
 	uint8_t  len,maxlines, linecount=0;
 	uint8_t res;
@@ -200,15 +193,17 @@ void fB_Menu::getFileList() {
 		delete fSort;
 	}
 	totalFiles = fat.fileCount();
+dbug(F("gfl tf: %d"), totalFiles);
 	mFile = (fB_Log **) malloc(sizeof(fB_Log*) * totalFiles);
 	fat.restartDir();
 	i=0;
 	k=0;
 	//while ((fat.findNextFile()== NO_ERROR) && i<totalFiles){
-		/*
 	while (!fat.findNextFile() && i<totalFiles) {
+		dbug(F("gfl %s"), fat.DE.filename);
+
 		mFile[i]= new fB_Log(NULL,fat.DE.filename); // non-active ( non-.txt) tags are NULL
-		for(j=0;j<logCount && k<logCount;j++ ) {
+		for(j=0;j<logFileCount && k<logFileCount;j++ ) {
 			if(!strcmp(logRay[j].name,mFile[i]->filename)) {
 				mFile[i]->fTag = logRay[j].tag;
 				logRay[j].pLog = mFile[i];
@@ -218,7 +213,6 @@ void fB_Menu::getFileList() {
 		}
 		i++;
 	}
-			*/
 
 	///////////////////////// q sort indexes ////////////////////
 	fSort = (uint8_t *) malloc (totalFiles);
@@ -233,7 +227,7 @@ void fB_Menu:: showPage(uint16_t tag, uint8_t pageOption) {
 	uint8_t  rows = 0;  //  calculated rows on this page (may be less than default pageRowCount)
 	uint8_t  count,listStart;
 	float dv;
-	//fB_Tag *pT;
+	fB_Tag *pT;
 	if(pageOption != REFRESHPAGE) {
 		Tag(HEADER)->Ptitle = curr.pP->Ptitle; 
 		curr.deselectRow();
@@ -246,10 +240,6 @@ void fB_Menu:: showPage(uint16_t tag, uint8_t pageOption) {
 				menu.getFileList();
 				count = menu.totalFiles;
 				listStart = menu.fListStart;
-				break;
-			case TLIST:
-				count = tagCount;
-				listStart = menu.tListStart;
 				break;
 			case CLOCK:
 				if(!(bootStatus & RTC)) return;
@@ -269,25 +259,25 @@ void fB_Menu:: showPage(uint16_t tag, uint8_t pageOption) {
 
 		switch(tag) {
 			case FILES:
-			case TLIST:
 				if(count <= listStart)listStart = max(count - MAXLISTROWS,0);
 				if(MAXLISTROWS < count - listStart ) rows = MAXLISTROWS;
 				else rows = count - listStart;
 				for( i=0;i<rows;i++) {
 					switch(tag) {
 						case FILES:
+							pT = curr.tag(i+1);
 							x = menu.fSort[i+listStart];
-							Tag(FROW+i)->text = menu.mFile[x]->filename;
-							Tag(FROW+i)->fTag = x; // use fTag to store array index
-							if(menu.mFile[x]->fTag != NULL) Tag(FROW+i)->flag16 |= MARK; // |=log
-							else Tag(FROW+i)->flag16 &= ~MARK; 
-							break;
-						case TLIST: // temporary test case for TLIST
-							rTP[curr.pP->iVal + i+1].p = &tagRay[listStart + i];
+							//pT->iVal = x;
+							pT->ptitle = menu.mFile[x]->filename;
+							pT->fTag = x; 
+					dbug(F("sp %P  , %s"), curr.pP->Ptitle,pT->ptitle);
+							// use fTag to store array index
+							if(menu.mFile[x]->fTag == NULL) pT->flag16 |= MARK; // |=log
+							else pT->flag16 &= ~MARK; 
 							break;
 					}
 				}
-				curr.putRowCount(rows+1);
+				curr.putRowCount(rows);
 				/*
 				dr = curr.rowCount - (rows+1); // for page tags, pagerow count is stored in iVal
 				iVal = rows+1;
@@ -322,41 +312,29 @@ void fB_Menu::refreshRow(uint16_t tag) {
 }
 
 void fB_Tag::showRow(uint8_t  rowIndex, uint8_t  option) {  //when option == REFRESH, only right col data is updated
-dbug(F("SR %P "),Ptitle);
+dbug(F("SR %P f16: 0x%x"),Ptitle, flag16);
 
 	int i=0;
 	uint32_t format;
-	char bufferTitle[MAXCHARSTEXT+1];
 	char Pbuffer[MAXCHARSTEXT+1];
-	char bufferText[MAXCHARSTEXT+1];
-	bufferTitle[0] = '\0';	
-
+	char* pTitleText;
 	tft.resetDefColors();
 	if( (flag16 & DISABLE)) 	tft.setAll2Bcolor();
 	else if(flag16 & MARK)	tft.setColor(FCOLOR,HCOLOR);
 	format = getFormat();
+//dbug(F("SR2 %P "),Ptitle);
 
 	if(option != REFRESHPAGE) {
-//dbug(F("SR2 %P "),Ptitle);
-		if(Ptitle != NULL) {
-			getPtext(Ptitle,Pbuffer);
-			if(!rowIndex) {
-				sprintf(bufferTitle,"< %s >",Pbuffer);
-				tft.print(CENTER,getY(rowIndex),bufferTitle,MAXCHARSTEXT);
-				return;
-			}
-			else if(curr.pP->flag16 & LIST)  sprintf(bufferTitle,"%s%d",Pbuffer,curr.rowDex);
-			else strcpy(bufferTitle,Pbuffer);
-		}
-		if(format == TEXT) strcpy(bufferText,text);  // use non-PROGMEM title (left side string) if avail
-		else {
-			if(format == PTEXT) getPtext(Ptext,bufferText);
-			else bufferText[0] = '\0';
-		}
+		if(!(flag16 & TTITLE)) pTitleText = getPtext(Ptitle,Pbuffer); // title points to Ptitle (usual case)
+		else pTitleText = ptitle; // title points to text field
+		if(!rowIndex) {  // row is page header
+			char bufferTitle[MAXCHARSTEXT+1];
+			sprintf(bufferTitle,"< %s >",pTitleText);
+			tft.print(CENTER,getY(rowIndex),bufferTitle,MAXCHARSTEXT);
+			return;
+		} 
 	}
-	//if( hide != HIDE  ) 	tft.resetDefColors();
-	//if( getAction() != UPDATE && option != REFRESHPAGE) tft.print(STARTX +ROWTEXTX,getY(rowIndex),bufferTitle,MAXCHARSTEXT);
-	if( option != REFRESHPAGE || format == TEXT || format == PTEXT) tft.print(STARTX +ROWTEXTX,getY(rowIndex),bufferTitle,MAXCHARSTEXT);
+	if( option != REFRESHPAGE || format == TEXT || format == PTEXT || flag16 & TTITLE) tft.print(STARTX +ROWTEXTX,getY(rowIndex),pTitleText,MAXCHARSTEXT);
 		//dbug(F("SR format H: 0x%J"),format);
 		//Serial.println(format,DEC);
 		//Serial.println(format,HEX);
@@ -377,7 +355,7 @@ dbug(F("SR %P "),Ptitle);
 		//}
 	}
 	else {		
-
+		
 		switch(format) {
 
 			case INT5:
@@ -386,19 +364,21 @@ dbug(F("SR %P "),Ptitle);
 				break;
 			case FLOAT1:
 				if(flag16 & UNDEF) tft.print( RIGHT, getY(rowIndex),getPstr(P_STRIKE,Pbuffer));
-				else tft.printFloat(STARTX +MONX,getY(rowIndex),dVal->dVal,1,RIGHT);
+				else tft.printFloat(STARTX +MONX,getY(rowIndex),dVal->value,1,RIGHT);
 				break;
 			case FLOAT2:
 				if(flag16 & UNDEF) tft.print( RIGHT, getY(rowIndex), getPstr(P_STRIKE,Pbuffer));
-				else tft.printFloat(STARTX +MONX,getY(rowIndex),dVal->dVal,AR4_2,RIGHT);
+				else tft.printFloat(STARTX +MONX,getY(rowIndex),dVal->value,AR4_2,RIGHT);
 				break;
 				break;
 			case TEXT:
-				tft.print( RIGHT, getY(rowIndex), bufferText);
+				if(flag16 & LJUST) 	tft.print( LEFT, getY(rowIndex), ptext);
+				else 	tft.print( RIGHT, getY(rowIndex), ptext);
 				break;
 			case PTEXT:
 				getPtext(Ptext,Pbuffer);
-				tft.print(  RIGHT, getY(rowIndex),Pbuffer );
+				if(flag16 & LJUST) 	tft.print(  LEFT, getY(rowIndex),Pbuffer );
+				else 	tft.print(  RIGHT, getY(rowIndex),Pbuffer );
 				break;
 		}
 	}
@@ -454,7 +434,7 @@ void fB_Menu::pinPageConstruct(uint8_t startDex, uint8_t hand) {
 		Tag(PNROW)->iVal = rowSide & 0x1F;
 		if((rowSide >> 7) == COL_L) Tag(PNCOL)->Ptext = PstrRay[P_LEFT];
 		else Tag(PNCOL)->Ptext = PstrRay[P_RIGHT];
-		Tag(PNTOG)->putAction(TOGGLE);
+		Tag(PNTOG)->putAction(PINTOG);
 		if( pT->getMode() == IO_D) {
 			Tag(PNADC)->flag16 |= DISABLE;
 			Tag(PNTOG)->Ptitle=PstrRay[P_TOGGLE];
@@ -482,8 +462,34 @@ void fB_Tag::action(uint8_t  hand) {
 	if(flag16 & DISABLE ) return;
 	char Pbuffer[7];
 	fB_Tag *pT;
-	fB_Log *pF = NULL;   //  ptr to  logfile
-	if(curr.pageTag == FPANEL)	pF = menu.mFile[fTag];//   value = index of the selected logfile
+	fB_Log *pF =  NULL;   //  ptr to  logfile
+	dbug(F("ra %P ,  cp: %P , iVal:%d"),Ptitle,curr.pP->ptitle,iVal);
+
+	if(curr.pageTag == FPANEL || curr.pageTag == FILES) {
+		pF = menu.mFile[fTag];
+		if(pF) pF->getAttributes();
+	}
+	switch(curr.pageTag) {
+		case FILES:	Tag(FPANEL)->ptitle = pF->filename;
+					Tag(FDATE)->ptitle = dateStr;
+					Tag(FSIZE)->ptext = sizeStr;
+					Tag(FDUMP)->fTag = fTag; //iVal = index of the selected logfile
+					Tag(FSTD)->fTag = fTag;
+					Tag(FARCH)->fTag = fTag;
+					//if(flag16 & LOG) {
+						//Tag(FARCH)->flag16 |= VISIBLE;  // file is logfile
+						Tag(FSTD)->Ptitle = PstrRay[P_STAMP];  
+						Tag(FSTD)->tag = FSTAMP;  
+					//}
+					//else {
+					//	Tag(FARCH)->status &= ~VISIBLE;  // file is other file
+					//	Tag(FSTD)->Ptitle = PstrRay[P_DELETE];  
+					//	Tag(FSTD)->type = FDEL;  
+					//}
+					menu.jumpPage(FPANEL);
+					return;
+	}
+
 	switch (hand)	{
 		case RIGHT:
 			//check page jump first 
@@ -504,50 +510,42 @@ void fB_Tag::action(uint8_t  hand) {
 					Tag(PNADC)->iVal = pT->read();
 					menu.refreshRow();
 					return;
-				case FROW: 
-					Tag(HEADER)->text = pF->filename;
-					pF->getAttributes();
-					//Tag(FDATE)->text = pF->dateStr;
-					//Tag(FSIZE)->text = pF->sizeStr;
-					Tag(FDATE)->text = dateStr;
-					Tag(FSIZE)->text = sizeStr;
-					Tag(FDUMP)->iVal = iVal;
-					Tag(FSTD)->iVal = iVal;
-					Tag(FARCH)->iVal = iVal;
-					//if(flag16 & LOG) {
-						Tag(FARCH)->flag16 |= VISIBLE;  // file is logfile
-						Tag(FSTD)->Ptitle = PstrRay[P_STAMP];  
-						Tag(FSTD)->tag = FSTAMP;  
-					//}
-					//else {
-					//	Tag(FARCH)->status &= ~VISIBLE;  // file is other file
-					//	Tag(FSTD)->Ptitle = PstrRay[P_DELETE];  
-					//	Tag(FSTD)->type = FDEL;  
-					//}
-					menu.jumpPage(FPANEL);
-					return;
 				case FSTAMP:
+					dbug(F("ra stamp1"));
+
 					pF->writeData();
+										dbug(F("ra stamp2"));
+
 					pF->getAttributes();
+										dbug(F("ra stamp3"));
+
 					menu.selectHeader();
+										dbug(F("ra stamp4"));
+
 					//Tag(FDATE)->text = pF->dateStr; // new atts
 					//Tag(FSIZE)->text = pF->sizeStr;
-					Tag(FDATE)->text = dateStr; // new atts
-					Tag(FSIZE)->text = sizeStr;
+					Tag(FDATE)->ptext = dateStr; // new atts
+										dbug(F("ra stamp5"));
+
+					Tag(FSIZE)->ptext = sizeStr;
+										dbug(F("ra stamp6"));
+
 					menu.refreshRow(FDATE);
+										dbug(F("ra stamp7"));
+
 					menu.refreshRow(FSIZE);
 					return;
 				case FARCH:
-					if(pF->archive()){
-						pF->getAttributes();
-						menu.selectHeader();
+					pF->archive();
+					//if(pF->archive()){
+						//menu.selectHeader();
 						//Tag(FDATE)->text = pF->dateStr; // new atts
 						//Tag(FSIZE)->text = pF->sizeStr;
-						Tag(FDATE)->text = dateStr; // new atts
-						Tag(FSIZE)->text = sizeStr;
-						menu.refreshRow(FDATE);
-						menu.refreshRow(FSIZE);
-					}
+						//Tag(FDATE)->ptext = dateStr; // new atts
+						//Tag(FSIZE)->ptext = sizeStr;
+						//menu.refreshRow(FDATE);
+						//menu.refreshRow(FSIZE);
+					//}
 					return;
 				case FDEL:
 					pF->remove();
@@ -599,7 +597,7 @@ void fB_Tag::action(uint8_t  hand) {
 				case TIAT:	record.EEinitTags(); menu.selectHeader();return;
 				case TSAT:	record.EEwriteTags(); menu.selectHeader();return;
 				case TLAU:	
-							for(int i = 0;i<logCount;i++) logRay[i].pLog->writeData();
+							for(int i = 0;i<logFileCount;i++) logRay[i].pLog->writeData();
 							menu.selectHeader();
 							return;
 
@@ -610,22 +608,19 @@ void fB_Tag::action(uint8_t  hand) {
 					pT = &tagRay[Tag(PNPIN)->fTag];
 					if(iVal == LOW) iVal = HIGH;
 					else iVal = LOW;
-dbug(F("tg %P ,  onval:%d  iVal:%d"),Ptitle,pT->getOnVal(),iVal);
 					Card(pT->getCtag())->AnalogGate(iVal);
 					if(iVal == HIGH) {
 						putOnVal(PGATE);
 						Tag(PNADC)->iVal = pT->read();
-dbug(F("tg2 %P ,  onval:%d  iVal:%d"),pT->Ptitle,pT->getOnVal(),iVal);
 					}
 					else {
 						putOnVal(LOW);
 						Tag(PNADC)->iVal = 0;
-dbug(F("tg3 %P ,  onval:%d  iVal:%d"),pT->Ptitle,pT->getOnVal(),iVal);
 					}
 					menu.refreshRow();
 					menu.refreshRow(PNADC);
 					return;
-				case TOGGLE:
+				case PINTOG:
 
 					pT = &tagRay[ Tag(PNPIN)->fTag];
 
@@ -823,7 +818,7 @@ void fB_Tag::clearRow1(uint8_t rowIndex) {
 		case LEFT: 
 			switch(type) {
 
-				case TOGGLE:
+				case PINTOG:
 					pT->iVal=LOW; 
 					value = LOW;
 					if(pP) pP->write(~(pP->getOnVal()));

@@ -8,7 +8,7 @@ class fB_Menu {
 		//fB_Curr		curr;
 
 		int			fListStart ;	// can go negative !	
-		int			tListStart ;		
+		int			sListStart ;		
 
 		uint8_t 	buttonCode;  // set by tft.readButtons in interrupt
 		uint16_t 	PstrCount;	
@@ -29,9 +29,8 @@ class fB_Menu {
 		void		getFileList(); 
 		void		pinPageConstruct(uint8_t startDex, uint8_t hand = RIGHT);
 		void		refreshRow(uint16_t tag = NULL);
+		void		init();
 
-
-		fB_Menu();
 
 	private:
 

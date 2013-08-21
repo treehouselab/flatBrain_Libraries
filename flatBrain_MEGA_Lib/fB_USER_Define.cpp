@@ -46,16 +46,7 @@ void defineUser() {
 		defineJump(RELAYSTAT);
 		defineJump(SENSORS);
 	//////////////////////////////////////////
-/*
-   	definePage(DIAGNOSTICS,HOME);
-		//defineRow(TSTAGS, NOACT,INT5,TSTAGS,200);
-		//defineRow(TUTAGS, NOACT,INT5,TUTAGS,200);
-		//defineRow(TPINS, NOACT,INT5,TPINS,200);
-		//defineRow(TLOGS, NOACT,INT5,TLOGS,200);
-		//defineRow(TPAGES, NOACT,INT5,TPAGES,200);
-		//defineRow(TROWS, NOACT,INT5,TROWS,200);
-		defineRow(FRAM, INT5,NOACT,NULL);
-*/
+
    	definePage(RELAYPULS,HOME);
 		defineRow(Y1,NULL,BLANK | SHFTPULSE);
 		defineRow(Y2,NULL,BLANK | SHFTPULSE);
@@ -74,22 +65,22 @@ void defineUser() {
 		defineRow(Y6S, NULL, BLAMP| UPDATE);
 
    	definePage(SENSORS,HOME);
-		defineRow(V1, NULL, FLOAT1);
-		defineRow(V2, NULL, FLOAT1);
-		defineRow(V3, NULL, FLOAT1);
-		defineRow(CZ, NULL, FLOAT2);
-		defineRow(CC, NULL, FLOAT2);
-		defineRow(CL, NULL, FLOAT2);
+		defineRow(V1, NULL, FLOAT1 | LOG);
+		defineRow(V2, NULL, FLOAT1 | LOG);
+		defineRow(V3, NULL, FLOAT1 | LOG);
+		defineRow(CZ, NULL, FLOAT2 | LOG);
+		defineRow(CC, NULL, FLOAT2 | LOG);
+		defineRow(CL, NULL, FLOAT2 | LOG);
  
  
- 	//////////// DEFINE LOGS AND RECORDS
-	//// Tags flagged with LOG which do not have a Record Log specified
-	//// will be logged to LOGDEF.TXT
+ 	//////////// DEFINE RECORDS
 
-	 ////defineLog(LOG2);
-     ////defineLog(LOG3);
-
-	////defineRecord(tag,fTag,flags)
+	defineRecord(V1,LOG1,NULL); // flags: [format] | STOREE ( for eeprom )
+	defineRecord(V1,LOG1,NULL);
+	defineRecord(V3,LOG1,NULL);
+	defineRecord(CZ,LOG1,NULL);
+	defineRecord(CC,LOG1,NULL);
+	defineRecord(CL,LOG1,NULL);
 
 
  }

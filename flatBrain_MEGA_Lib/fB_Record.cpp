@@ -31,8 +31,8 @@ void fB_Record::createTagDefLog() {
 						case BLAMP:
 						case INT5:		sprintf(datastr,"%d",pT->iVal);break;
 						case FLOAT1:	
-						case FLOAT2:	doubleToStr(pT->dVal->dVal,3,datastr); break;	
-						case TEXT:		sprintf(datastr,"%s",pT->text); break;
+						case FLOAT2:	doubleToStr(pT->dVal->value,3,datastr); break;	
+						case TEXT:		sprintf(datastr,"%s",pT->ptext); break;
 						case PTEXT:		getPtext(pT->Ptext, datastr);break;
 						case STRIKE:	sprintf(datastr,P("----"));break;
 						case BLANK:		datastr[0] = '\0' ;break;
@@ -65,11 +65,16 @@ fB_Log::fB_Log(uint8_t	_fTag, char * _filename) {
 bool fB_Log::create(char *fname) {
 	char *pF;
 	uint8_t  res;
+	dbug(F("LOG creat1 %s"),fname);
+
 	if(fname) pF = fname; 
 	else pF = filename; // if not given, use object filename
+	dbug(F("LOG creat2 %s"),fname);
 	res = fat.createFile(pF);
+	dbug(F("LOG creat3 %s"),fname);
 	if(!res) {
 		setDate();
+	dbug(F("LOG creat4 %s"),fname);
 		return true;
 	}
 	return false;
@@ -81,40 +86,56 @@ void fB_Log::setDate() {
 }
 
 void fB_Log::writeHeader() {
+	if(!logTagCount) return;
+
 	fB_Tag * pT;
-	char title[MAXCHARSTEXT];
+	char title[MAXCHARSTEXT+1];
 	char Pbuffer[15];
+	dbug(F("LOG WDH create %s"),filename);
+
 	uint8_t res =fat.openFile(filename,FILEMODE_TEXT_WRITE==NO_ERROR);
-	char buffer[ tagCount*10];
+	dbug(F("LOG WDH2 create %s  tc:%d, ltc: %d,"),filename, tagCount,logTagCount);
+	char buffer[(logTagCount+2) * MAXCHARSTEXT];
 	buffer[0] = '\0';
 	sprintf(buffer,P("DATE,TIME,%s"));
+	dbug(F("LOG WDH3 create %s"),filename);
 	if(res!=NO_ERROR) {
 		//dbug("LOG WD create %s",filename);
+	dbug(F("LOG WDH4 create %s"),filename);
 		if(!create()) return;
 		writeHeader();
 	}
+	dbug(F("LOG WDH5 create %s"),filename);
 	for(int k = 0;k<tagCount;k++) {	
 		pT = &tagRay[k];
 		if(!pT) continue;
 		getPtext(pT->Ptitle,title);
-		if( pT->fTag == fTag) sprintf(buffer,P("%s,%s"),buffer,title);
+		if( pT->flag16 & LOG && pT->fTag == fTag) sprintf(buffer,"%s,%s",buffer,title);
 	}
 	fat.writeLn(buffer);
 	fat.closeFile();
+	dbug(F("LOG WDH6 create %s"),filename);
 	setDate();
 }
 void fB_Log::writeData() {
+	if(!logTagCount) return;
+
 	fB_Tag * pT;
 	char Pbuffer[6];
 	char buffer[100];
 	uint8_t res =fat.openFile(filename,FILEMODE_TEXT_WRITE);
 	buffer[0] = '\0';
+
+dbug(F("LOG WD create %s"),filename);
+
 	rtc.stamp(buffer);
 	if(res!=NO_ERROR) {
-		//dbug("LOG WD create %s",filename);
+dbug(F("LOG2 WD create %s"),filename);
 		if(!create()) return;
 		writeHeader();
 	}
+dbug(F("LOG3 WD create %s"),filename);
+/*
 	for(int k = 0;k<tagCount;k++) {	
 		pT = &tagRay[k];
 		if(!pT) continue;
@@ -124,8 +145,8 @@ void fB_Log::writeData() {
 				case BLAMP:
 				case INT5:		sprintf(datastr,"%d",pT->iVal);break;
 				case FLOAT1:	
-				case FLOAT2:	doubleToStr(pT->dVal->dVal,3,datastr); break;	
-				case TEXT:		sprintf(datastr,"%s",pT->text);break;
+				case FLOAT2:	doubleToStr(pT->dVal->value,3,datastr); break;	
+				case TEXT:		sprintf(datastr,"%s",pT->ptext);break;
 				case PTEXT:		getPtext(pT->Ptext, datastr);break;
 				case STRIKE:	sprintf(datastr,P("----"));break;
 				case BLANK:		datastr[0] = '\0' ;break;
@@ -134,15 +155,19 @@ void fB_Log::writeData() {
 		}
 	}
 	fat.writeLn(buffer);
+	*/
 	fat.closeFile();
 	setDate();
 }
 bool fB_Log::archive() {
+dbug(F("fbLog1 arch fTag: %s "),fTag);
 	if(!fTag) return false; // can't archive unless active .txt file
-	char buf[2][14];
+	char buf[2][MAXCHARSTEXT+1];
 	char base[9];
 	int i,j=1,k=0;
+dbug(F("fbLog2 arch fn: %s "),filename);
 	if(fat.getFile(filename)==NO_ERROR){
+dbug(F("fbLog3 arch fn: %s "),filename);
 		sprintf(base,"%s",fat.DE.basename);
 		sprintf(buf[k],"%s.A%d",base,MAXAFILES);
 		if(fat.getFile(buf[k])==NO_ERROR) fat.deleteFile(buf[k]);
@@ -207,7 +232,7 @@ void fB_Record::EEwriteTags() {
 		tAddr = j*32+BASEGLOBAL;
 		ee.setBlock(tAddr,'\0',48); // leaves a zeroed 8 bits at end of glist to mark end
 		ee.writeBlock(tAddr,(uint8_t *)title,strlen(title));
-		data = (uint8_t *)&(pT->dVal->dVal);
+		data = (uint8_t *)&(pT->dVal->value);
 		vAddr = tAddr+8;
 		ee.writeBlock(vAddr,data,4);
 		data = (uint8_t *)&(pT->dVal->factor);
@@ -259,12 +284,12 @@ fB_Tag* fB_Record::EEgetTag( uint16_t tag) {
 		if(!strcmp(title,tStr)) {
 			ee.readBlock(vAddr,vBuffer,4);
 			data = (double*)vBuffer ;
-			pT->dVal->dVal = *data + ROUNDOFF;
+			pT->dVal->value = *data + ROUNDOFF;
 			ee.readBlock(fAddr,fBuffer,4);
 			data = (double*)fBuffer;
 			pT->dVal->factor = *data;
 			pT->flag16 = ee.readByte(gAddr);
-			dbug(F("EEREAD tag: %s  value: %f  fact: %f  flag: 0x%h"),tBuffer,pT->dVal->dVal,pT->dVal->factor,pT->flag16);
+			dbug(F("EEREAD tag: %s  value: %f  fact: %f  flag: 0x%h"),tBuffer,pT->dVal->value,pT->dVal->factor,pT->flag16);
 			return pT;
 		}
 		
@@ -272,7 +297,7 @@ fB_Tag* fB_Record::EEgetTag( uint16_t tag) {
 	return NULL;
 }
 char* getLogName(uint8_t fTag) {	
-	for(int i=0;i < logCount;i++) if(logRay[i].tag == fTag) return logRay[i].name;
+	for(int i=0;i < logFileCount;i++) if(logRay[i].tag == fTag) return logRay[i].name;
 	return NULL;
 }
 

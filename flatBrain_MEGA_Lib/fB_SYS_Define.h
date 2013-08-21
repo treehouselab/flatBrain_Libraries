@@ -192,10 +192,10 @@ XCARDS		Ox20-27
 #define	LOG				0x0008	// Log to SD card
 #define	MARK			0x0010	// Mark row
 #define	VISIBLE			0x0020
-#define	DISABLE			0x0040
-#define	UNDEF			0x0080
-#define	LJUST			0x0100
-#define	LIST			0x0200
+#define	TTITLE			0x0040	// use char* ptitle for row title instead of Ptitle
+#define	DISABLE			0x0080
+#define	UNDEF			0x0100
+#define	LJUST			0x0200 // ??
 //#define				0x0400
 //#define				0x0800
 #define	MASKP			0xF000	// 4 bits reserved ROWCOUNT
@@ -212,15 +212,15 @@ XCARDS		Ox20-27
 #define	MASK8A			0x0F	 
 #define	MASK32A			0x003FF000L
 #define	UNDEF			0x00000000L	
-#define	TOGGLE			0x00001000L	
+#define	PINTOG			0x00001000L	
 #define	INCR			0x00002000L	
 #define	SHFTPULSE		0x00004000L	
 #define	PULSE			0x00008000L
 #define	UPDATE			0x00010000L
 #define	TGATE			0x00020000L
 #define	NOACT			0x00040000L
-#define	PNTOG			0x00080000L
-//#define				0x00100000L
+#define	TOGGLE			0x00080000L
+#define	FROW	       	0x00100000L
 //#define				0x00200000L
 
 #define	MASK8F			0xF0	 
@@ -256,17 +256,14 @@ XCARDS		Ox20-27
 ////////////// ALL SYSTEM TAGS < 500 ///////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
 
-// LOG tags, Range 1-255
-#define	DEFLOG		1	
-#define	SYSTAG		2	
+// SYSTEM LOG tags, Range 1-9
+#define	SYSTAG		1	
 
 ///// TAG ARRAY tags, unique////////////////////////////////////////////
 ///////////////////////////////////////////////////////////
 // PAGE tags
 #define	HOME		11   
 #define	SYSTEM		1
-#define	TLIST 		2
-#define FILES		7
 #define FPANEL		5	
 #define TPANEL		4	
 #define	DIAGNOSTICS	6
@@ -274,19 +271,19 @@ XCARDS		Ox20-27
 #define	ALARM		9
 #define	PINS		10
 
-#define TROW		20   // 10 numbers (MAXLISTROW)  RESERVED FOR LIST of TAG POINTER ARRAY INDEXES
-#define FROW		30   // 10 numbers (MAXLISTROW)  RESERVED FOR LIST of TAG POINTER ARRAY INDEXES
+#define FILES		20   //   11 RESERVED FOR FILES 
+//#define	STAGS 		32   //   11 RESERVED FOR LIST 
 
 
-#define TBOOT		40	//SYSTEM TAGS
-#define TSTAGS		41
-#define TUTAGS		42
-#define TPINS		43
-#define TLOGS		44
-#define TPAGES		45
-#define TROWS		46
-#define FRAM		47
-#define HEADER		48
+#define TBOOT		60	//SYSTEM TAGS
+#define TSTAGS		61
+#define TUTAGS		62
+#define TPINS		63
+#define TLOGS		64
+#define TPAGES		65
+#define TROWS		66
+#define FRAM		67
+#define HEADER		68
 
 #define TLOG			81  //  Tags
 #define TOPR			82

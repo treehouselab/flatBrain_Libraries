@@ -4,15 +4,14 @@
 void defineSystem()  {
 
 	defineCard(BRAIN,BRAIN,0,0);
-	defineLog(LOG);
 
 	defineRow(HEADER,NULL,PAGE);
 
 	definePage(SYSTEM,HOME);
+		defineRow(FRAM,NULL,INT5 | NOACT);
 		defineJump(CLOCK);
 		defineJump(PINS);
 		defineJump(FILES);
-		defineJump(TLIST);
 
 	definePage(CLOCK,SYSTEM);
 		defineRow(CLKYR, NULL,INCR | INT5);
@@ -29,7 +28,7 @@ void defineSystem()  {
 		defineRow(PNCRD,NULL,PTEXT | NOACT);
 		defineRow(PNROW,NULL,INT5  | NOACT);
 		defineRow(PNCOL,NULL,PTEXT | NOACT);
-		defineRow(PNTOG,NULL,BLAMP | TOGGLE);
+		defineRow(PNTOG,NULL,BLAMP | PINTOG);
 		defineRow(PNADC,NULL,INT5  | UPDATE);
 		if(secondPass)Tag(PNROW)->flag16 |= MARK;
 		if(secondPass)Tag(PNCOL)->flag16 |= MARK;
@@ -37,10 +36,10 @@ void defineSystem()  {
 	//definePage(RECORD,SYSTEM );
 	//	defineJump(FILES);
 
-	definePage(FILES,SYSTEM);
-	defineRowList(FROW,MAXLISTROWS,NULL,TEXT);
+	defineRowList(FILES,SYSTEM,TTITLE);
+
 	definePage(FPANEL,FILES);
-		defineRow(FDATE,NULL,TEXT | NOACT);
+		defineRow(FDATE,NULL, NOACT | TTITLE);
 		defineRow(FSIZE,NULL,INT5 | NOACT);
 		defineRow(FDUMP,NULL,BLANK);
 		defineRow(FSTD,NULL,NULL);
@@ -48,9 +47,10 @@ void defineSystem()  {
 		if(secondPass)Tag(FDATE)->flag16 |= MARK;
 		if(secondPass)Tag(FSIZE)->flag16 |= MARK;
 					
-	definePage(TLIST,SYSTEM);
-	defineRowList(TROW,MAXLISTROWS,NULL,NULL); 
-	definePage(TPANEL,TLIST);
+	//defineRowList(STAGS,SYSTEM,NULL); 
+	
+
+	definePage(TPANEL,HOME);
 		defineRow(TLOG,NULL,NOACT);
 		defineRow(TINP,NULL,NOACT);
 		defineRow(TVAL,NULL,FLOAT2);

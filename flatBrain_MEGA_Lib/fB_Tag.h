@@ -31,7 +31,7 @@ class fB_Curr {
 
 class fB_Val {
 	public:
-		double dVal;
+		double value;
 		double factor;
 		double offset;
 		fB_Val();	
@@ -40,13 +40,15 @@ class fB_Val {
 class fB_Tag {
 	public:
 		uint16_t tag;
-		const __FlashStringHelper* Ptitle;
-		//char* ptitle;
 		union {	
-			int		iVal; 	
-			fB_Val*	dVal;	
-			char	*text; 
-			const __FlashStringHelper* Ptext;
+			const __FlashStringHelper	*Ptitle;
+			char						*ptitle;
+		};
+		union {	
+			int							iVal; 	
+			fB_Val						*dVal;	
+			const __FlashStringHelper	*Ptext;
+			char						*ptext; 
 		} ;
 
 		uint16_t	flag16;
@@ -54,7 +56,7 @@ class fB_Tag {
 		uint16_t	pin; 
 
 		uint8_t		fTag;
-		uint16_t	tTag;	  // pointer to target Tag 
+		//uint16_t	tTag;	  // pointer to target Tag 
 
 		void		action(uint8_t hand);
 		void		showRow(uint8_t rowIndex, uint8_t  pageOption=NULL);

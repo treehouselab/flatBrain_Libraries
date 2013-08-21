@@ -18,9 +18,11 @@
 
 
 // LOG TAGS ("LOGDEF" IS RESERVED FOR DEFAULT LOG DEFINITION)
-// RANGE: 5-255
-#define	LOG2	    6
-#define	LOG3	    7
+// RANGE: 10-255
+
+#define	LOG1	    11
+#define	LOG2	    12
+#define	LOG3	    13
 
 // Card tags,unique, RANGE: 1-255
 #define VMCU	2

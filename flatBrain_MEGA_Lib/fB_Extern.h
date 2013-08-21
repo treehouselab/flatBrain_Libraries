@@ -27,16 +27,20 @@ typedef union  PandT {		// array of tags, preserves menu structure
 extern PandT*			rTP;	
 
 extern	fB_Tag*			tagRay;			// array of Tag objects
+extern	fB_Tag**		sListRay;		// array of Tag pointers
+
 extern	fB_Card**		pCard;		// sparse array of pointers 
 extern	logStruc*		logRay;
 
-extern uint8_t		tagCount;
-extern uint8_t		logCount;
+extern uint16_t		tagCount;
+extern uint16_t		logTagCount;
+
+extern uint8_t		sListCount;
+extern uint8_t		logFileCount;
 extern uint8_t		pinCount;
 extern uint8_t		cardCount;
 extern uint8_t		pageCount;
 extern uint8_t		rowCount;
-extern uint8_t		tListZeroIndex;
 
 extern uint8_t		alarmEnabled;
 extern uint8_t 		bootStatus;
@@ -47,18 +51,18 @@ void dbug(const __FlashStringHelper* Pdata,... );
 
 
 char* getPstr(uint16_t tag, char *buffer);
-void getPtext(const __FlashStringHelper* Ptext,char *buffer);
+char* getPtext(const __FlashStringHelper* Ptext,char *buffer);
 void getPtextU(const __FlashStringHelper* Ptext,char *buffer);
 fB_Tag* Tag(uint16_t tag) ;
 fB_Card* Card(uint16_t tag) ;	
-fB_Tag* initTag(uint16_t tag,const __FlashStringHelper* Ptitle,uint32_t flags,uint8_t fTag=NULL,uint16_t tTag=NULL);
+fB_Tag* initTag(uint16_t tag,const __FlashStringHelper* Ptitle,uint32_t flags,uint8_t fTag=NULL,const __FlashStringHelper* Plog  = NULL);
 fB_Tag* initPage( uint16_t tag,const __FlashStringHelper* Ptitle, uint16_t parentTag); 
 void initJump(uint16_t tag);
 void initSpace();;
 void initPin( uint16_t tag,const __FlashStringHelper* Ptitle, uint16_t ctag,uint8_t   row,uint8_t   side,   uint8_t  dir, uint8_t  onval) ;
 void initCard(uint16_t tag,const __FlashStringHelper* Ptitle, uint8_t  type,uint8_t  i2cAddr, uint8_t  aChan );
-void initRow(uint16_t tag, const __FlashStringHelper* Ptitle,uint32_t  flags,uint16_t tTag=NULL);
-void initRowList(uint16_t tag, const __FlashStringHelper* Ptitle,uint8_t count,uint32_t  flags,uint16_t tTag=NULL);
+void initRow(uint16_t tag, const __FlashStringHelper* Ptitle,uint32_t  flags);
+void initRowList(uint16_t tag,const __FlashStringHelper* Ptitle,uint16_t parentTag,uint32_t flags);
 void Calibrate( uint16_t tag, double factor=NULL,double offset=NULL) ;
 void initLog(uint16_t fTag,const __FlashStringHelper* Ptitle ) ;	
 void navigate();

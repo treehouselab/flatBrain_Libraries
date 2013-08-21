@@ -17,13 +17,6 @@ void setup(){
 
 	//Card(YCRD)->LED(HIGH);
 
-   	Tag(TSTAGS)->value = sysTagCount;
-   	Tag(TUTAGS)->value = usrTagCount;
-   	Tag(TPINS)->value = pinCount;
-   	Tag(TLOGS)->value = logCount;
-   	Tag(TPAGES)->value = pageCount;
-   	Tag(TROWS)->value = rowCount;
-   	Tag(FRAM)->value = freeRAM();
 
 }
 

@@ -9,7 +9,7 @@ fB_Val::fB_Val() {
 	
 	//tag = _tag; 
 	//Ptitle = _Ptitle;
-	//text = NULL;
+	//ptext = NULL;
 	//pPin = NULL;
 	//fTag= _fTag;
 	//tTag= _tTag;
@@ -109,14 +109,14 @@ double fB_Tag::getValue() {  // if pin, get value from ADC
 	else{
 		if(isDouble()) 	{
 			if(!dVal->factor) dVal->factor = 1;
-			return (dVal->dVal * dVal->factor) + dVal->offset;
+			return (dVal->value * dVal->factor) + dVal->offset;
 		}
 		else return (double) iVal;
 	}
 }
 
 void fB_Tag::putValue(double value) { 
-	if(isDouble()) 	dVal->dVal = value;
+	if(isDouble()) 	dVal->value = value;
 	iVal = (int) value;
 }
 
