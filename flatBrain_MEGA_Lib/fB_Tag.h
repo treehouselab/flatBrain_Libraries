@@ -51,11 +51,14 @@ class fB_Tag {
 			char						*ptext; 
 		} ;
 
+		union {
+			uint8_t		fTag;
+			uint8_t		buf8;
+		};
 		uint16_t	flag16;
 		uint8_t 	flag8;
 		uint16_t	pin; 
 
-		uint8_t		fTag;
 		//uint16_t	tTag;	  // pointer to target Tag 
 
 		void		action(uint8_t hand);

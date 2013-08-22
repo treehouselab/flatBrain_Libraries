@@ -13,9 +13,6 @@ class fB_Menu {
 		uint8_t 	buttonCode;  // set by tft.readButtons in interrupt
 		uint16_t 	PstrCount;	
 
-		uint8_t 	totalFiles ;		
-		fB_Log		**mFile;
-		uint8_t 	*fSort; // pointer to array of sorted indexes of mFile
 
 		void		showPage(uint16_t tag, uint8_t option = NULL);
 		void		clearPage(uint8_t fullFlag=NULL);

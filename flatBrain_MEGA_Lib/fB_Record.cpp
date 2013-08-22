@@ -2,172 +2,186 @@
 
 #include "fB_Include.h"
 
+//dbug(F("bfr fc: %d"), fCount);
+static int compareFilename(const void *x1, const void *x2) { 
+	char	fname1[MAXCHARSTEXT+1],fname2[MAXCHARSTEXT+1] ;
+	fat.findIndex(*(uint16_t *)x1);
+	strcpy(fname1,fat.DE.filename);
+	fat.findIndex(*(uint16_t *)x2);
+	strcpy(fname2,fat.DE.filename);
+	return strcmp(fname1,fname2);
+}
+
+
+uint16_t fB_Record::buildFileRay(char *ext) {
+	// will select all files if !ext
+	uint16_t extCount = 0;
+	uint16_t index = 0;
+	uint16_t  i = 0;
+	if(sortRay) free(sortRay);
+	extCount = fat.fileCountExt(ext);
+	sortRay = (uint16_t *) calloc(extCount,2);
+	fat.restartDir();
+	//while ((fat.findNextFile()== NO_ERROR) && i<totalFiles){
+	for(int i = 0; fat.findNextExt(ext,index) == NO_ERROR  && index<extCount;i++)	sortRay[i++] = index;
+	///////////////////////// q sort indexes ////////////////////
+	qsort(sortRay, extCount,2, &compareFilename);
+	return extCount;
+}
+
 
 void fB_Record::createTagDefLog() {
-	fB_Log* tLog;
 	fB_Tag* pT;
 	uint8_t  res;
 	char buffer[100];
 	char Pbuffer[40];
 	char title[MAXCHARSTEXT];
 	buffer[0] = '\0';
-	tLog = new fB_Log(NULL,P("TAGDEF.TXT"));  // using fB_Log object only long enough to create file
-	if(bootStatus & SD) { 
-		res = tLog->create(); // returns zero if created
-		if(res) {
-			tLog->remove(); 
-			res = tLog->create();
-		}
-		if(!res) { 
-			if(fat.openFile(tLog->filename,FILEMODE_TEXT_WRITE)==NO_ERROR) { 
-				//sprintf(buffer,P("GLOBAL,GTAG,LOG, VALUE,FACTOR, GPIN, GSYS, GINIT,GINP, GBIAS"));
-				fat.writeLn(P("NAME,TAG,LOG, VALUE,FACTOR, OFFSET, TPIN, TSYS, STOREE"));
-				for(int i=0;i<tagCount;i++){
-					pT = &tagRay[i];
-					if(!pT) continue;
-					getPtext(pT->Ptitle,title);
-					char datastr[16];
-					switch(pT->getFormat()){
-						case BLAMP:
-						case INT5:		sprintf(datastr,"%d",pT->iVal);break;
-						case FLOAT1:	
-						case FLOAT2:	doubleToStr(pT->dVal->value,3,datastr); break;	
-						case TEXT:		sprintf(datastr,"%s",pT->ptext); break;
-						case PTEXT:		getPtext(pT->Ptext, datastr);break;
-						case STRIKE:	sprintf(datastr,P("----"));break;
-						case BLANK:		datastr[0] = '\0' ;break;
-					}
-
-					sprintf(buffer,P("%s,%d,%s, %s,%s, %d,%d,%d,%d,%d"),title,pT->tag ,getLogName(pT->fTag),datastr	,doubleToStr(pT->dVal->factor,3,datastr),doubleToStr(pT->dVal->offset,3,datastr),
-						1 && pT->flag16 & TSYS
-						,1 && pT->flag16 & STOREE
-	//					,1 && pT->flag16 & 0x04
-	//					,1 && pT->flag16 & 0x08
-	//					,1 && pT->flag16 & 0x10
-						);
-					fat.writeLn(buffer);
-				}
-				fat.closeFile();
-				tLog->setDate();
+	if(!(bootStatus & SD) || !rec.logCreate(P("TAGDEF"))) return;	
+	if(fat.openFile(fat.DE.filename,FILEMODE_TEXT_WRITE)==NO_ERROR) { 
+		//sprintf(buffer,P("GLOBAL,GTAG,LOG, VALUE,FACTOR, GPIN, GSYS, GINIT,GINP, GBIAS"));
+		fat.writeLn(P("NAME,TAG,LOG, VALUE,FACTOR, OFFSET, TPIN, TSYS, STOREE"));
+		for(int i=0;i<tagCount;i++){
+			pT = &tagRay[i];
+			if(!pT || !(pT->flag16 & (TSYS | LOG) && !pT->pin)) continue;
+			getPtext(pT->Ptitle,title);
+			char datastr[16];
+			if(pT->flag16 & UNDEF) 	sprintf(datastr,P("----"));
+			else switch(pT->getFormat()){
+				case BLAMP:
+				case INT5:		sprintf(datastr,"%d",pT->iVal);break;
+				case FLOAT1:	
+				case FLOAT2:	doubleToStr(pT->dVal->value,3,datastr); break;	
+				case TEXT:		sprintf(datastr,"%s",pT->ptext); break;
+				case PTEXT:		getPtext(pT->Ptext, datastr);break;
+				case BLANK:		datastr[0] = '\0' ;break;
 			}
+
+			sprintf(buffer,P("%s,%d,%s, %s,%s, %d,%d,%d,%d,%d"),title,pT->tag ,basename(),datastr	,doubleToStr(pT->dVal->factor,3,datastr),doubleToStr(pT->dVal->offset,3,datastr),
+				1 && pT->flag16 & TSYS
+				,1 && pT->flag16 & STOREE
+//					,1 && pT->flag16 & 0x04
+//					,1 && pT->flag16 & 0x08
+//					,1 && pT->flag16 & 0x10
+				);
+			fat.writeLn(buffer);
 		}
+		fat.closeFile();
+		logSetDate();
 	}
-	delete tLog;
-}
-///////////////////////////////////////// fB_Log Methods //////////////////////////////////////////////////////
-
-fB_Log::fB_Log(uint8_t	_fTag, char * _filename) {
-	fTag = _fTag;
-	sprintf(filename,"%s",_filename);
 }
 
+char* fB_Record::filename() {return fat.DE.filename;}
+char* fB_Record::basename() {return fat.DE.basename;}
 
-bool fB_Log::create(char *fname) {
-	char *pF;
-	uint8_t  res;
-	dbug(F("LOG creat1 %s"),fname);
+void fB_Record::logStamp() {
+	logWriteData();
+	logGetAttributes();
+}
 
-	if(fname) pF = fname; 
-	else pF = filename; // if not given, use object filename
-	dbug(F("LOG creat2 %s"),fname);
-	res = fat.createFile(pF);
-	dbug(F("LOG creat3 %s"),fname);
-	if(!res) {
-		setDate();
-	dbug(F("LOG creat4 %s"),fname);
+char* fB_Record::fileFind(uint16_t index) {
+	if(fat.findIndex(index) == NO_ERROR) {
+		logGetAttributes();
+		return fat.DE.filename;
+	}
+	return NULL;
+}
+
+bool fB_Record::fileFind(char *fname){
+	if(fat.getFile(fname) == NO_ERROR) {
+		logGetAttributes();
 		return true;
 	}
 	return false;
 }
 
-void fB_Log::setDate() {
-	rtc.now();
-	fat.stampFile(filename,rtc.yOff+2000,rtc.m,rtc.d,rtc.hh,rtc.mm);
+bool fB_Record::fileCreate(char *fname) {
+	uint8_t  res;
+	if(!fname) return false; 
+	res = fat.createFile(fname);
+	if(!res) {
+		logSetDate();
+		return true;
+	}
+	return false;
+}
+bool fB_Record::logCreate(char *base) {
+	uint8_t  res;
+	if(!base) return false; 
+	strcpy(base,".LOG");
+	if(fileCreate(base)) {
+		logWriteHeader();  // fat. pointer should be set by create
+		return true;
+	}
+	return false;
 }
 
-void fB_Log::writeHeader() {
-	if(!logTagCount) return;
+void fB_Record::logSetDate() {
+	rtc.now();
+	fat.stampFile(fat.DE.filename,rtc.yOff+2000,rtc.m,rtc.d,rtc.hh,rtc.mm);
+}
 
+void fB_Record::logWriteHeader() {
+	if(!logTagCount) return;
+	
 	fB_Tag * pT;
 	char title[MAXCHARSTEXT+1];
 	char Pbuffer[15];
-	dbug(F("LOG WDH create %s"),filename);
-
-	uint8_t res =fat.openFile(filename,FILEMODE_TEXT_WRITE==NO_ERROR);
-	dbug(F("LOG WDH2 create %s  tc:%d, ltc: %d,"),filename, tagCount,logTagCount);
+	uint8_t res =fat.openFile(fat.DE.filename,FILEMODE_TEXT_WRITE==NO_ERROR);
 	char buffer[(logTagCount+2) * MAXCHARSTEXT];
 	buffer[0] = '\0';
-	sprintf(buffer,P("DATE,TIME,%s"));
-	dbug(F("LOG WDH3 create %s"),filename);
-	if(res!=NO_ERROR) {
-		//dbug("LOG WD create %s",filename);
-	dbug(F("LOG WDH4 create %s"),filename);
-		if(!create()) return;
-		writeHeader();
-	}
-	dbug(F("LOG WDH5 create %s"),filename);
+	strcpy(buffer,P("DATE,TIME,%s"));
+	if(res!=NO_ERROR) return;
 	for(int k = 0;k<tagCount;k++) {	
 		pT = &tagRay[k];
 		if(!pT) continue;
+		if(!(pT->flag16 & LOG)) continue;
+		if(strcmp(fat.DE.basename,getPtext(Log(pT->fTag)->Pbase,Pbuffer)))continue;
 		getPtext(pT->Ptitle,title);
-		if( pT->flag16 & LOG && pT->fTag == fTag) sprintf(buffer,"%s,%s",buffer,title);
+		sprintf(buffer,"%s,%s",buffer,title);
 	}
 	fat.writeLn(buffer);
 	fat.closeFile();
-	dbug(F("LOG WDH6 create %s"),filename);
-	setDate();
+	logSetDate();
 }
-void fB_Log::writeData() {
+void fB_Record::logWriteData() {
 	if(!logTagCount) return;
-
 	fB_Tag * pT;
 	char Pbuffer[6];
 	char buffer[100];
-	uint8_t res =fat.openFile(filename,FILEMODE_TEXT_WRITE);
+	char datastr[16];
 	buffer[0] = '\0';
-
-dbug(F("LOG WD create %s"),filename);
-
+	uint8_t res =fat.openFile(fat.DE.filename,FILEMODE_TEXT_WRITE);
+	if(res!=NO_ERROR) return;
 	rtc.stamp(buffer);
-	if(res!=NO_ERROR) {
-dbug(F("LOG2 WD create %s"),filename);
-		if(!create()) return;
-		writeHeader();
-	}
-dbug(F("LOG3 WD create %s"),filename);
-/*
+
 	for(int k = 0;k<tagCount;k++) {	
 		pT = &tagRay[k];
 		if(!pT) continue;
-		if(pT->fTag == fTag){
-			char datastr[16];
-			switch(pT->getFormat()){
-				case BLAMP:
-				case INT5:		sprintf(datastr,"%d",pT->iVal);break;
-				case FLOAT1:	
-				case FLOAT2:	doubleToStr(pT->dVal->value,3,datastr); break;	
-				case TEXT:		sprintf(datastr,"%s",pT->ptext);break;
-				case PTEXT:		getPtext(pT->Ptext, datastr);break;
-				case STRIKE:	sprintf(datastr,P("----"));break;
-				case BLANK:		datastr[0] = '\0' ;break;
-			}
-			sprintf(buffer,P("%s,%s"),buffer,datastr);
+		if(!(pT->flag16 & LOG)) continue;
+		if(strcmp(  fat.DE.basename , getPtext(Log(pT->fTag)->Pbase,Pbuffer) ) )continue;
+		if(pT->flag16 & UNDEF) 	sprintf(datastr,P("----"));
+		switch(pT->getFormat()){
+			case BLAMP:
+			case INT5:		sprintf(datastr,"%d",pT->iVal);break;
+			case FLOAT1:	
+			case FLOAT2:	doubleToStr(pT->dVal->value,3,datastr); break;	
+			case TEXT:		sprintf(datastr,"%s",pT->ptext);break;
+			case PTEXT:		getPtext(pT->Ptext, datastr);break;
+			case BLANK:		datastr[0] = '\0' ;break;
 		}
+		sprintf(buffer,P("%s,%s"),buffer,datastr);
 	}
 	fat.writeLn(buffer);
-	*/
 	fat.closeFile();
-	setDate();
+	logSetDate();
 }
-bool fB_Log::archive() {
-dbug(F("fbLog1 arch fTag: %s "),fTag);
-	if(!fTag) return false; // can't archive unless active .txt file
+bool fB_Record::logArchive() {
+	if(strcmp(fat.DE.fileext,"LOG")) return false;
 	char buf[2][MAXCHARSTEXT+1];
 	char base[9];
 	int i,j=1,k=0;
-dbug(F("fbLog2 arch fn: %s "),filename);
-	if(fat.getFile(filename)==NO_ERROR){
-dbug(F("fbLog3 arch fn: %s "),filename);
+	if(fat.getFile(fat.DE.filename)==NO_ERROR){
 		sprintf(base,"%s",fat.DE.basename);
 		sprintf(buf[k],"%s.A%d",base,MAXAFILES);
 		if(fat.getFile(buf[k])==NO_ERROR) fat.deleteFile(buf[k]);
@@ -177,39 +191,37 @@ dbug(F("fbLog3 arch fn: %s "),filename);
 			sprintf(buf[j],"%s.A%d",base,i);
 			if(fat.getFile(buf[j])==NO_ERROR) fat.renameFile(buf[j],buf[k]);
 		}
-		if(fat.renameFile(filename,buf[++j])==NO_ERROR) remove();
+		if(fat.renameFile(fat.DE.filename,buf[++j])==NO_ERROR) logRemove();
 		return true;
 	}
 	return false;
 }
-void fB_Log::getAttributes() {
+void fB_Record::logGetAttributes() {
 	char Pbuffer[25];
 	dateStr[0] = '\0';
 	sizeStr[0] = '\0';
 	char year[5];
-	if(fat.getFile(filename)==NO_ERROR){
-		sprintf(year,P("%4.4d"),(fat.DE.date>>9 & B01111111) + 0x7BC);
-		for(int i=0;i<4;i++) year[i] = year[i+1];  // shift year to left
-		//year[0] = 'M';
-		sprintf(dateStr,P("%3s.%d.%d% 2.2d:%2.2d"),year
-			,(fat.DE.date>>5 & B00001111), (fat.DE.date & B00011111),
-			fat.DE.time>>11, (fat.DE.time>>5) & B00111111);
-		long size = fat.DE.fileSize;
-		if(size >= 1000) sprintf(sizeStr,P("%d KB"),fat.DE.fileSize/1000);
-		else sprintf(sizeStr,P("%d BYTES"),fat.DE.fileSize);
-	}
+	sprintf(year,P("%4.4d"),(fat.DE.date>>9 & B01111111) + 0x7BC);
+	for(int i=0;i<4;i++) year[i] = year[i+1];  // shift year to left
+	//year[0] = 'M';
+	sprintf(dateStr,P("%3s.%d.%d% 2.2d:%2.2d"),year
+		,(fat.DE.date>>5 & B00001111), (fat.DE.date & B00011111),
+		fat.DE.time>>11, (fat.DE.time>>5) & B00111111);
+	long size = fat.DE.fileSize;
+	if(size >= 1000) sprintf(sizeStr,P("%d KB"),fat.DE.fileSize/1000);
+	else sprintf(sizeStr,P("%d BYTES"),fat.DE.fileSize);
 }
 
-void fB_Log::remove() {
-	fat.deleteFile(filename);
+void fB_Record::logRemove() {
+	fat.deleteFile(fat.DE.filename);
 }
 
-void fB_Log::dump() {
+void fB_Record::logDump() {
    char buffer[MAXCHARSDUMP+1] = { NULL };
-   if(fat.openFile(filename,FILEMODE_TEXT_READ)==NO_ERROR) {
-	 //Serial.begin(SERIALSPEED);
+   if(fat.openFile(fat.DE.filename,FILEMODE_TEXT_READ)==NO_ERROR) {
+	 Serial.begin(SERIALSPEED);
      Serial.print(F("FILENAME: "));
-     Serial.println(filename);
+     Serial.println(fat.DE.filename);
      while(fat.readLn(buffer,MAXCHARSDUMP))  Serial.println(buffer);
      fat.closeFile();	
 
@@ -296,11 +308,6 @@ fB_Tag* fB_Record::EEgetTag( uint16_t tag) {
 	}
 	return NULL;
 }
-char* getLogName(uint8_t fTag) {	
-	for(int i=0;i < logFileCount;i++) if(logRay[i].tag == fTag) return logRay[i].name;
-	return NULL;
-}
-
 
  void dumpEEPROM(unsigned int addr, unsigned int length)
 {
@@ -323,3 +330,30 @@ char* getLogName(uint8_t fTag) {
    }
    Serial.println();
 }
+/*
+void fB_Record::listFiles(uint16_t x1,uint16_t y1,uint16_t x2,uint16_t y2) {
+	uint8_t  len,maxlines, linecount=0;
+	uint8_t res;
+	char strBuffer[81];
+	char Pbuffer[13];
+
+	tft.currY = y1 +1;
+	len = (int) ((x2-x1+1)/tft.cfont.x_size);
+	maxlines = (int) ((y2-y1+1)/LINEHT);
+
+	fat.restartDir();
+	while(linecount < maxlines) {
+		res = fat.findNextFile();
+		if (res==NO_ERROR){
+			sprintf(strBuffer,P("%4.4s.%3s %d"),fat.DE.basename,fat.DE.fileext,fat.DE.fileSize/1000);
+			if(!linecount) tft.printLine(strBuffer,len);
+			else tft.printNewLine(strBuffer,len);
+			linecount++;
+		}
+		else {
+			if(!linecount) tft.printNewLine(P("* NO FILE *"),len);
+			return;
+		}
+	}
+}
+*/

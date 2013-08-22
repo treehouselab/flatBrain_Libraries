@@ -11,42 +11,46 @@ fB_TFT      tft;
 fB_Menu     menu; 
 fB_tFAT     fat; 
 fB_Alarm    alarm; 
-fB_Record   record; 
+fB_Record   rec; 
 fB_Curr		curr; 
 //fB_Seg		seg;
 
 //fB_WTV   audio;
 //fB_VLVD   vlvd;
-		char		dateStr[MAXCHARSTEXT];
-		char		sizeStr[MAXCHARSTEXT];
-
 const __FlashStringHelper* PstrRay[MAXPSTRCOUNT];
-
-uint16_t	tagCount	= 0;
-uint16_t	logTagCount		= 0;
-uint8_t		logFileCount	= 0;
-uint8_t		pinCount		= 0;
-uint8_t		cardCount		= 0;
-uint8_t		pageCount		= 0;
-uint16_t	rowCount		= 0;
-uint16_t	sListCount		= 0;
-uint16_t	farY =	0;
-
-uint8_t 	bootStatus;
-uint8_t		secondPass;
-fB_Tag		*Tag(uint16_t tag);
 
 typedef union  PandT {			// array of tags, preserves menu structure
 	fB_Tag*		p;				// allows me to re-use array,first to store
 	uint16_t	t;              // the tags on one pass, then to convert to pointers
-};								// on the next pass
+};	
+
+typedef struct logTag {
+	uint8_t						tag;
+	const __FlashStringHelper*	Pbase;
+};
+
+// on the next pass
+uint8_t 	bootStatus;
+uint8_t		secondPass;
+fB_Tag		*Tag(uint16_t tag);
+//uint16_t	farY =	0;
+
+uint16_t	tagCount	= 0;
+uint8_t		pinCount		= 0;
+uint8_t		cardCount		= 0;
+uint8_t		pageCount		= 0;
+uint16_t	rowCount		= 0;
+uint16_t	logTagCount		= 0;
+uint8_t		logFileCount	= 0;
+uint8_t		archiveCount	= 0;
+
+
 PandT*			rTP;	
 uint16_t*		tempTagRay;		// temp array for packed tag list
+logTag*			logTagRay;		// array of structs containing log tag and basename pointer
 fB_Tag*			tagRay;			// array of Tag objects
-fB_Tag**		sListRay;		// array of Tag pointers
 fB_Tag*			rowTagRay;		// array of tags, preserves menu structure
 fB_Card**		pCard;			// sparse array of pointers to Card objects
-logStruc*		logRay;
 
 
 void dbug(const __FlashStringHelper* Ptitle, ... );
@@ -102,48 +106,27 @@ void packTempTagRay(uint16_t tag) {
 	}
 }
 
-logStruc*	Log(uint8_t tag) {
-	if(tag != NULL) for(int i=0;i < logFileCount;i++) if(logRay[i].tag == tag) return &logRay[i];
+logTag* Log(uint8_t tag) {
+	if(tag != NULL) for(int i=0;i < logTagCount;i++) if(logTagRay[i].tag == tag) return &logTagRay[i];
 	return NULL;
 }
+
 fB_Tag* Tag(uint16_t tag) {
 	if(tag != NULL) for(int i=0;i < tagCount;i++) if(tagRay[i].tag == tag) return &tagRay[i];
 	return NULL;
 }
-//fB_Pin* Pin(uint16_t tag) {	
-//	if(tag != NULL) for(int i=0;i < tagCount;i++) if(tagRay[i].tag == tag && tagRay[i].pPin) return tagRay[i].pPin;
-//	return NULL;
-//}
 fB_Card* Card(uint16_t tag) {	
 	if(tag != NULL)for(int i=0;i < cardCount;i++) if(pCard[i]->tag == tag) return pCard[i];
 	return NULL;
 }
 
-void initLog(uint16_t fTag,const __FlashStringHelper* Ptitle ) {
-	if(!fTag || !Ptitle) return;
-	if(!secondPass) logFileCount++;
-	else{
-		char buffer[13] = { '\0'};
-		char title[MAXCHARSTEXT];
-		getPtext(Ptitle,title);
-		logRay[logFileCount].tag = fTag;
-		sprintf(logRay[logFileCount].name,"%.8s.TXT",title);
-		fB_Log *pL;
-		pL = new fB_Log(fTag,logRay[logFileCount].name);
-		if((bootStatus & SD) && pL->create()) {  // using fB_Log object only long enough to create file, storing filename in lotags array.
-			pL->writeHeader();
-		}
-		delete pL;    // file system directory will be created later
-		logFileCount++;
-	}
-}
-
-
-
-fB_Tag* initTag(uint16_t tag,const __FlashStringHelper* Ptitle,uint32_t flags,uint8_t fTag=NULL,const __FlashStringHelper* Plog  = NULL) {
-		
+fB_Tag* initTag(uint16_t tag,const __FlashStringHelper* Ptitle,uint32_t flags,uint8_t fTag=NULL,const __FlashStringHelper* Pbase  = NULL) {
+	char Pbuffer[MAXCHARSTEXT];	
 	fB_Tag *pT = NULL;
-	if(!secondPass) packTempTagRay(tag); // add to tempTagRay if unique;
+	if(!secondPass) {
+		packTempTagRay(tag); // add to tempTagRay if unique;
+		if(fTag && !(flags & PAGE)) logTagCount++;
+	}
 	else {
 		pT = Tag(tag);
 		if(!pT)	{
@@ -158,9 +141,11 @@ fB_Tag* initTag(uint16_t tag,const __FlashStringHelper* Ptitle,uint32_t flags,ui
 		pT->putFlags(flags);
 		pT->putFormat(flags);
 		pT->putAction(flags);
-		if(fTag && !Log(fTag)) {
-			initLog(fTag,Plog );
+		if(fTag && !(flags & PAGE)) {
 			pT->flag16 |= LOG;
+			if(bootStatus & SD) rec.logCreate(getPtext(Pbase,Pbuffer));
+			logTagRay[logTagCount].tag = fTag;
+			logTagRay[logTagCount].Pbase = Pbase;
 			logTagCount++;
 		}
 		dbug(F("IT  %P, t:%d "),Ptitle,tag);
@@ -296,31 +281,27 @@ void flatBrainInit(){
 	dbug(F("free RAM3 %d"),freeRAM());
 	tagRay =	(fB_Tag *) calloc(tagCount,sizeof(fB_Tag));			// array of Tag objects
 	rTP    =	(PandT *) calloc(rowCount,sizeof(PandT));			// array of tags or pointers, for menu operations
-	logRay =	(logStruc *) calloc(logFileCount,sizeof(logStruc));
+	logTagRay = (logTag *) calloc(logTagCount,sizeof(logTag));
 	pCard  =	(fB_Card **) calloc(cardCount,sizeof(fB_Card*));
 
 	dbug(F("INIT PASS 1"));
 	dbug(F("tagCount %d"),tagCount);
-	//dbug(F("sListCount %d"),sListCount);
+	dbug(F("logTagCount %d"),logTagCount);
 	dbug(F("pageCount %d"),pageCount);
 	dbug(F("rowCount %d"),rowCount);
 	dbug(F("cardCount %d"),cardCount);
 	dbug(F("pinCount %d"),pinCount);
-	dbug(F("logFileCount %d"),logFileCount);
 	dbug(F("tag size %d"),sizeof(fB_Tag));
-	dbug(F("log size %d"),sizeof(fB_Log));
 
 	dbug(F("INIT MALLOC"));
 	dbug(F("free RAM %d"),freeRAM());
 
 	// reset counters
 	tagCount    = 0;	// unique tags
-//	sListCount  = 0;	// unique tags
 	pageCount = 0;	// unique pages ( incl in tagCount)
 	rowCount  = 0;	// all rows tags, incl spaces, jumps, and pin duplicates
 	pinCount  = 0;	// all pin tags, possible duplicates of row tags
 	cardCount = 0;
-	logFileCount  = 0;
 	logTagCount  = 0;
 
 	secondPass = 1;  // 2nd pass , execute
@@ -328,14 +309,12 @@ void flatBrainInit(){
 	defineUser();
 	for(int i=0; i< rowCount; i++) rTP[i].p = Tag(rTP[i].t); // might be obscure. ( see note at top of file ).
 															//  takes array of uint16_t tags and converts them to fB_Tag*
-	
-	//sListRay  =	(fB_Tag **) calloc(sListCount,sizeof(fB_Tag*));
 
 	dbug(F("INIT PASS 2"));
 
-	pT = record.EEgetTag(TBOOT);
+	pT = rec.EEgetTag(TBOOT);
 	res = (uint8_t ) pT->iVal;
-	if(pT && res == HIGH) record.EEinitTags();     //initialize from eeprom globals defined with GINIT flag
+	if(pT && res == HIGH) rec.EEinitTags();     //initialize from eeprom globals defined with GINIT flag
 	pT->iVal = res;
 	dbug(F("INIT EEPROM"));
 

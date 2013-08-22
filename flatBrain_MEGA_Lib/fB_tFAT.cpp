@@ -86,17 +86,6 @@ uint8_t fB_tFAT::initFAT(uint8_t  speed)
 	_inited=true;
 	return 0x00;
 }
-uint16_t  fB_tFAT::fileCount() {
-	uint8_t res = NO_ERROR;
-	int count=0;
-	DEcnt=0;
-	while (true)
-	{
-		res = findNextFile();
-		if(res==NO_ERROR) 	count++;
-		else return count;
-	}
-}
 
 
 
@@ -141,21 +130,62 @@ uint8_t fB_tFAT::findNextFile(){
 		return NO_ERROR;
 	}
 }
-uint8_t fB_tFAT::findNextExt(char *ext)
+
+uint8_t fB_tFAT::findNextExt(char *ext, uint16_t &index) // finds next file that matches ext substr
 {	
 	uint8_t res = NO_ERROR;
 
 	while(res == NO_ERROR) {
 		res = findNextFile();
-		if (res==NO_ERROR)	if(!strcmp(DE.fileext,ext)) return true;
-		else return false;
+		if (res==NO_ERROR){
+			if(!ext) return true;
+			for(int i=0;i<3 && i < strlen(ext);i++) if(DE.fileext[i]  != ext[i]) break;
+			if(i == strlen(ext) ) return res;
+			index++;
+		}
+		break;
 	}
 	return ERROR_FILE_NOT_FOUND;
 }
+uint8_t fB_tFAT::findIndex(uint16_t index)
+{	
+	uint8_t res = NO_ERROR;
+	uint16_t count = 0;
+	while(res = findNextFile()) {
+		if(!(res== NO_ERROR)) return ERROR_FILE_NOT_FOUND;
+		if(count++ == index) return;
+	}
+	return ERROR_FILE_NOT_FOUND;
+}
+uint16_t  fB_tFAT::fileCount() {
+	uint8_t res = NO_ERROR;
+	int count=0;
+	DEcnt=0;
+	while (true)
+	{
+		res = findNextFile();
+		if(res==NO_ERROR) 	count++;
+		else return count;
+	}
+}
+
+uint16_t  fB_tFAT::fileCountExt(char* ext) {
+	if(!ext) return fileCount();
+	uint8_t res = NO_ERROR;
+	int count=0;
+	DEcnt=0;
+	while (true)
+	{
+		res = findNextExt(ext);
+		if(res==NO_ERROR) 	count++;
+		else return count;
+	}
+}
+
+
 uint8_t fB_tFAT::findNextBase(char *base)
 {	
 	uint8_t res = NO_ERROR;
-
 	while(res == NO_ERROR) {
 		res = findNextFile();
 		if (res==NO_ERROR)	if(!strcmp(DE.basename,base)) return true;

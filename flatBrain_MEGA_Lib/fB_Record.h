@@ -7,46 +7,38 @@
 //class fB_Card; // pre-declare
 //class fB_Col; // pre-declare
 
-
-class fB_Log {
-	public:
-		uint8_t	    fTag;  // same fTag as in Tags
-		char		filename[14];
-		//uint8_t 		enabled;
-		//char	fileext[4];
-		//char		dateStr[MAXCHARSTEXT];
-		//char		sizeStr[MAXCHARSTEXT];
-		void		show();
-		bool		create(char *fname=NULL);
-		void		setDate();
-		void		writeHeader();
-		void		writeData();
-		bool		archive();
-		void		remove();
-		void		getAttributes();
-		void		dump();
-		fB_Log(uint8_t	fTag, char * filename) ;
-};
-
-typedef struct		logStruc {	
-	uint8_t	tag;	 
-	char		name[13];
-	fB_Log*		pLog;			
-	};
-
 class fB_Record {
 	public:
-		logStruc   *Logs;
-		void		createTagDefLog();		
-		//void		defineSystemGlobals();
-		//void		defineElements();
+		char		dateStr[MAXCHARSTEXT];
+		char		sizeStr[MAXCHARSTEXT];
+		uint16_t*	sortRay;		    // array of indexes to FAT objects
+		
 		void		EEwriteTags();
 		void		EEinitTags();
 		fB_Tag*		EEgetTag(uint16_t tag);
-		char*		getLogName(uint8_t fTag);
 		void		init();
 		bool		SDinit(uint8_t  SSpin, uint8_t  SPIspeed);
-		void		initLog(uint8_t fTag, const __FlashStringHelper* Ptitle);
+
+		static int			compareFilename(const void *x1, const void *x2);
+		uint16_t	buildFileRay(char *ext); // returns index count;
+		void		createTagDefLog();		
+		char*		fileFind(uint16_t index);
+		bool		fileFind(char *fname);
+		bool		fileCreate(char *fnameL);
+		void		logShow();
+		// these methods rely in the Record filename pointer pointing to fat.DE.filename
+		void		logStamp();
+		bool		logCreate(char *base);
+		void		logSetDate();
+		void		logWriteHeader();
+		void		logWriteData();
+		bool		logArchive();
+		void		logRemove();
+		void		logGetAttributes();
+		void		logDump();
+		char*		filename();
+		char*		basename();
+
 
 	private:
 

@@ -125,9 +125,12 @@ public:
 	byte		getFile(char *fn);
 	byte		openFile(char *fn, uint8_t mode=FILEMODE_BINARY);
 	uint16_t	fileCount();
+	//uint16_t    fileCountExt(char* ext);
 	uint16_t	lineCount(char *fn);
 	byte		findNextFile();
-	byte		findNextExt(char *ext);
+	uint8_t		findIndex(uint16_t index);
+	uint16_t	fileCountExt(char* ext);
+	uint8_t		findNextExt(char *ext, uint16_t &index);
 	byte		findNextBase(char *base);
 	uint16_t	readBinary();
 	boolean 	readLn(char *st, int bufSize);
@@ -135,7 +138,7 @@ public:
 	void		closeFile();
 	byte		renameFile(char *fn1, char *fn2);
 	byte		deleteFile(char *fn);
-	uint8_t 		createFile(char *fn);
+	uint8_t 	createFile(char *fn);
 	byte		stampFile(char *fn,uint8_t  year,uint8_t  month,uint8_t  day,uint8_t  hour,uint8_t  min);
 	void		setSSpin(uint8_t pin);
 	_file_attributes	currFile;

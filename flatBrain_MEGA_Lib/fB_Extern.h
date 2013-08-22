@@ -11,40 +11,45 @@ extern fB_Menu		menu;
 extern fB_RTC		rtc;
 extern fB_Record	record;
 extern fB_Curr		curr;
+extern fB_Record	rec;
 extern uint8_t 		_i2cspeed;
-extern		char		dateStr[MAXCHARSTEXT];
-extern		char		sizeStr[MAXCHARSTEXT];
 
 extern uint8_t  XmapB[];
 extern uint8_t  Xmap50[];
 extern uint8_t  Xmap76[];
-extern const __FlashStringHelper* PstrRay[];
 
-typedef union  PandT {		// array of tags, preserves menu structure
-	fB_Tag*		p;
-	uint16_t	t;
+extern const __FlashStringHelper* PstrRay[MAXPSTRCOUNT];
+
+typedef union  PandT {			// array of tags, preserves menu structure
+	fB_Tag*		p;				// allows me to re-use array,first to store
+	uint16_t	t;              // the tags on one pass, then to convert to pointers
 };
-extern PandT*			rTP;	
 
-extern	fB_Tag*			tagRay;			// array of Tag objects
-extern	fB_Tag**		sListRay;		// array of Tag pointers
+typedef struct logTag {
+	uint8_t						tag;
+	const __FlashStringHelper*	Pbase;
+};
 
-extern	fB_Card**		pCard;		// sparse array of pointers 
-extern	logStruc*		logRay;
-
-extern uint16_t		tagCount;
-extern uint16_t		logTagCount;
-
-extern uint8_t		sListCount;
-extern uint8_t		logFileCount;
-extern uint8_t		pinCount;
-extern uint8_t		cardCount;
-extern uint8_t		pageCount;
-extern uint8_t		rowCount;
-
-extern uint8_t		alarmEnabled;
 extern uint8_t 		bootStatus;
 extern uint8_t		secondPass;
+extern fB_Tag		*Tag(uint16_t tag);
+
+
+extern uint16_t		tagCount	= 0;
+extern uint8_t		pinCount		= 0;
+extern uint8_t		cardCount		= 0;
+extern uint8_t		pageCount		= 0;
+extern uint16_t		rowCount		= 0;
+extern uint16_t		logTagCount		= 0;
+extern uint8_t		logFileCount	= 0;
+extern uint8_t		archiveCount	= 0;
+
+
+extern	PandT*			rTP;	
+extern	uint16_t*		tempTagRay;		// temp array for packed tag list
+extern	fB_Tag*			tagRay;			// array of Tag objects
+extern	fB_Tag*			rowTagRay;		// array of tags, preserves menu structure
+extern	fB_Card**		pCard;			// sparse array of pointers to Card objects
 
 char*	doubleToStr(double value, int places,char *buffer);
 void dbug(const __FlashStringHelper* Pdata,... );
@@ -53,6 +58,7 @@ void dbug(const __FlashStringHelper* Pdata,... );
 char* getPstr(uint16_t tag, char *buffer);
 char* getPtext(const __FlashStringHelper* Ptext,char *buffer);
 void getPtextU(const __FlashStringHelper* Ptext,char *buffer);
+logTag* Log(uint8_t tag) ;
 fB_Tag* Tag(uint16_t tag) ;
 fB_Card* Card(uint16_t tag) ;	
 fB_Tag* initTag(uint16_t tag,const __FlashStringHelper* Ptitle,uint32_t flags,uint8_t fTag=NULL,const __FlashStringHelper* Plog  = NULL);

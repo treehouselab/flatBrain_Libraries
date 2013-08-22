@@ -195,7 +195,7 @@ XCARDS		Ox20-27
 #define	TTITLE			0x0040	// use char* ptitle for row title instead of Ptitle
 #define	DISABLE			0x0080
 #define	UNDEF			0x0100
-#define	LJUST			0x0200 // ??
+//#define					0x0200 // ??
 //#define				0x0400
 //#define				0x0800
 #define	MASKP			0xF000	// 4 bits reserved ROWCOUNT
@@ -231,7 +231,7 @@ XCARDS		Ox20-27
 #define	FLOAT1			0x01000000L
 #define	FLOAT2			0x02000000L	
 #define	BLAMP			0x04000000L	
-#define	STRIKE			0x08000000L	
+//#define				0x08000000L	
 #define	PTEXT			0x10000000L	
 //#define				0x20000000L
 //#define				0x40000000L
@@ -271,9 +271,8 @@ XCARDS		Ox20-27
 #define	ALARM		9
 #define	PINS		10
 
-#define FILES		20   //   11 RESERVED FOR FILES 
-//#define	STAGS 		32   //   11 RESERVED FOR LIST 
-
+#define AFILES		19   
+#define LFILES		20   //   11 RESERVED FOR FILES 
 
 #define TBOOT		60	//SYSTEM TAGS
 #define TSTAGS		61

@@ -1,19 +1,9 @@
 #include "fB_Include.h"
 
-int compareFilename(const void *x1, const void *x2) { 
-	fB_Log *f1,*f2;
-	f1 = menu.mFile[*(uint8_t *)x1];
-	f2 = menu.mFile[*(uint8_t *)x2];
-	if(f1->fTag !=NULL && f2->fTag == NULL) return -1;
-	if(f1->fTag == NULL && f2->fTag !=NULL) return  1;
-	return strcmp(f1->filename,f2->filename);
-}
 
 void fB_Menu::init(){
 
-	totalFiles   = 0;
 	fListStart = 0;
-	sListStart = 0;
 	buttonCode = 0;
 	PstrCount = 0;	
 
@@ -86,11 +76,13 @@ void fB_Menu::context(uint8_t  hand) {
 	if(!curr.rowDex) { // jump  page if row[0]
 		switch(curr.pageTag) {
 			case HOME:		return; break;
-			case FILES: 	pListStart = &fListStart; totalLines = totalFiles; break;
+			case LFILES: 	pListStart = &fListStart; totalLines = logFileCount; break;
+			case AFILES: 	pListStart = &fListStart; totalLines = archiveCount; break;
 		}
 		if(hand==RIGHT) {
 			switch(curr.pageTag) {
-				case FILES: 		
+				case AFILES: 		
+				case LFILES: 		
 					if(	totalLines >  *pListStart+MAXLISTROWS) {
 						*pListStart += MAXLISTROWS; 
 						jumpPage(curr.pageTag);
@@ -100,7 +92,8 @@ void fB_Menu::context(uint8_t  hand) {
 		}
 		else {
 			switch(curr.pageTag) {
-				case FILES: 		
+				case AFILES: 		
+				case LFILES: 		
 					if(	*pListStart >= MAXLISTROWS) {
 						*pListStart -= MAXLISTROWS;	
 						jumpPage(curr.pageTag); 
@@ -159,67 +152,6 @@ void fB_Menu:: clearPage(uint8_t  full) {
 	curr.rowDex = 0;
 
 }
-void fB_Menu::listFiles(uint16_t x1,uint16_t y1,uint16_t x2,uint16_t y2) {
-	uint8_t  len,maxlines, linecount=0;
-	uint8_t res;
-	char strBuffer[81];
-	char Pbuffer[13];
-
-	tft.currY = y1 +1;
-	len = (int) ((x2-x1+1)/tft.cfont.x_size);
-	maxlines = (int) ((y2-y1+1)/LINEHT);
-
-	fat.restartDir();
-	while(linecount < maxlines) {
-		res = fat.findNextFile();
-		if (res==NO_ERROR){
-			sprintf(strBuffer,P("%4.4s.%3s %d"),fat.DE.basename,fat.DE.fileext,fat.DE.fileSize/1000);
-			if(!linecount) tft.printLine(strBuffer,len);
-			else tft.printNewLine(strBuffer,len);
-			linecount++;
-		}
-		else {
-			if(!linecount) tft.printNewLine(P("* NO FILE *"),len);
-			return;
-		}
-	}
-}
-void fB_Menu::getFileList() {
-	int i,j,k;
-
-	if(mFile) {
-		for( i = 0; i < totalFiles; i++)  delete mFile[i];
-		delete mFile;
-		delete fSort;
-	}
-	totalFiles = fat.fileCount();
-dbug(F("gfl tf: %d"), totalFiles);
-	mFile = (fB_Log **) malloc(sizeof(fB_Log*) * totalFiles);
-	fat.restartDir();
-	i=0;
-	k=0;
-	//while ((fat.findNextFile()== NO_ERROR) && i<totalFiles){
-	while (!fat.findNextFile() && i<totalFiles) {
-		dbug(F("gfl %s"), fat.DE.filename);
-
-		mFile[i]= new fB_Log(NULL,fat.DE.filename); // non-active ( non-.txt) tags are NULL
-		for(j=0;j<logFileCount && k<logFileCount;j++ ) {
-			if(!strcmp(logRay[j].name,mFile[i]->filename)) {
-				mFile[i]->fTag = logRay[j].tag;
-				logRay[j].pLog = mFile[i];
-				k++;
-				break;
-			}
-		}
-		i++;
-	}
-
-	///////////////////////// q sort indexes ////////////////////
-	fSort = (uint8_t *) malloc (totalFiles);
-	for(i=0;i<totalFiles;i++) fSort[i] = i;
-	qsort(fSort, totalFiles, 1, compareFilename);
-}
-
 
 void fB_Menu:: showPage(uint16_t tag, uint8_t pageOption) {
 	int dr;
@@ -228,6 +160,7 @@ void fB_Menu:: showPage(uint16_t tag, uint8_t pageOption) {
 	uint8_t  count,listStart;
 	float dv;
 	fB_Tag *pT;
+	char Pbuffer[4];
 	if(pageOption != REFRESHPAGE) {
 		Tag(HEADER)->Ptitle = curr.pP->Ptitle; 
 		curr.deselectRow();
@@ -236,10 +169,14 @@ void fB_Menu:: showPage(uint16_t tag, uint8_t pageOption) {
 		curr.setCurrPage(tag);
 
 		switch(tag) {
-			case FILES:
-				menu.getFileList();
-				count = menu.totalFiles;
-				listStart = menu.fListStart;
+			case SYSTEM:
+				menu.fListStart = 0 ;
+				break;
+			case LFILES:
+				count = rec.buildFileRay(P("LOG"));
+				break;
+			case AFILES:
+				count = rec.buildFileRay(P("A"));
 				break;
 			case CLOCK:
 				if(!(bootStatus & RTC)) return;
@@ -258,26 +195,19 @@ void fB_Menu:: showPage(uint16_t tag, uint8_t pageOption) {
 		}
 
 		switch(tag) {
-			case FILES:
+			case LFILES:
+			case AFILES:
+				listStart = menu.fListStart;
 				if(count <= listStart)listStart = max(count - MAXLISTROWS,0);
 				if(MAXLISTROWS < count - listStart ) rows = MAXLISTROWS;
 				else rows = count - listStart;
 				for( i=0;i<rows;i++) {
-					switch(tag) {
-						case FILES:
-							pT = curr.tag(i+1);
-							x = menu.fSort[i+listStart];
-							//pT->iVal = x;
-							pT->ptitle = menu.mFile[x]->filename;
-							pT->fTag = x; 
-					dbug(F("sp %P  , %s"), curr.pP->Ptitle,pT->ptitle);
-							// use fTag to store array index
-							if(menu.mFile[x]->fTag == NULL) pT->flag16 |= MARK; // |=log
-							else pT->flag16 &= ~MARK; 
-							break;
-					}
+					pT = curr.tag(i+1); // step through each row on page
+					pT->buf8 = rec.sortRay[i+listStart];	// use buf to store FAT index
+					pT->ptitle = rec.fileFind(pT->buf8); // use filename for title of row
 				}
 				curr.putRowCount(rows);
+				free(rec.sortRay);
 				/*
 				dr = curr.rowCount - (rows+1); // for page tags, pagerow count is stored in iVal
 				iVal = rows+1;
@@ -323,6 +253,7 @@ dbug(F("SR %P f16: 0x%x"),Ptitle, flag16);
 	else if(flag16 & MARK)	tft.setColor(FCOLOR,HCOLOR);
 	format = getFormat();
 //dbug(F("SR2 %P "),Ptitle);
+	
 
 	if(option != REFRESHPAGE) {
 		if(!(flag16 & TTITLE)) pTitleText = getPtext(Ptitle,Pbuffer); // title points to Ptitle (usual case)
@@ -372,13 +303,11 @@ dbug(F("SR %P f16: 0x%x"),Ptitle, flag16);
 				break;
 				break;
 			case TEXT:
-				if(flag16 & LJUST) 	tft.print( LEFT, getY(rowIndex), ptext);
-				else 	tft.print( RIGHT, getY(rowIndex), ptext);
+				tft.print( RIGHT, getY(rowIndex), ptext);
 				break;
 			case PTEXT:
 				getPtext(Ptext,Pbuffer);
-				if(flag16 & LJUST) 	tft.print(  LEFT, getY(rowIndex),Pbuffer );
-				else 	tft.print(  RIGHT, getY(rowIndex),Pbuffer );
+				tft.print(  RIGHT, getY(rowIndex),Pbuffer );
 				break;
 		}
 	}
@@ -462,34 +391,61 @@ void fB_Tag::action(uint8_t  hand) {
 	if(flag16 & DISABLE ) return;
 	char Pbuffer[7];
 	fB_Tag *pT;
-	fB_Log *pF =  NULL;   //  ptr to  logfile
 	dbug(F("ra %P ,  cp: %P , iVal:%d"),Ptitle,curr.pP->ptitle,iVal);
 
-	if(curr.pageTag == FPANEL || curr.pageTag == FILES) {
-		pF = menu.mFile[fTag];
-		if(pF) pF->getAttributes();
-	}
 	switch(curr.pageTag) {
-		case FILES:	Tag(FPANEL)->ptitle = pF->filename;
-					Tag(FDATE)->ptitle = dateStr;
-					Tag(FSIZE)->ptext = sizeStr;
-					Tag(FDUMP)->fTag = fTag; //iVal = index of the selected logfile
-					Tag(FSTD)->fTag = fTag;
-					Tag(FARCH)->fTag = fTag;
-					//if(flag16 & LOG) {
-						//Tag(FARCH)->flag16 |= VISIBLE;  // file is logfile
-						Tag(FSTD)->Ptitle = PstrRay[P_STAMP];  
-						Tag(FSTD)->tag = FSTAMP;  
-					//}
-					//else {
-					//	Tag(FARCH)->status &= ~VISIBLE;  // file is other file
-					//	Tag(FSTD)->Ptitle = PstrRay[P_DELETE];  
-					//	Tag(FSTD)->type = FDEL;  
-					//}
-					menu.jumpPage(FPANEL);
-					return;
+		case AFILES:	
+		case LFILES:	
+				// FAT index of file is in buf8 of calling Tag
+				if(!rec.fileFind(buf8)) return;  // rec filename->fat.DE.filename and lasts only so long
+				Tag(FPANEL)->ptitle = rec.filename();
+				Tag(FSTD)->buf8 = buf8;// page tag fTag/buf8 is used for parentTag, so stuffing FAT index in FSTD tag
+				Tag(FDATE)->ptitle = rec.dateStr;
+				Tag(FSIZE)->ptext = rec.sizeStr;
+				if(curr.pageTag == LFILES) {
+					Tag(FSTD)->Ptitle = PstrRay[P_STAMP];  
+					Tag(FSTD)->iVal = FSTAMP;  
+					Tag(FARCH)->flag16 |= VISIBLE;  // file is logfile
+				}
+				else {
+					Tag(FSTD)->Ptitle = PstrRay[P_DELETE];  
+					Tag(FSTD)->iVal = FDEL;  
+					Tag(FARCH)->flag16 &= ~VISIBLE;  // file is other file
+				}
+				menu.jumpPage(FPANEL);
+				return;
+		case FPANEL:
+				if(!rec.fileFind(Tag(FSTD)->buf8)) return;
+			    switch(tag) {
+					case FSTD:
+						if(iVal == FSTAMP) {
+							rec.logStamp();
+							Tag(FDATE)->ptext = rec.dateStr; 
+							Tag(FSIZE)->ptext = rec.sizeStr;
+							menu.refreshRow(FDATE);
+							menu.refreshRow(FSIZE);
+							menu.selectHeader();
+						}
+						else if(iVal == FDEL) {
+							rec.logRemove();
+							menu.jumpPage(curr.parentTag);
+						}
+						return;
+					case FARCH:
+						rec.logArchive();
+						menu.selectHeader();
+						Tag(FDATE)->ptext = rec.dateStr; 
+						Tag(FSIZE)->ptext = rec.sizeStr;
+						menu.refreshRow(FDATE);
+						menu.refreshRow(FSIZE);
+						return;
+					case FDUMP:
+						rec.logDump();
+						menu.selectHeader();
+						return;
+				}
+				break;
 	}
-
 	switch (hand)	{
 		case RIGHT:
 			//check page jump first 
@@ -509,51 +465,6 @@ void fB_Tag::action(uint8_t  hand) {
 					pT = &tagRay[ Tag(PNPIN)->fTag];
 					Tag(PNADC)->iVal = pT->read();
 					menu.refreshRow();
-					return;
-				case FSTAMP:
-					dbug(F("ra stamp1"));
-
-					pF->writeData();
-										dbug(F("ra stamp2"));
-
-					pF->getAttributes();
-										dbug(F("ra stamp3"));
-
-					menu.selectHeader();
-										dbug(F("ra stamp4"));
-
-					//Tag(FDATE)->text = pF->dateStr; // new atts
-					//Tag(FSIZE)->text = pF->sizeStr;
-					Tag(FDATE)->ptext = dateStr; // new atts
-										dbug(F("ra stamp5"));
-
-					Tag(FSIZE)->ptext = sizeStr;
-										dbug(F("ra stamp6"));
-
-					menu.refreshRow(FDATE);
-										dbug(F("ra stamp7"));
-
-					menu.refreshRow(FSIZE);
-					return;
-				case FARCH:
-					pF->archive();
-					//if(pF->archive()){
-						//menu.selectHeader();
-						//Tag(FDATE)->text = pF->dateStr; // new atts
-						//Tag(FSIZE)->text = pF->sizeStr;
-						//Tag(FDATE)->ptext = dateStr; // new atts
-						//Tag(FSIZE)->ptext = sizeStr;
-						//menu.refreshRow(FDATE);
-						//menu.refreshRow(FSIZE);
-					//}
-					return;
-				case FDEL:
-					pF->remove();
-					menu.jumpPage(curr.parentTag);					
-					return;
-				case FDUMP:
-					pF->dump();
-					menu.selectHeader();
 					return;
 				case CLKSET:
 					rtc.yOff = (uint8_t ) (Tag(CLKYR)->iVal - 2000);
@@ -596,10 +507,10 @@ void fB_Tag::action(uint8_t  hand) {
 				//case TLAS:	createGdefLog() ; pPage->selectHeader();break;
 				case TIAT:	record.EEinitTags(); menu.selectHeader();return;
 				case TSAT:	record.EEwriteTags(); menu.selectHeader();return;
-				case TLAU:	
-							for(int i = 0;i<logFileCount;i++) logRay[i].pLog->writeData();
-							menu.selectHeader();
-							return;
+				//case TLAU:	
+				//			for(int i = 0;i<logFileCount;i++) logRay[i].pLog->writeData();
+				//			menu.selectHeader();
+				//			return;
 
 			} // END SWITCH on Tag
 
