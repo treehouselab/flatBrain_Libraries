@@ -13,20 +13,18 @@ static int compareFilename(const void *x1, const void *x2) {
 }
 
 
-uint16_t fB_Record::buildFileRay(char *ext) {
+void fB_Record::buildFileRay(char *ext) {
 	// will select all files if !ext
-	uint16_t extCount = 0;
-	uint16_t index = 0;
-	uint16_t  i = 0;
-	if(sortRay) free(sortRay);
-	extCount = fat.fileCountExt(ext);
-	sortRay = (uint16_t *) calloc(extCount,2);
+	uint16_t offset = 0,i;
+	//if(fileCount) free(sortRay);
+	fileCount = fat.fileCountExt(ext);
+	sortRay = (uint16_t *) calloc(fileCount,2);
 	fat.restartDir();
 	//while ((fat.findNextFile()== NO_ERROR) && i<totalFiles){
-	for(int i = 0; fat.findNextExt(ext,index) == NO_ERROR  && index<extCount;i++)	sortRay[i++] = index;
+	for( i = 0; fat.findNextExt(ext,offset) == NO_ERROR  && i < fileCount;i++) 	sortRay[i] = offset+i;
 	///////////////////////// q sort indexes ////////////////////
-	qsort(sortRay, extCount,2, &compareFilename);
-	return extCount;
+	qsort(sortRay, fileCount,2, &compareFilename);
+	
 }
 
 
@@ -38,7 +36,7 @@ void fB_Record::createTagDefLog() {
 	char title[MAXCHARSTEXT];
 	buffer[0] = '\0';
 	if(!(bootStatus & SD) || !rec.logCreate(P("TAGDEF"))) return;	
-	if(fat.openFile(fat.DE.filename,FILEMODE_TEXT_WRITE)==NO_ERROR) { 
+	if(fat.openFile(filename,FILEMODE_TEXT_WRITE)==NO_ERROR) { 
 		//sprintf(buffer,P("GLOBAL,GTAG,LOG, VALUE,FACTOR, GPIN, GSYS, GINIT,GINP, GBIAS"));
 		fat.writeLn(P("NAME,TAG,LOG, VALUE,FACTOR, OFFSET, TPIN, TSYS, STOREE"));
 		for(int i=0;i<tagCount;i++){
@@ -57,7 +55,7 @@ void fB_Record::createTagDefLog() {
 				case BLANK:		datastr[0] = '\0' ;break;
 			}
 
-			sprintf(buffer,P("%s,%d,%s, %s,%s, %d,%d,%d,%d,%d"),title,pT->tag ,basename(),datastr	,doubleToStr(pT->dVal->factor,3,datastr),doubleToStr(pT->dVal->offset,3,datastr),
+			sprintf(buffer,P("%s,%d,%s, %s,%s, %d,%d,%d,%d,%d"),title,pT->tag ,base,datastr	,doubleToStr(pT->dVal->factor,3,datastr),doubleToStr(pT->dVal->offset,3,datastr),
 				1 && pT->flag16 & TSYS
 				,1 && pT->flag16 & STOREE
 //					,1 && pT->flag16 & 0x04
@@ -71,8 +69,6 @@ void fB_Record::createTagDefLog() {
 	}
 }
 
-char* fB_Record::filename() {return fat.DE.filename;}
-char* fB_Record::basename() {return fat.DE.basename;}
 
 void fB_Record::logStamp() {
 	logWriteData();
@@ -81,14 +77,18 @@ void fB_Record::logStamp() {
 
 char* fB_Record::fileFind(uint16_t index) {
 	if(fat.findIndex(index) == NO_ERROR) {
+		strcpy(filename, fat.DE.filename);
+		strcpy(base, fat.DE.basename);
 		logGetAttributes();
-		return fat.DE.filename;
+		return filename;
 	}
 	return NULL;
 }
 
 bool fB_Record::fileFind(char *fname){
 	if(fat.getFile(fname) == NO_ERROR) {
+		strcpy(filename, fat.DE.filename);
+		strcpy(base, fat.DE.basename);
 		logGetAttributes();
 		return true;
 	}
@@ -98,19 +98,26 @@ bool fB_Record::fileFind(char *fname){
 bool fB_Record::fileCreate(char *fname) {
 	uint8_t  res;
 	if(!fname) return false; 
-	res = fat.createFile(fname);
-	if(!res) {
+	if(fat.createFile(fname) == NO_ERROR) {
+		strcpy(filename, fat.DE.filename);
+		strcpy(base, fat.DE.basename);
 		logSetDate();
+		logGetAttributes();
 		return true;
 	}
+	dbug(F("RLC %s  DT %s"),base,fat.DE.filename);
+
 	return false;
 }
 bool fB_Record::logCreate(char *base) {
-	uint8_t  res;
+	char buffer[MAXCHARSTEXT+1];
 	if(!base) return false; 
-	strcpy(base,".LOG");
-	if(fileCreate(base)) {
-		logWriteHeader();  // fat. pointer should be set by create
+	sprintf(buffer,"%s.LOG",base);
+	if(fileCreate(buffer)) {
+		logWriteHeader();  
+	dbug(F("RLC %s  DT %s"),base,fat.DE.filename);
+	dbug(F("RLC %s  Ds %s"),base,dateStr);
+	dbug(F("RLC %s  base %s"),base,fat.DE.basename);
 		return true;
 	}
 	return false;
@@ -118,7 +125,7 @@ bool fB_Record::logCreate(char *base) {
 
 void fB_Record::logSetDate() {
 	rtc.now();
-	fat.stampFile(fat.DE.filename,rtc.yOff+2000,rtc.m,rtc.d,rtc.hh,rtc.mm);
+	fat.stampFile(filename,rtc.yOff+2000,rtc.m,rtc.d,rtc.hh,rtc.mm);
 }
 
 void fB_Record::logWriteHeader() {
@@ -127,7 +134,7 @@ void fB_Record::logWriteHeader() {
 	fB_Tag * pT;
 	char title[MAXCHARSTEXT+1];
 	char Pbuffer[15];
-	uint8_t res =fat.openFile(fat.DE.filename,FILEMODE_TEXT_WRITE==NO_ERROR);
+	uint8_t res =fat.openFile(filename,FILEMODE_TEXT_WRITE==NO_ERROR);
 	char buffer[(logTagCount+2) * MAXCHARSTEXT];
 	buffer[0] = '\0';
 	strcpy(buffer,P("DATE,TIME,%s"));
@@ -136,7 +143,7 @@ void fB_Record::logWriteHeader() {
 		pT = &tagRay[k];
 		if(!pT) continue;
 		if(!(pT->flag16 & LOG)) continue;
-		if(strcmp(fat.DE.basename,getPtext(Log(pT->fTag)->Pbase,Pbuffer)))continue;
+		if(strcmp(base,getPtext(Log(pT->fTag)->Pbase,Pbuffer)))continue;
 		getPtext(pT->Ptitle,title);
 		sprintf(buffer,"%s,%s",buffer,title);
 	}
@@ -151,7 +158,7 @@ void fB_Record::logWriteData() {
 	char buffer[100];
 	char datastr[16];
 	buffer[0] = '\0';
-	uint8_t res =fat.openFile(fat.DE.filename,FILEMODE_TEXT_WRITE);
+	uint8_t res =fat.openFile(filename,FILEMODE_TEXT_WRITE);
 	if(res!=NO_ERROR) return;
 	rtc.stamp(buffer);
 
@@ -159,7 +166,7 @@ void fB_Record::logWriteData() {
 		pT = &tagRay[k];
 		if(!pT) continue;
 		if(!(pT->flag16 & LOG)) continue;
-		if(strcmp(  fat.DE.basename , getPtext(Log(pT->fTag)->Pbase,Pbuffer) ) )continue;
+		if(strcmp( base, getPtext(Log(pT->fTag)->Pbase,Pbuffer) ) )continue;
 		if(pT->flag16 & UNDEF) 	sprintf(datastr,P("----"));
 		switch(pT->getFormat()){
 			case BLAMP:
@@ -177,12 +184,11 @@ void fB_Record::logWriteData() {
 	logSetDate();
 }
 bool fB_Record::logArchive() {
-	if(strcmp(fat.DE.fileext,"LOG")) return false;
+
+	//if(strcmp(fat.DE.fileext,"LOG")) return false;
 	char buf[2][MAXCHARSTEXT+1];
-	char base[9];
 	int i,j=1,k=0;
-	if(fat.getFile(fat.DE.filename)==NO_ERROR){
-		sprintf(base,"%s",fat.DE.basename);
+	if(fat.getFile(filename)==NO_ERROR){
 		sprintf(buf[k],"%s.A%d",base,MAXAFILES);
 		if(fat.getFile(buf[k])==NO_ERROR) fat.deleteFile(buf[k]);
 		for(i=MAXAFILES-1 ;i>0;i--,j--,k--) {
@@ -191,7 +197,9 @@ bool fB_Record::logArchive() {
 			sprintf(buf[j],"%s.A%d",base,i);
 			if(fat.getFile(buf[j])==NO_ERROR) fat.renameFile(buf[j],buf[k]);
 		}
-		if(fat.renameFile(fat.DE.filename,buf[++j])==NO_ERROR) logRemove();
+		dbug(F("REC LARCH RENAME DEF:%s to %s"),filename,buf[++j]); 
+		if(fat.renameFile(filename,buf[j])==NO_ERROR) logRemove();
+		//if(fat.renameFile(fat.DE.filename,buf[++j])==NO_ERROR) logRemove();
 		return true;
 	}
 	return false;
@@ -213,15 +221,18 @@ void fB_Record::logGetAttributes() {
 }
 
 void fB_Record::logRemove() {
-	fat.deleteFile(fat.DE.filename);
+		dbug(F("R FILE remove %s  "),filename);
+		fat.deleteFile(filename);
+
+	//fat.deleteFile(fat.DE.filename); //DO NOT DO THIS, THE CHAR POINTER CANNNOT POINT TO THE fat.DE. RECORD!
 }
 
 void fB_Record::logDump() {
    char buffer[MAXCHARSDUMP+1] = { NULL };
-   if(fat.openFile(fat.DE.filename,FILEMODE_TEXT_READ)==NO_ERROR) {
+   if(fat.openFile(filename,FILEMODE_TEXT_READ)==NO_ERROR) {
 	 Serial.begin(SERIALSPEED);
      Serial.print(F("FILENAME: "));
-     Serial.println(fat.DE.filename);
+     Serial.println(filename);
      while(fat.readLn(buffer,MAXCHARSDUMP))  Serial.println(buffer);
      fat.closeFile();	
 

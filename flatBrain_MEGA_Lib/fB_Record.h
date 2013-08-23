@@ -9,9 +9,12 @@
 
 class fB_Record {
 	public:
+		char		filename[MAXCHARSTEXT]; // current filename. REFRESH FROM fat.DE.filename BUT DON'T POINT to DE record!!!!!
+		char		base[MAXCHARSTEXT-3]; // ditto above
 		char		dateStr[MAXCHARSTEXT];
 		char		sizeStr[MAXCHARSTEXT];
 		uint16_t*	sortRay;		    // array of indexes to FAT objects
+		uint8_t	fileCount;
 		
 		void		EEwriteTags();
 		void		EEinitTags();
@@ -19,8 +22,8 @@ class fB_Record {
 		void		init();
 		bool		SDinit(uint8_t  SSpin, uint8_t  SPIspeed);
 
-		static int			compareFilename(const void *x1, const void *x2);
-		uint16_t	buildFileRay(char *ext); // returns index count;
+//		static int			compareFilename(const void *x1, const void *x2);
+		void		buildFileRay(char *ext); // returns index count;
 		void		createTagDefLog();		
 		char*		fileFind(uint16_t index);
 		bool		fileFind(char *fname);
@@ -36,8 +39,6 @@ class fB_Record {
 		void		logRemove();
 		void		logGetAttributes();
 		void		logDump();
-		char*		filename();
-		char*		basename();
 
 
 	private:

@@ -11,7 +11,8 @@ void defineSystem()  {
 		defineRow(FRAM,NULL,INT5 | NOACT);
 		defineJump(CLOCK);
 		defineJump(PINS);
-		defineJump(FILES);
+		defineJump(LOGS);
+		defineRow(ARCHIVES,NULL,NULL);
 
 	definePage(CLOCK,SYSTEM);
 		defineRow(CLKYR, NULL,INCR | INT5);
@@ -34,11 +35,11 @@ void defineSystem()  {
 		if(secondPass)Tag(PNCOL)->flag16 |= MARK;
 
 	//definePage(RECORD,SYSTEM );
-	//	defineJump(FILES);
+	//	defineJump(LOGS);
 
-	defineRowList(FILES,SYSTEM,TTITLE);
+	defineRowList(LOGS,SYSTEM,TTITLE);
 
-	definePage(FPANEL,FILES);
+	definePage(FPANEL,LOGS);
 		defineRow(FDATE,NULL, NOACT | TTITLE);
 		defineRow(FSIZE,NULL,INT5 | NOACT);
 		defineRow(FDUMP,NULL,BLANK);
@@ -58,6 +59,7 @@ void defineSystem()  {
 		defineRow(TFAC,NULL,FLOAT2);
 		if(secondPass)	Tag(TLOG)->flag16 |= MARK;
 
+	defineRecord(MTAG,MTAG2,TSYS);// Probably also need to define row in fB_Menu.cpp
 	defineRecord(TBOOT,SYSTAG,TSYS);// Probably also need to define row in fB_Menu.cpp
 
 

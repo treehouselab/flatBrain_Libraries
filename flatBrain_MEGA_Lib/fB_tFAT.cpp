@@ -25,9 +25,8 @@
 	License along with this library; if not, write to the Free Software
 	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
-#include "fB_Header.h"
+#include "fB_Include.h"
 
-extern uint8_t  dLogCount;
 
 /* Public */
 
@@ -90,11 +89,11 @@ uint8_t fB_tFAT::initFAT(uint8_t  speed)
 
 
 uint8_t fB_tFAT::findNextFile(){
+
 	unsigned long currSec = firstDirSector;
 	int i;
 	word offset = DEcnt*32;
-	while (offset>=512)
-	{
+	while (offset>=512)	{
 		currSec++;
 		offset-=512;
 	}
@@ -102,15 +101,16 @@ uint8_t fB_tFAT::findNextFile(){
 
 	if (buffer[0]==0x00) return ERROR_NO_MORE_FILES;
 	else {
-		while ((buffer[offset + 0x0B] & 0x08) || (buffer[offset + 0x0B] & 0x10) || (buffer[offset]==0xE5))
-		{
+		while ((buffer[offset + 0x0B] & 0x08) || (buffer[offset + 0x0B] & 0x10) || (buffer[offset]==0xE5))	{
 			offset+=32;
 			DEcnt++;
 			if (offset==512){
 			  currSec++;
 			  mmc::readSector(buffer, currSec);
 			  offset = 0;
-			} 
+			} 		
+			
+
 			if (buffer[offset]==0x00) return ERROR_NO_MORE_FILES;
 		}
 		DE.sec = currSec;
@@ -131,83 +131,68 @@ uint8_t fB_tFAT::findNextFile(){
 	}
 }
 
-uint8_t fB_tFAT::findNextExt(char *ext, uint16_t &index) // finds next file that matches ext substr
-{	
-	uint8_t res = NO_ERROR;
-
-	while(res == NO_ERROR) {
-		res = findNextFile();
-		if (res==NO_ERROR){
-			if(!ext) return true;
-			for(int i=0;i<3 && i < strlen(ext);i++) if(DE.fileext[i]  != ext[i]) break;
-			if(i == strlen(ext) ) return res;
-			index++;
-		}
-		break;
-	}
-	return ERROR_FILE_NOT_FOUND;
-}
-uint8_t fB_tFAT::findIndex(uint16_t index)
+uint8_t fB_tFAT::findIndex(uint16_t index) // resets fat pointer to file at index position ( count from zero)
 {	
 	uint8_t res = NO_ERROR;
 	uint16_t count = 0;
-	while(res = findNextFile()) {
-		if(!(res== NO_ERROR)) return ERROR_FILE_NOT_FOUND;
-		if(count++ == index) return;
+	restartDir();
+	while(findNextFile() == NO_ERROR) {
+		if(count++ == index)  return NO_ERROR;
 	}
 	return ERROR_FILE_NOT_FOUND;
 }
 uint16_t  fB_tFAT::fileCount() {
 	uint8_t res = NO_ERROR;
 	int count=0;
-	DEcnt=0;
-	while (true)
-	{
-		res = findNextFile();
-		if(res==NO_ERROR) 	count++;
-		else return count;
-	}
+	restartDir();
+	while ( findNextFile()==NO_ERROR) 	count++;
+	return count;
 }
 
 uint16_t  fB_tFAT::fileCountExt(char* ext) {
 	if(!ext) return fileCount();
-	uint8_t res = NO_ERROR;
-	int count=0;
-	DEcnt=0;
-	while (true)
-	{
-		res = findNextExt(ext);
-		if(res==NO_ERROR) 	count++;
-		else return count;
+	uint16_t count=0,i;
+	restartDir();
+	while(findNextFile() == NO_ERROR) {
+		if(ext) {
+			for( i =0;i<3 && i < strlen(ext);i++) if(DE.fileext[i] != ext[i]) break;
+			if(i!=3 && i!=strlen(ext)) continue;
+		}
+		count++;
 	}
+	return count;
 }
 
+uint8_t fB_tFAT::findNextExt(char *ext, uint16_t &index) // finds next file that matches ext substr, passes back position 
+{	
+	uint8_t res = NO_ERROR;
+	int i,skip;
 
+	while( findNextFile()== NO_ERROR) {
+		skip = 0;
+		if(ext) {
+			for(int i =0;i<3 && i < strlen(ext);i++) if(DE.fileext[i]  != ext[i]) { skip = 1; break; }
+			if(!skip) {
+				return NO_ERROR;
+			}
+			index++;
+		}else return NO_ERROR;
+	}
+	return ERROR_FILE_NOT_FOUND;
+}
 uint8_t fB_tFAT::findNextBase(char *base)
 {	
 	uint8_t res = NO_ERROR;
-	while(res == NO_ERROR) {
-		res = findNextFile();
-		if (res==NO_ERROR)	if(!strcmp(DE.basename,base)) return true;
-		else return false;
-	}
+	while( findNextFile()==NO_ERROR) if(!strcmp(DE.basename,base)) return NO_ERROR;
 	return ERROR_FILE_NOT_FOUND;
 }
 
 uint8_t fB_tFAT::getFile(char *fn)
 {
-	uint8_t res = NO_ERROR;
 	int i, j;
-
 	for (i=0; i<strlen(fn); i++) fn[i]=uCase(fn[i]);
 	restartDir();
-	while (res==NO_ERROR)
-	{
-		res = findNextFile();
-		if (res==NO_ERROR) {
-			if (!strcmp(DE.filename,fn))	return NO_ERROR;
-		}
-	}
+	while (findNextFile() ==NO_ERROR) if (!strcmp(DE.filename,fn))	return NO_ERROR;
 	return ERROR_FILE_NOT_FOUND;
 }
 
@@ -310,10 +295,11 @@ uint8_t fB_tFAT::deleteFile(char *fn)
 	uint16_t firstCluster, currCluster, nextCluster;
 	word offset = -32;
 	int j;
-
+		dbug(F("fatdf %s"),fn);
 	for (int i=0; i<strlen(fn); i++)	fn[i]=uCase(fn[i]);
 
 	if (getFile(fn)==NO_ERROR)	{
+		dbug(F("fatdf2 %s"),fn);
 		currSec = DE.sec;
 		offset = DE.offset;
 		mmc::readSector(buffer, currSec);
@@ -724,11 +710,13 @@ uint8_t  fB_tFAT::createFile(char *fn)
 
 	if (!(getFile(fn)==NO_ERROR))
 	{
+
 		currSec = firstDirSector;
 		mmc::readSector(buffer, currSec);
 		offset = -32;
 		while (!done)
 		{
+		dbug(F("fatCf3 %s"),fn);
 			offset+=32;
 			if (offset==512)
 			{
@@ -771,6 +759,7 @@ uint8_t  fB_tFAT::createFile(char *fn)
 				done=true;
 			}
 		}
+		//getFile(fn); // to reset fat.DE records
 		return NO_ERROR;
 	}
 	else return ERROR_CREATE_ERROR;

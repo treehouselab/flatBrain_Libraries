@@ -11,7 +11,7 @@ Treehouselab.com - Mike Price */
 #define defineCard(ctag,ctype,i2cAddr, aChan )		initCard(ctag,F(#ctag),ctype,i2cAddr, aChan )  
 #define defineLog(fTag)								initLog(fTag,F(#fTag));
 #define defineTag(tag,flags)						initTag(tag,F(#tag),flags)
-#define defineRecord(tag,fTag,flags)				initTag(tag,F(#tag),flags,fTag,NULL)
+#define defineRecord(tag,fTag,flags)				initTag(tag,F(#tag),flags,fTag,F(#fTag))
 #define defineHome(tag)							initPage(HOME,F(#tag),NULL)
 #define definePage(tag,parentTag)				initPage(tag,F(#tag),parentTag)
 #define defineRow(tag,tTag,flags)				initRow(tag,F(#tag),flags)

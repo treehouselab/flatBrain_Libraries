@@ -144,11 +144,12 @@ fB_Tag* initTag(uint16_t tag,const __FlashStringHelper* Ptitle,uint32_t flags,ui
 		if(fTag && !(flags & PAGE)) {
 			pT->flag16 |= LOG;
 			if(bootStatus & SD) rec.logCreate(getPtext(Pbase,Pbuffer));
-			logTagRay[logTagCount].tag = fTag;
-			logTagRay[logTagCount].Pbase = Pbase;
-			logTagCount++;
+			if(!Log(tag)) {
+				logTagRay[logTagCount].tag = fTag;
+				logTagRay[logTagCount].Pbase = Pbase;
+				logTagCount++;
+			}
 		}
-		dbug(F("IT  %P, t:%d "),Ptitle,tag);
 	
 	}
 	return pT;
@@ -162,7 +163,6 @@ void initPage( uint16_t tag,const __FlashStringHelper* Ptitle, uint16_t parentTa
 		pT->iVal = rowCount;		// index in tagRay of first row of Page
 		curr.setCurrPage(tag);      // fTag = parentTag
 		curr.rowCount = 1;
-		dbug(F("***IP %P, t:%d ***"),Ptitle,tag);
 	}
 	rowCount++;
 	pageCount++;
@@ -229,6 +229,8 @@ void Calibrate( uint16_t tag, double factor=NULL,double offset=NULL) {
 void flatBrainInit(){
 
 
+	dbug(F(" "));
+	dbug(F("---------"));
 	dbug(F("FB INIT ENTRY"));
 
 	dbug(F("free RAM %d"),freeRAM());

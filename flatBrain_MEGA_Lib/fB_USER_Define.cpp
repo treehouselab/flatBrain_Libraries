@@ -75,9 +75,9 @@ void defineUser() {
  
  	//////////// DEFINE RECORDS
 
-	defineRecord(V1,LOG1,NULL); // flags: [format] | STOREE ( for eeprom )
-	defineRecord(V1,LOG1,NULL);
-	defineRecord(V3,LOG1,NULL);
+	defineRecord(V1,LOG2,NULL); // flags: [format] | STOREE ( for eeprom )
+	defineRecord(V1,LOG2,NULL);
+	defineRecord(V3,LOG3,NULL);
 	defineRecord(CZ,LOG1,NULL);
 	defineRecord(CC,LOG1,NULL);
 	defineRecord(CL,LOG1,NULL);

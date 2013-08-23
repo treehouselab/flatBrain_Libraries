@@ -191,11 +191,11 @@ XCARDS		Ox20-27
 #define	STOREE			0x0004	// EEPROM Store 
 #define	LOG				0x0008	// Log to SD card
 #define	MARK			0x0010	// Mark row
-#define	VISIBLE			0x0020
+#define	HIDE			0x0020
 #define	TTITLE			0x0040	// use char* ptitle for row title instead of Ptitle
-#define	DISABLE			0x0080
+//#define			    0x0080
 #define	UNDEF			0x0100
-//#define					0x0200 // ??
+#define	LOCAL			0x0200 
 //#define				0x0400
 //#define				0x0800
 #define	MASKP			0xF000	// 4 bits reserved ROWCOUNT
@@ -258,21 +258,24 @@ XCARDS		Ox20-27
 
 // SYSTEM LOG tags, Range 1-9
 #define	SYSTAG		1	
+#define	MTAG2		2	 //test
+#define	MTAG		1009	 //test
 
 ///// TAG ARRAY tags, unique////////////////////////////////////////////
 ///////////////////////////////////////////////////////////
 // PAGE tags
-#define	HOME		11   
-#define	SYSTEM		1
-#define FPANEL		5	
+#define	HOME		1   
+#define	SYSTEM		2
+#define FPANEL		3	
 #define TPANEL		4	
-#define	DIAGNOSTICS	6
-#define	CLOCK		8
-#define	ALARM		9
-#define	PINS		10
+#define	DIAGNOSTICS	5
+#define	CLOCK		6
+#define	ALARM		7
+#define	PINS		8
+#define	ARCHIVES	9
 
-#define AFILES		19   
-#define LFILES		20   //   11 RESERVED FOR FILES 
+
+#define LOGS		19   //   11 RESERVED FOR LOGS
 
 #define TBOOT		60	//SYSTEM TAGS
 #define TSTAGS		61
