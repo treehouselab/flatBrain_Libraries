@@ -626,7 +626,8 @@ void fB_TFT::print( int x, int y, char *st,int n){
 		if(n< stl) stl = n;
 		else if(n> stl && x!= CENTER && x!= RIGHT) blen = n - stl;
 	}
-	
+	//dbug(F("TFT %d,%d s:%s"),x,y,st);
+
 	if (x==RIGHT)   x=(MAXPIXELWID+1)-(stl*cfont.x_size);
 	if (x==CENTER)	x=((MAXPIXELWID+1)-(stl*cfont.x_size))/2;
 

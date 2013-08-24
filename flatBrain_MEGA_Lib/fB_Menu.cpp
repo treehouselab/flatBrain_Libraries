@@ -1,5 +1,97 @@
 #include "fB_Include.h"
 
+uint8_t fB_Menu::dPlaces(double value, uint8_t size) {  // returns number if visible decimal places in double if format is "size" chars and point is one character width.
+	int j = 0;
+	double dint,test;
+
+	while(true) {
+		test = value/pow(10.0,(double)j);
+		if(test < 1) break;
+		j++;
+	}
+	return (size - ( j + 1));
+}
+
+char *fB_Menu::d2str(double value, uint8_t size, char* buffer) {
+	//formats double to string of size length, strips leading zero
+	dbug(F("d2str0 v:%f s:%d, s:%s"),value,size,buffer);
+
+	uint8_t places, skipz = 0,i;
+	char c;
+	char tempbuf[MAXCHARSLINE];
+	
+	places = dPlaces(value,size);
+	dbug(F("d2str1 v:%f  p:%d"),value,places);
+	doubleToStr(value,places,tempbuf);
+	if(value < 1.0) skipz = 1;
+	for ( i=0; i<size;i++) {
+		if(i>= strlen(tempbuf)) buffer[i] = '0'; // pad 
+		else buffer[i] = tempbuf[i+skipz]; // skip leading zero
+	}
+	buffer[i]= '\0';
+dbug(F("d2str3 v:%f t:%s, s:%s"),value,tempbuf,buffer);
+
+	return buffer;
+
+}
+
+
+
+char* fB_Menu::doubleToStr(double value, int places,char *buffer) {
+   // this is used to cast digits 
+   int digit,dhit = 0;
+   double tens = 0.1;
+   int tenscount = 0;
+   int i,j=0,k=0,abase= 48;
+   double tempdouble = value;
+   char dBuffer[places+1];
+
+     // make sure we round properly. this could use pow from <math.h>, but doesn't seem worth the import
+   // if this rounding step isn't here, the value  54.321 prints as 54.3209
+
+   // calculate rounding term d:   0.5/pow(10,places)  
+   double d = 0.5;
+   if (value < 0)
+     d *= -1.0;
+   // divide by ten for each decimal place
+   for (i = 0; i < places; i++)
+     d/= 10.0;    
+   // this small addition, combined with truncation will round our values properly 
+   tempdouble +=  d;
+
+   // first get value tens to be the large power of ten less than value
+   // tenscount isn't necessary but it would be useful if you wanted to know after this how many chars the number will take
+
+   if (value < 0)   tempdouble *= -1.0;
+   while ((tens * 10.0) <= tempdouble) {
+     tens *= 10.0;
+     tenscount += 1;
+   }
+   if (value < 0) buffer[j++] = '-';// write out the negative if needed
+   if (tenscount == 0) buffer[j++] = abase +0;
+   for (i=0; i< tenscount; i++) {
+     digit = (int) (tempdouble/tens);
+     buffer[j++] = abase +digit;
+     tempdouble = tempdouble - ((double)digit * tens);
+     tens /= 10.0;
+   }
+   if (places <= 0){ // if no places after decimal, stop now and return
+		buffer[j] = '\0';
+		return buffer;
+   }
+   k = j;
+   buffer[j++] = '.';// otherwise, write the point and continue on
+   for (i = 0; i < places; i++) {   // write out each decimal place shifting digits into the ones place and writing the truncated value
+     tempdouble *= 10.0; 
+     digit = (int) tempdouble;
+     buffer[j++] = abase + digit;
+     tempdouble = tempdouble - (double) digit;      // once written, subtract off that digit
+	 if(digit) dhit = 1;
+   }
+   if(!dhit) j=k;  // truncate if all decimals are zero
+   buffer[j] = '\0';
+   return buffer;
+}
 
 void fB_Menu::init(){
 
@@ -161,6 +253,7 @@ void fB_Menu:: showPage(uint16_t tag, uint8_t pageOption) {
 	fB_Tag *pT;
 	char Pbuffer[4];
 
+		dbug(F("CL fac:%f"), Tag(CL)->dVal->factor);
 
 	if(pageOption != REFRESHPAGE) {
 		//Tag(HEADER)->Ptitle = curr.pP->Ptitle; 
@@ -206,7 +299,7 @@ void fB_Menu:: showPage(uint16_t tag, uint8_t pageOption) {
 				for( i=0;i<rows;i++) {
 					pT = curr.tag(i+1); // step through each row on page
 					pT->buf8 = rec.sortRay[i+listStart];	// use buf to store FAT index
-dbug(F("SP %s, fc:%d, r:%d, b8:%d"),rec.filename,rec.fileCount,i+1, pT->buf8);
+///dbug(F("SP %s, fc:%d, r:%d, b8:%d"),rec.filename,rec.fileCount,i+1, pT->buf8);
 
 				}
 				curr.putRowCount(rows);
@@ -242,6 +335,7 @@ void fB_Menu::refreshRow(uint16_t tag) {
 		pT = Tag(tag);
 	}
 	pT->showRow(rowIndex);
+
 }
 
 void fB_Tag::showRow(uint8_t  rowIndex, uint8_t  option) {  //when option == REFRESH, only right col data is updated
@@ -249,7 +343,7 @@ void fB_Tag::showRow(uint8_t  rowIndex, uint8_t  option) {  //when option == REF
 
 	int i=0;
 	uint32_t format;
-	char Pbuffer[MAXCHARSTEXT+1];
+	char Pbuffer[MAXCHARSLINE+1];
 	char* pTitleText;
 	tft.resetDefColors();
 	if( (flag16 & HIDE)) 	tft.setAll2Bcolor();
@@ -268,13 +362,13 @@ void fB_Tag::showRow(uint8_t  rowIndex, uint8_t  option) {  //when option == REF
 			else pTitleText = ptitle; // title points to text field
 		}
 		if(!rowIndex) {  // row is page header
-			char bufferTitle[MAXCHARSTEXT+1];
+			char bufferTitle[MAXCHARSLINE+1];
 			sprintf(bufferTitle,"< %s >",pTitleText);
-			tft.print(CENTER,getY(rowIndex),bufferTitle,MAXCHARSTEXT);
+			tft.print(CENTER,getY(rowIndex),bufferTitle,MAXCHARSLINE);
 			return;
 		} 
 	}
-	if( option != REFRESHPAGE || format == TEXT || format == PTEXT || flag16 & TTITLE) tft.print(STARTX +ROWTEXTX,getY(rowIndex),pTitleText,MAXCHARSTEXT);
+	if( option != REFRESHPAGE || format == TEXT || format == PTEXT || flag16 & TTITLE) tft.print(STARTX +ROWTEXTX,getY(rowIndex),pTitleText,MAXCHARSLINE);
 		//dbug(F("SR format H: 0x%J"),format);
 		//Serial.println(format,DEC);
 		//Serial.println(format,HEX);
@@ -310,6 +404,12 @@ void fB_Tag::showRow(uint8_t  rowIndex, uint8_t  option) {  //when option == REF
 				if(flag16 & UNDEF) tft.print( RIGHT, getY(rowIndex), getPstr(P_STRIKE,Pbuffer));
 				else tft.printFloat(STARTX +MONX,getY(rowIndex),dVal->value,AR4_2,RIGHT);
 				break;
+				break;
+			case D2STR:
+				if(flag16 & UNDEF) tft.print( RIGHT, getY(rowIndex), getPstr(P_STRIKE,Pbuffer));
+			dbug(F("SR d2str %s"),menu.d2str(dVal->value,MAXCHARSTEXT,Pbuffer));
+
+				tft.print( RIGHT, getY(rowIndex),menu.d2str(dVal->value,MAXCHARSTEXT,Pbuffer));
 				break;
 			case TEXT:
 				tft.print( RIGHT, getY(rowIndex), ptext);
@@ -372,6 +472,20 @@ void fB_Menu::pinPageConstruct(uint8_t startDex, uint8_t hand) {
 		Tag(PNROW)->iVal = rowSide & 0x1F;
 		if((rowSide >> 7) == COL_L) Tag(PNCOL)->Ptext = PstrRay[P_LEFT];
 		else Tag(PNCOL)->Ptext = PstrRay[P_RIGHT];
+		if(pT->getMode() == IO_A) {
+			Tag(PNFAC)->flag16 &= ~HIDE;
+			Tag(PNOFF)->flag16 &= ~HIDE;
+			Tag(PNVAL)->flag16 &= ~HIDE;
+			Tag(PNOFF)->dVal->value = pT->dVal->offset;
+			Tag(PNVAL)->dVal->value = pT->dVal->value;		
+			Tag(PNFAC)->dVal->value = pT->dVal->factor;
+		}
+		else {
+			Tag(PNFAC)->flag16 |= HIDE;
+			Tag(PNOFF)->flag16 |= HIDE;
+			Tag(PNVAL)->flag16 |= HIDE;
+		}
+		//dbug(F("PPC %P, mode:%d, fac:%f"), pT->Ptitle,pT->getMode(),pT->dVal->factor);
 		Tag(PNTOG)->putAction(PINTOG);
 		if( pT->getMode() == IO_D) {
 			Tag(PNADC)->flag16 |= HIDE;
@@ -408,7 +522,7 @@ void fB_Tag::action(uint8_t  hand) {
 				if(!rec.fileFind(buf8)) return;  // rec filename->fat.DE.filename and lasts only so long
 				Tag(FPANEL)->ptitle = rec.filename;
 				Tag(FSTD)->buf8 = buf8;// page tag fTag/buf8 is used for parentTag, so stuffing FAT index in FSTD tag
-		dbug(F("ra DATIME %s"),rec.dateStr);
+		//dbug(F("ra DATIME %s"),rec.dateStr);
 				Tag(FDATE)->ptitle = rec.dateStr;
 				Tag(FSIZE)->ptext = rec.sizeStr;
 				if(curr.pP->flag16 & LOCAL) {  // Archive file display
@@ -425,7 +539,7 @@ void fB_Tag::action(uint8_t  hand) {
 				return;
 		case FPANEL:
 				if(!rec.fileFind(Tag(FSTD)->buf8)) return;
-		dbug(F("ra %s,  b8:%d"),rec.filename, pT->buf8);
+		//dbug(F("ra %s,  b8:%d"),rec.filename, pT->buf8);
 
 			    switch(tag) {
 					case FSTD:
@@ -473,6 +587,9 @@ void fB_Tag::action(uint8_t  hand) {
 					menu.refreshRow(PNCOL);
 					menu.refreshRow(PNTOG);
 					menu.refreshRow(PNADC);
+					menu.refreshRow(PNFAC);
+					menu.refreshRow(PNOFF);
+					menu.refreshRow(PNVAL);
 					return;
 				case PNADC:
 					pT = &tagRay[ Tag(PNPIN)->fTag];
@@ -588,6 +705,9 @@ void fB_Tag::action(uint8_t  hand) {
 					menu.refreshRow(PNCOL);
 					menu.refreshRow(PNTOG);
 					menu.refreshRow(PNADC);
+					menu.refreshRow(PNFAC);
+					menu.refreshRow(PNOFF);
+					menu.refreshRow(PNVAL);
 					return;
 			}
 			break;

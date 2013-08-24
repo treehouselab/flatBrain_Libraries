@@ -1,6 +1,7 @@
 #include "fB_Include.h"
 
 fB_Val::fB_Val() {
+	value = 0;
 	offset = 0;
 	factor = 1;
 }
@@ -86,7 +87,7 @@ uint8_t	fB_Tag::getAction8() {
 	return  (flag8 & MASK8A);
 }
 uint8_t fB_Tag::isDouble() {
-	if(getFormat() == FLOAT1  || getFormat() == FLOAT2) return (1);
+	if(getFormat() == FLOAT1  || getFormat() == FLOAT2 || getFormat() == D2STR) return (1);
 	else return 0;
 }
 uint32_t  fB_Tag::assignFormat(double value) {

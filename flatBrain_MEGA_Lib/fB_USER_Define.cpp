@@ -82,6 +82,10 @@ void defineUser() {
 	defineRecord(CC,LOG1,NULL);
 	defineRecord(CL,LOG1,NULL);
 
+	defineCalibrate(CL,.9876583210,1.234567880);
+	dbug(F("CLINIT P:%P fac:%f"), Tag(CL)->Ptitle, Tag(CL)->dVal->factor);
+
+
 
  }
 

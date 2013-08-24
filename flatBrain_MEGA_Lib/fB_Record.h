@@ -9,10 +9,10 @@
 
 class fB_Record {
 	public:
-		char		filename[MAXCHARSTEXT]; // current filename. REFRESH FROM fat.DE.filename BUT DON'T POINT to DE record!!!!!
-		char		base[MAXCHARSTEXT-3]; // ditto above
-		char		dateStr[MAXCHARSTEXT];
-		char		sizeStr[MAXCHARSTEXT];
+		char		filename[MAXCHARSLINE+1]; // current filename. REFRESH FROM fat.DE.filename BUT DON'T POINT to DE record!!!!!
+		char		base[MAXCHARSLINE-3]; // ditto above
+		char		dateStr[MAXCHARSLINE+1];
+		char		sizeStr[MAXCHARSLINE+1];
 		uint16_t*	sortRay;		    // array of indexes to FAT objects
 		uint8_t	fileCount;
 		

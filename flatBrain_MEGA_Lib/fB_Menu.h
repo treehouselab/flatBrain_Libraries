@@ -27,9 +27,9 @@ class fB_Menu {
 		void		pinPageConstruct(uint8_t startDex, uint8_t hand = RIGHT);
 		void		refreshRow(uint16_t tag = NULL);
 		void		init();
-
-
-	private:
+		uint8_t		dPlaces(double value, uint8_t size);
+		char *		d2str(double value, uint8_t size, char* buffer) ;
+		char*		doubleToStr(double value, int places,char *buffer);
 
 
 };

@@ -72,7 +72,7 @@ int freeRAM () {
 char* getPstr(uint16_t tag, char *buffer){
    int cursor = 0;
    prog_char *ptr = ( prog_char * ) PstrRay[tag];
-   while( ( buffer[ cursor ] = pgm_read_byte_near( ptr + cursor ) ) != '\0' && cursor < MAXCHARSTEXT ) ++cursor;
+   while( ( buffer[ cursor ] = pgm_read_byte_near( ptr + cursor ) ) != '\0' && cursor < MAXCHARSLINE ) ++cursor;
    buffer[cursor] = '\0';
    return buffer;
 }
@@ -81,7 +81,7 @@ char* getPtext(const __FlashStringHelper* Ptext,char *buffer){
   int cursor = 0;
    prog_char *ptr = ( prog_char * ) Ptext;
    if(Ptext) {
-	   while( ( buffer[ cursor ] = pgm_read_byte_near( ptr + cursor ) ) != '\0' && cursor < MAXCHARSTEXT ) ++cursor;
+	   while( ( buffer[ cursor ] = pgm_read_byte_near( ptr + cursor ) ) != '\0' && cursor < MAXCHARSLINE ) ++cursor;
 	   buffer[cursor] = '\0';
 	   return buffer;
    }
@@ -121,7 +121,7 @@ fB_Card* Card(uint16_t tag) {
 }
 
 fB_Tag* initTag(uint16_t tag,const __FlashStringHelper* Ptitle,uint32_t flags,uint8_t fTag=NULL,const __FlashStringHelper* Pbase  = NULL) {
-	char Pbuffer[MAXCHARSTEXT];	
+	char Pbuffer[MAXCHARSLINE+1];	
 	fB_Tag *pT = NULL;
 	if(!secondPass) {
 		packTempTagRay(tag); // add to tempTagRay if unique;
@@ -138,6 +138,9 @@ fB_Tag* initTag(uint16_t tag,const __FlashStringHelper* Ptitle,uint32_t flags,ui
 			pT->pin = NULL;
 		}
 		else if(fTag) pT->fTag = fTag;
+		if(!pT->isDouble() && (flags & (FLOAT1 | FLOAT2 | D2STR))){
+				pT->dVal = new fB_Val;
+		}
 		pT->putFlags(flags);
 		pT->putFormat(flags);
 		pT->putAction(flags);
@@ -211,17 +214,21 @@ void  initCard(uint16_t tag,const __FlashStringHelper* Ptitle, uint8_t  type,uin
 
 	if(secondPass)	{
 		pCard[cardCount++] = new fB_Card(tag,Ptitle,type,i2cAddr,aChan ); // Card array is separate from Tag array
-		dbug(F("IC cc:%d,t;%d, pt:%d"),cardCount-1,pCard[cardCount-1]->tag,Card(tag)->tag);
 	}
 }
 
-void Calibrate( uint16_t tag, double factor=NULL,double offset=NULL) {
-	fB_Tag *pT;
-	pT = Tag(tag);
-	if(pT->isDouble()) {
-		if(!factor) factor=1;
+void defineCalibrate( uint16_t tag, double factor=NULL,double offset=NULL) {
+	if(secondPass) {
+		fB_Tag *pT;
+		pT = Tag(tag);
+		if(!pT->isDouble()) pT->dVal = new fB_Val;
+		pT->putFormat(D2STR);
+		if(!factor || factor < 0.00001 ) factor=1;
 		pT->dVal->factor = factor;
 		pT->dVal->offset = offset;
+		//dbug(F("CALIB t:%d, %P %f"),tag,pT->Ptitle, factor);
+		//dbug(F("CL0 P:%P fac:%f"), Tag(CL)->Ptitle, Tag(CL)->dVal->factor);
+
 	}
 }
 
@@ -309,6 +316,7 @@ void flatBrainInit(){
 	secondPass = 1;  // 2nd pass , execute
 	defineSystem();
 	defineUser();
+
 	for(int i=0; i< rowCount; i++) rTP[i].p = Tag(rTP[i].t); // might be obscure. ( see note at top of file ).
 															//  takes array of uint16_t tags and converts them to fB_Tag*
 
@@ -347,7 +355,6 @@ void flatBrainInit(){
 	dbug(F("free RAM %d"),freeRAM());
 	Tag(FRAM)->iVal = freeRAM();
 
-
 }
 
 
@@ -374,7 +381,7 @@ void dbug(const __FlashStringHelper* Ptitle, ... ){
 		i++;
 		if(fmt[i] == 'P') { 
 			Ptext =va_arg(args,const __FlashStringHelper*);
-			char pstr[MAXCHARSTEXT];
+			char pstr[MAXCHARSLINE+1];
 			getPtext(Ptext,pstr);
 			Serial.print(pstr);
 		}
@@ -422,62 +429,6 @@ void dbug(const __FlashStringHelper* Ptitle, ... ){
   Serial.println(prefix);
 }
 
-
-char* doubleToStr(double value, int places,char *buffer) {
-   // this is used to cast digits 
-   int digit,dhit = 0;
-   double tens = 0.1;
-   int tenscount = 0;
-   int i,j=0,k=0,abase= 48;
-   double tempdouble = value;
-   char dBuffer[places+1];
-
-     // make sure we round properly. this could use pow from <math.h>, but doesn't seem worth the import
-   // if this rounding step isn't here, the value  54.321 prints as 54.3209
-
-   // calculate rounding term d:   0.5/pow(10,places)  
-   double d = 0.5;
-   if (value < 0)
-     d *= -1.0;
-   // divide by ten for each decimal place
-   for (i = 0; i < places; i++)
-     d/= 10.0;    
-   // this small addition, combined with truncation will round our values properly 
-   tempdouble +=  d;
-
-   // first get value tens to be the large power of ten less than value
-   // tenscount isn't necessary but it would be useful if you wanted to know after this how many chars the number will take
-
-   if (value < 0)   tempdouble *= -1.0;
-   while ((tens * 10.0) <= tempdouble) {
-     tens *= 10.0;
-     tenscount += 1;
-   }
-   if (value < 0) buffer[j++] = '-';// write out the negative if needed
-   if (tenscount == 0) buffer[j++] = abase +0;
-   for (i=0; i< tenscount; i++) {
-     digit = (int) (tempdouble/tens);
-     buffer[j++] = abase +digit;
-     tempdouble = tempdouble - ((double)digit * tens);
-     tens /= 10.0;
-   }
-   if (places <= 0){ // if no places after decimal, stop now and return
-		buffer[j] = '\0';
-		return buffer;
-   }
-   k = j;
-   buffer[j++] = '.';// otherwise, write the point and continue on
-   for (i = 0; i < places; i++) {   // write out each decimal place shifting digits into the ones place and writing the truncated value
-     tempdouble *= 10.0; 
-     digit = (int) tempdouble;
-     buffer[j++] = abase + digit;
-     tempdouble = tempdouble - (double) digit;      // once written, subtract off that digit
-	 if(digit) dhit = 1;
-   }
-   if(!dhit) j=k;  // truncate if all decimals are zero
-   buffer[j] = '\0';
-   return buffer;
-}
 
 /*
  void softReset() // Restarts program from beginning but does not reset the peripherals and registers

@@ -31,6 +31,9 @@ void defineSystem()  {
 		defineRow(PNCOL,NULL,PTEXT | NOACT);
 		defineRow(PNTOG,NULL,BLAMP | PINTOG);
 		defineRow(PNADC,NULL,INT5  | UPDATE);
+		defineRow(PNFAC,NULL,D2STR | NOACT);
+		defineRow(PNOFF,NULL,D2STR | NOACT);
+		defineRow(PNVAL,NULL,D2STR | NOACT);
 		if(secondPass)Tag(PNROW)->flag16 |= MARK;
 		if(secondPass)Tag(PNCOL)->flag16 |= MARK;
 

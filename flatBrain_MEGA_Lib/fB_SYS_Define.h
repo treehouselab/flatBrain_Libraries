@@ -76,7 +76,8 @@ XCARDS		Ox20-27
 #define MAXEETAGS		25  // for eeprom runaway only
 #define MAXCHARSDUMP	256  // reduce this if logfile dump collides with heap 
 #define MAXLISTROWS		10 
-#define MAXCHARSTEXT	15 
+#define MAXCHARSLINE	15 
+#define MAXCHARSTEXT	8 
 #define MAXVDRDEX		6 
 #define	MAXPSTRCOUNT	11
 #define	MAXTEMPTAG		500
@@ -231,7 +232,7 @@ XCARDS		Ox20-27
 #define	FLOAT1			0x01000000L
 #define	FLOAT2			0x02000000L	
 #define	BLAMP			0x04000000L	
-//#define				0x08000000L	
+#define	D2STR			0x08000000L	
 #define	PTEXT			0x10000000L	
 //#define				0x20000000L
 //#define				0x40000000L
@@ -316,6 +317,9 @@ XCARDS		Ox20-27
 #define PNCRD 			125		    
 #define PNTOG 			126		    
 #define PNADC 			127		    
+#define PNFAC 			128		    
+#define PNOFF 			129		    
+#define PNVAL 			124		    
 
 //#define HEADER			130   
 #define FSTAMP			137		    

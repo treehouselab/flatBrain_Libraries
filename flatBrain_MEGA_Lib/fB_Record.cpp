@@ -4,7 +4,7 @@
 
 //dbug(F("bfr fc: %d"), fCount);
 static int compareFilename(const void *x1, const void *x2) { 
-	char	fname1[MAXCHARSTEXT+1],fname2[MAXCHARSTEXT+1] ;
+	char	fname1[MAXCHARSLINE+1],fname2[MAXCHARSLINE+1] ;
 	fat.findIndex(*(uint16_t *)x1);
 	strcpy(fname1,fat.DE.filename);
 	fat.findIndex(*(uint16_t *)x2);
@@ -33,7 +33,7 @@ void fB_Record::createTagDefLog() {
 	uint8_t  res;
 	char buffer[100];
 	char Pbuffer[40];
-	char title[MAXCHARSTEXT];
+	char title[MAXCHARSLINE+1];
 	buffer[0] = '\0';
 	if(!(bootStatus & SD) || !rec.logCreate(P("TAGDEF"))) return;	
 	if(fat.openFile(filename,FILEMODE_TEXT_WRITE)==NO_ERROR) { 
@@ -49,13 +49,13 @@ void fB_Record::createTagDefLog() {
 				case BLAMP:
 				case INT5:		sprintf(datastr,"%d",pT->iVal);break;
 				case FLOAT1:	
-				case FLOAT2:	doubleToStr(pT->dVal->value,3,datastr); break;	
+				case FLOAT2:	menu.doubleToStr(pT->dVal->value,3,datastr); break;	
 				case TEXT:		sprintf(datastr,"%s",pT->ptext); break;
 				case PTEXT:		getPtext(pT->Ptext, datastr);break;
 				case BLANK:		datastr[0] = '\0' ;break;
 			}
 
-			sprintf(buffer,P("%s,%d,%s, %s,%s, %d,%d,%d,%d,%d"),title,pT->tag ,base,datastr	,doubleToStr(pT->dVal->factor,3,datastr),doubleToStr(pT->dVal->offset,3,datastr),
+			sprintf(buffer,P("%s,%d,%s, %s,%s, %d,%d,%d,%d,%d"),title,pT->tag ,base,datastr	,menu.doubleToStr(pT->dVal->factor,3,datastr),menu.doubleToStr(pT->dVal->offset,3,datastr),
 				1 && pT->flag16 & TSYS
 				,1 && pT->flag16 & STOREE
 //					,1 && pT->flag16 & 0x04
@@ -110,7 +110,7 @@ bool fB_Record::fileCreate(char *fname) {
 	return false;
 }
 bool fB_Record::logCreate(char *base) {
-	char buffer[MAXCHARSTEXT+1];
+	char buffer[MAXCHARSLINE+1];
 	if(!base) return false; 
 	sprintf(buffer,"%s.LOG",base);
 	if(fileCreate(buffer)) {
@@ -132,10 +132,10 @@ void fB_Record::logWriteHeader() {
 	if(!logTagCount) return;
 	
 	fB_Tag * pT;
-	char title[MAXCHARSTEXT+1];
+	char title[MAXCHARSLINE+1];
 	char Pbuffer[15];
 	uint8_t res =fat.openFile(filename,FILEMODE_TEXT_WRITE==NO_ERROR);
-	char buffer[(logTagCount+2) * MAXCHARSTEXT];
+	char buffer[(logTagCount+2) * MAXCHARSLINE];
 	buffer[0] = '\0';
 	strcpy(buffer,P("DATE,TIME,%s"));
 	if(res!=NO_ERROR) return;
@@ -172,7 +172,7 @@ void fB_Record::logWriteData() {
 			case BLAMP:
 			case INT5:		sprintf(datastr,"%d",pT->iVal);break;
 			case FLOAT1:	
-			case FLOAT2:	doubleToStr(pT->dVal->value,3,datastr); break;	
+			case FLOAT2:	menu.doubleToStr(pT->dVal->value,3,datastr); break;	
 			case TEXT:		sprintf(datastr,"%s",pT->ptext);break;
 			case PTEXT:		getPtext(pT->Ptext, datastr);break;
 			case BLANK:		datastr[0] = '\0' ;break;
@@ -186,7 +186,7 @@ void fB_Record::logWriteData() {
 bool fB_Record::logArchive() {
 
 	//if(strcmp(fat.DE.fileext,"LOG")) return false;
-	char buf[2][MAXCHARSTEXT+1];
+	char buf[2][MAXCHARSLINE+1];
 	int i,j=1,k=0;
 	if(fat.getFile(filename)==NO_ERROR){
 		sprintf(buf[k],"%s.A%d",base,MAXAFILES);
@@ -245,7 +245,7 @@ void fB_Record::EEwriteTags() {
 	fB_Tag * pT;
 	uint16_t tAddr,vAddr;
 	uint8_t  * data;
-	char title[MAXCHARSTEXT];
+	char title[MAXCHARSLINE+1];
 	int j=0;
 	for(int i=0;i<tagCount;i++){
 		pT = &tagRay[i];
@@ -284,7 +284,7 @@ fB_Tag* fB_Record::EEgetTag( uint16_t tag) {
 	uint8_t  vBuffer[4];
 	uint8_t  fBuffer[4];
 	uint8_t  gBuffer;
-	char title[MAXCHARSTEXT];
+	char title[MAXCHARSLINE+1];
 	uint16_t tAddr,vAddr,fAddr,gAddr;
 	double *data;
 	char *tStr;

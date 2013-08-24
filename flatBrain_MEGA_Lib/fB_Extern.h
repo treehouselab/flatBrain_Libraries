@@ -51,7 +51,6 @@ extern	fB_Tag*			tagRay;			// array of Tag objects
 extern	fB_Tag*			rowTagRay;		// array of tags, preserves menu structure
 extern	fB_Card**		pCard;			// sparse array of pointers to Card objects
 
-char*	doubleToStr(double value, int places,char *buffer);
 void dbug(const __FlashStringHelper* Pdata,... );
 
 int freeRAM();
@@ -69,7 +68,7 @@ void initPin( uint16_t tag,const __FlashStringHelper* Ptitle, uint16_t ctag,uint
 void initCard(uint16_t tag,const __FlashStringHelper* Ptitle, uint8_t  type,uint8_t  i2cAddr, uint8_t  aChan );
 void initRow(uint16_t tag, const __FlashStringHelper* Ptitle,uint32_t  flags);
 void initRowList(uint16_t tag,const __FlashStringHelper* Ptitle,uint16_t parentTag,uint32_t flags);
-void Calibrate( uint16_t tag, double factor=NULL,double offset=NULL) ;
+void defineCalibrate( uint16_t tag, double factor=NULL,double offset=NULL) ;
 void initLog(uint16_t fTag,const __FlashStringHelper* Ptitle ) ;	
 void navigate();
 #endif
