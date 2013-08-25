@@ -71,21 +71,19 @@ class fB_Tag {
 		void		clearRow(uint8_t rowIndex);
 		void		hideRow(uint8_t rowIndex);
 
-		
-		void		clearFlags();
-		uint16_t	getFlags();
-		void		putFlags(uint32_t flags32);
-		uint8_t		getFormat8();
+		void		clearFlags() { flag16 &= ~0x0FFF; }
+		uint16_t	getFlags() { return flag16 & ~MASKP; }
+		void		putFlags(uint32_t flags32) 	{ flag16 |= (uint16_t)flags32; }
+		uint8_t		getFormat8() {	return (flag8 & MASK8F) >> 4;  }
 		uint32_t	getFormat();
 		void		putFormat(uint32_t flags32);
 		uint32_t	getAction();
-		uint8_t		getAction8();
+		uint8_t		getAction8() { 	return  (flag8 & MASK8A); }
 		void		putAction(uint32_t flags32);
 		uint32_t	assignFormat(double value);
 		uint8_t		isDouble();					// is format a FLOAT1 or FLOAT2?
-		double		getValue();					// get value from data, based on format. Cast as double. If Pin, use value from ADC.
-		void		putValue(double value);		// put value in data union according to format
-		//fB_Tag(uint16_t _tag,const __FlashStringHelper* _Ptitle, uint32_t _flags,  uint8_t _fTag, uint16_t _tTag);
+		double		getDval() { return dVal->value = read() * dVal->factor + dVal->offset; };
+		void		putDval(double value) { if(isDouble()) 	dVal->value = value; }
 
 		void createPin(uint16_t ctag,uint8_t   row,uint8_t   side,   uint8_t  dir, uint8_t  onval);
 		void pull(unsigned int value);  // HIGH or LOW

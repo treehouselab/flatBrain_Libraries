@@ -72,7 +72,7 @@ void defineUser() {
 		defineRow(CC, NULL, FLOAT2 | LOG);
 		defineRow(CL, NULL, FLOAT2 | LOG);
  
- 
+
  	//////////// DEFINE RECORDS
 
 	defineRecord(V1,LOG2,NULL); // flags: [format] | STOREE ( for eeprom )
@@ -82,8 +82,13 @@ void defineUser() {
 	defineRecord(CC,LOG1,NULL);
 	defineRecord(CL,LOG1,NULL);
 
-	defineCalibrate(CL,.9876583210,1.234567880);
-	dbug(F("CLINIT P:%P fac:%f"), Tag(CL)->Ptitle, Tag(CL)->dVal->factor);
+	defineCalibrate(V1,.004882,0.19);
+	defineCalibrate(V2,.004882,0.19);
+	defineCalibrate(V3,.004882,0.19);
+	defineCalibrate(CZ,.004882,0.19);
+	defineCalibrate(CC,.004882,0.19);
+	defineCalibrate(CL,.004882,0.19);
+
 
 
 

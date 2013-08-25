@@ -5,7 +5,7 @@
 fB_Card::fB_Card(uint16_t _tag,const __FlashStringHelper* _Ptitle, uint8_t _type,uint8_t  _i2cAddr, uint8_t  _aChan ) {
 	type = _type;
 	i2cAddr = _i2cAddr;
-	aChan  = aChan;
+	aChan  = _aChan;
 	tag = _tag;
 	Ptitle = _Ptitle;
 	//initCard(tag,Ptitle,this);

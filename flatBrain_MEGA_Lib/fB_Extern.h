@@ -49,7 +49,7 @@ extern	PandT*			rTP;
 extern	uint16_t*		tempTagRay;		// temp array for packed tag list
 extern	fB_Tag*			tagRay;			// array of Tag objects
 extern	fB_Tag*			rowTagRay;		// array of tags, preserves menu structure
-extern	fB_Card**		pCard;			// sparse array of pointers to Card objects
+extern	fB_Card**		pCardRay;			// sparse array of pointers to Card objects
 
 void dbug(const __FlashStringHelper* Pdata,... );
 
@@ -63,7 +63,8 @@ fB_Card* Card(uint16_t tag) ;
 fB_Tag* initTag(uint16_t tag,const __FlashStringHelper* Ptitle,uint32_t flags,uint8_t fTag=NULL,const __FlashStringHelper* Plog  = NULL);
 fB_Tag* initPage( uint16_t tag,const __FlashStringHelper* Ptitle, uint16_t parentTag); 
 void initJump(uint16_t tag);
-void initSpace();;
+void initSpace();
+void initAlias(uint16_t tag, const __FlashStringHelper* Palias);
 void initPin( uint16_t tag,const __FlashStringHelper* Ptitle, uint16_t ctag,uint8_t   row,uint8_t   side,   uint8_t  dir, uint8_t  onval) ;
 void initCard(uint16_t tag,const __FlashStringHelper* Ptitle, uint8_t  type,uint8_t  i2cAddr, uint8_t  aChan );
 void initRow(uint16_t tag, const __FlashStringHelper* Ptitle,uint32_t  flags);

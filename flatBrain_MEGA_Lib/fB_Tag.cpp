@@ -6,32 +6,6 @@ fB_Val::fB_Val() {
 	factor = 1;
 }
 
-//fB_Tag::fB_Tag(uint16_t _tag,const __FlashStringHelper* _Ptitle, uint32_t flags = NULL, uint8_t _fTag=NULL, uint16_t _tTag=NULL) {	
-	
-	//tag = _tag; 
-	//Ptitle = _Ptitle;
-	//ptext = NULL;
-	//pPin = NULL;
-	//fTag= _fTag;
-	//tTag= _tTag;
-	//flag8 = NULL;
-	//flag16 = NULL;
-	//putFlags( flags);
-	//putFormat( flags);
-	//putAction( flags);
-
-//}
-
-void		fB_Tag::putFlags(uint32_t flags32) 	{ flag16 |= (uint16_t)flags32; }
-
-uint16_t	fB_Tag::getFlags() { return flag16 & ~MASKP; }
-void		fB_Tag::clearFlags() { flag16 &= ~0x0FFF; }
-
-
-uint8_t	fB_Tag::getFormat8() {
-	uint8_t j;
-	return (flag8 & MASK8F) >> 4;
-}
 void	fB_Tag::putFormat(uint32_t flags32) {
 	int i;
 	uint16_t format16 = 0;
@@ -83,9 +57,6 @@ return action32 ;
 }
 
 
-uint8_t	fB_Tag::getAction8() {
-	return  (flag8 & MASK8A);
-}
 uint8_t fB_Tag::isDouble() {
 	if(getFormat() == FLOAT1  || getFormat() == FLOAT2 || getFormat() == D2STR) return (1);
 	else return 0;
@@ -97,29 +68,7 @@ uint32_t  fB_Tag::assignFormat(double value) {
 	if(mod*10-int(mod*10) == 0) return FLOAT1;
 	return FLOAT2;
 }
-double fB_Tag::getValue() {  // if pin, get value from ADC 
-	uint16_t ival;
-	double dval;
-	if(pin) {
-		if(isDouble()){
-			if(!dVal->factor) dVal->factor = 1;
-			return ((double) read() * dVal->factor) + dVal->offset;
-		}
-		else return read();
-	}
-	else{
-		if(isDouble()) 	{
-			if(!dVal->factor) dVal->factor = 1;
-			return (dVal->value * dVal->factor) + dVal->offset;
-		}
-		else return (double) iVal;
-	}
-}
 
-void fB_Tag::putValue(double value) { 
-	if(isDouble()) 	dVal->value = value;
-	iVal = (int) value;
-}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 fB_Curr::fB_Curr() {
@@ -360,6 +309,8 @@ unsigned int fB_Tag::read() {
 	switch(Card(getCtag())->type) {
 		case X50:
 		case X76:
+dbug(F("READ %P ,  onval:%d, mode:%d"),Ptitle,getOnVal(),getMode());
+
 			if(getMode()== IO_A  && getOnVal() == PGATE) {
 					return(avgAnalogIn());
 			}
@@ -415,7 +366,10 @@ unsigned int fB_Tag::aRead() {
 }
 uint16_t fB_Tag::avgAnalogIn() {
 	uint16_t  sum = 0;
+	dbug(F("AVGAI %P ,  onval:%d"),Ptitle,getOnVal());
 	if(getOnVal() != PGATE) return 0;
+	dbug(F("AVGAI %P ,  onval:%d"),Ptitle,getOnVal());
+
     for(int i = 0; i < ANALOGSAMPLESIZE; i++) {
         sum += Card(getCtag())->CD_analogRead(getCpin());
 		delay(ANALOGSAMPLEDELAY);

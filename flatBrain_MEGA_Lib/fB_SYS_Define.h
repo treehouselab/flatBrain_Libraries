@@ -71,6 +71,8 @@ XCARDS		Ox20-27
 #define ROUNDOFF		.0005  // added to calcs to round off displayed values
 #define BASEGLOBAL		0 // allows 25 gSys objects
 #define	PULSEMSECS		200
+#define ANALOGSAMPLESIZE	10
+#define ANALOGSAMPLEDELAY	50
 
 
 #define MAXEETAGS		25  // for eeprom runaway only
@@ -78,9 +80,11 @@ XCARDS		Ox20-27
 #define MAXLISTROWS		10 
 #define MAXCHARSLINE	15 
 #define MAXCHARSTEXT	8 
-#define MAXVDRDEX		6 
+#define MAXCHARSD2STR	6 
+//#define MAXVDRDEX		6 
 #define	MAXPSTRCOUNT	11
 #define	MAXTEMPTAG		500
+
 
 // Bus to Arduino Mega pin mapping
 #define	B0		A8
@@ -272,35 +276,24 @@ XCARDS		Ox20-27
 #define	DIAGNOSTICS	5
 #define	CLOCK		6
 #define	ALARM		7
-#define	PINS		8
-#define	ARCHIVES	9
+#define	DPINS		8
+#define	APINS		9
+#define	ARCHIVES	10
 
 
 #define LOGS		19   //   11 RESERVED FOR LOGS
 
-#define TBOOT		60	//SYSTEM TAGS
-#define TSTAGS		61
+#define HEADER		60
+#define TBOOT		61	//SYSTEM TAGS
 #define TUTAGS		62
 #define TPINS		63
 #define TLOGS		64
 #define TPAGES		65
 #define TROWS		66
 #define FRAM		67
-#define HEADER		68
+#define TIAT		69
+#define TSAT		70
 
-#define TLOG			81  //  Tags
-#define TOPR			82
-#define TINP			83
-#define TVAL			84
-#define TFAC			85
-#define TINC			86
-#define TSET			87
-#define TIAT			90  
-#define TSAT			91  
-#define TLAS			92	
-#define TLAU			93	
-#define TADJ			95		    
-#define TARB 			96		
 
 #define CLKYR			100		    
 #define CLKMO			101		    
@@ -314,14 +307,14 @@ XCARDS		Ox20-27
 #define PNPIN 			121		    
 #define PNROW 			122		    
 #define PNCOL 			123		    
-#define PNCRD 			125		    
-#define PNTOG 			126		    
+#define PNCRD 			124	    
+#define PNTOG 			125		    
+#define PNGAT 			126		    
 #define PNADC 			127		    
 #define PNFAC 			128		    
 #define PNOFF 			129		    
-#define PNVAL 			124		    
+#define PNVAL 			130		    
 
-//#define HEADER			130   
 #define FSTAMP			137		    
 #define FARCH			138		    
 #define FSIZE			139	

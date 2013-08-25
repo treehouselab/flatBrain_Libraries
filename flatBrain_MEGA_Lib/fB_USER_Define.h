@@ -7,8 +7,7 @@
 /////////////////////////////////////////////////////////
 //#define MAXPINS		    8	// XIO
 //#define MAXCARDS	    2	// XIO 
-#define MAXSTACKPAGES	1	
-#define MAXLOGS			5  // MAX LOGFILES
+//#define MAXLOGS			5  // MAX LOGFILES
 #define MAXAFILES		10  
 
 #define ANALOGSAMPLESIZE	50
