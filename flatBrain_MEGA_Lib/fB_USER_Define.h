@@ -37,7 +37,7 @@
 
 // Pin , Page, Row Tags, unique
 
-#define RELAYPULS	600
+#define RPULSE	600
 
 #define Y1			601 
 #define Y2			602 
@@ -48,7 +48,7 @@
 #define YRST		607
 #define YSHFT		608
 
-#define RELAYSTAT	620
+#define RSTATUS	620
 
 #define Y1S			621
 #define Y2S			622

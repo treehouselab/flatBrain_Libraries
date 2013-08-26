@@ -46,10 +46,6 @@ void fB_Card::init() {
 			MCP->pinMode(X76AC, OUTPUT);  // pin maps to address pin of CD4067, for analog channel
 			MCP->pinMode(X76AD, OUTPUT);  // pin maps to address pin of CD4067, for analog channel
 			MCP->pinMode(X76IN, OUTPUT);  // pin maps to INHIBIT pin of CD4067, active HIGH
-
-			//MCP->pinMode(X76BA, OUTPUT);  // pin maps to address pin of CD4051, for VD channel
-			//MCP->pinMode(X76BB, OUTPUT);  // pin maps to address pin of CD4051, for VD channel
-			//MCP->pinMode(X76BC, OUTPUT);  // pin maps to address pin of CD4051, for VD channel
 			MCP->pinMode(X76RS, OUTPUT);  // pin maps to 2nd MCP _RST pin
 
 			MCP->digitalWrite(X76IN, LOW);  
@@ -57,9 +53,6 @@ void fB_Card::init() {
 			MCP->pinMode(X76LD, OUTPUT); // pin maps to board LED
 			MCP->pinMode(X76GT, OUTPUT);  // pin maps to N-Chan fet gate
 			MCP->digitalWrite(X76GT, LOW);  //  gate off
-
-			//VDselectR(pgm_read_byte(&VDRmap[0]));  // default no connect
-
 			break;
 	}
 } 
@@ -221,6 +214,7 @@ unsigned int fB_Card::MCPd_analogRead(uint8_t  pin) {
 unsigned int fB_Card::MCPd_digitalRead(uint8_t  pin) {
 	if(!i2cAddr) return fERR;
 	MCPd->pinMode((uint8_t )pin,(uint8_t )INPUT);	
+//dbug(F("CARD mcpd_dr pin:%d val:%d"),pin,MCPd->digitalRead(pin));
 	return (MCPd->digitalRead(pin));
 }
 unsigned int fB_Card::MCPd_getLatches() {

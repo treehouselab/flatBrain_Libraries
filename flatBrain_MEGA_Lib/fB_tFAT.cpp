@@ -209,14 +209,14 @@ uint8_t fB_tFAT::openFile(char *fn, uint8_t mode)
 	restartDir();
 	if (getFile(fn)==NO_ERROR)
 	{
-		//if (!strcmp(DE.filename,fn)){
+		if (!strcmp(DE.filename,fn)){
 			sprintf(currFile.filename,"%s",DE.filename);
 			currFile.currentCluster=DE.startCluster;
 			currFile.fileSize=DE.fileSize;
 			currFile.currentPos=0;
 			currFile.fileMode=mode;
 			return NO_ERROR;
-		//}
+		}
 	}
 	else ERROR_FILE_NOT_FOUND;
 }
@@ -494,6 +494,7 @@ uint16_t fB_tFAT::writeLn(char *st)
 			currFile.currentCluster=findFreeCluster();
 
 			mmc::readSector(buffer, currSec);
+
 			while (!done)
 			{
 				offset+=32;
@@ -716,7 +717,7 @@ uint8_t  fB_tFAT::createFile(char *fn)
 		offset = -32;
 		while (!done)
 		{
-		dbug(F("fatCf3 %s"),fn);
+//		dbug(F("fatCf3 %s"),fn);
 			offset+=32;
 			if (offset==512)
 			{
@@ -759,7 +760,7 @@ uint8_t  fB_tFAT::createFile(char *fn)
 				done=true;
 			}
 		}
-		//getFile(fn); // to reset fat.DE records
+		getFile(fn); // to reset fat.DE records
 		return NO_ERROR;
 	}
 	else return ERROR_CREATE_ERROR;

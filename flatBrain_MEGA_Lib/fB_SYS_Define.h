@@ -216,7 +216,7 @@ XCARDS		Ox20-27
 
 #define	MASK8A			0x0F	 
 #define	MASK32A			0x003FF000L
-#define	UNDEF			0x00000000L	
+//#define				0x00000000L	
 #define	PINTOG			0x00001000L	
 #define	INCR			0x00002000L	
 #define	SHFTPULSE		0x00004000L	
@@ -225,7 +225,7 @@ XCARDS		Ox20-27
 #define	TGATE			0x00020000L
 #define	NOACT			0x00040000L
 #define	TOGGLE			0x00080000L
-#define	FROW	       	0x00100000L
+//#define		       	0x00100000L
 //#define				0x00200000L
 
 #define	MASK8F			0xF0	 

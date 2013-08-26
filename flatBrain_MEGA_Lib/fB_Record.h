@@ -14,7 +14,7 @@ class fB_Record {
 		char		dateStr[MAXCHARSLINE+1];
 		char		sizeStr[MAXCHARSLINE+1];
 		uint16_t*	sortRay;		    // array of indexes to FAT objects
-		uint8_t	fileCount;
+		uint8_t		fileCount;
 		
 		void		EEwriteTags();
 		void		EEinitTags();

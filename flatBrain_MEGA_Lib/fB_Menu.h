@@ -24,7 +24,7 @@ class fB_Menu {
 		void		selectHeader();
 		void		listFiles(uint16_t x1,uint16_t y1,uint16_t x2,uint16_t y2);
 		void		getFileList(); 
-		void		pinPageConstruct(uint8_t mode,uint8_t startDex, uint8_t hand=NULL);
+		void		pinPageConstruct(uint8_t mode,uint8_t startDex, uint8_t hand=RIGHT);
 		void		refreshRow(uint16_t tag = NULL);
 		void		init();
 		uint8_t		dPlaces(double value, uint8_t size);

@@ -98,26 +98,24 @@ bool fB_Record::fileFind(char *fname){
 bool fB_Record::fileCreate(char *fname) {
 	uint8_t  res;
 	if(!fname) return false; 
-	if(fat.createFile(fname) == NO_ERROR) {
+	res = fat.createFile(fname);
+	if(res == NO_ERROR) {
 		strcpy(filename, fat.DE.filename);
 		strcpy(base, fat.DE.basename);
 		logSetDate();
-		logGetAttributes();
 		return true;
 	}
-	dbug(F("RLC %s  DT %s"),base,fat.DE.filename);
 
 	return false;
 }
 bool fB_Record::logCreate(char *base) {
 	char buffer[MAXCHARSLINE+1];
+	//dbug(F("R lc  entry  base:%s"),base);
 	if(!base) return false; 
 	sprintf(buffer,"%s.LOG",base);
 	if(fileCreate(buffer)) {
 		logWriteHeader();  
-	dbug(F("RLC %s  DT %s"),base,fat.DE.filename);
-	dbug(F("RLC %s  Ds %s"),base,dateStr);
-	dbug(F("RLC %s  base %s"),base,fat.DE.basename);
+		logGetAttributes();
 		return true;
 	}
 	return false;
@@ -129,24 +127,28 @@ void fB_Record::logSetDate() {
 }
 
 void fB_Record::logWriteHeader() {
+	dbug(F("R LWh entry  "));
 	if(!logTagCount) return;
 	
 	fB_Tag * pT;
 	char title[MAXCHARSLINE+1];
 	char Pbuffer[15];
-	uint8_t res =fat.openFile(filename,FILEMODE_TEXT_WRITE==NO_ERROR);
+	uint8_t res =fat.openFile(filename,FILEMODE_TEXT_WRITE);
+	if(res!=NO_ERROR) return;
 	char buffer[(logTagCount+2) * MAXCHARSLINE];
 	buffer[0] = '\0';
-	strcpy(buffer,P("DATE,TIME,%s"));
-	if(res!=NO_ERROR) return;
+	strcpy(buffer,P("DATE,TIME"));
 	for(int k = 0;k<tagCount;k++) {	
 		pT = &tagRay[k];
 		if(!pT) continue;
 		if(!(pT->flag16 & LOG)) continue;
 		if(strcmp(base,getPtext(Log(pT->fTag)->Pbase,Pbuffer)))continue;
 		getPtext(pT->Ptitle,title);
-		sprintf(buffer,"%s,%s",buffer,title);
+		strcat(buffer,",");
+		strcat(buffer,title);
+
 	}
+
 	fat.writeLn(buffer);
 	fat.closeFile();
 	logSetDate();
@@ -156,9 +158,10 @@ void fB_Record::logWriteData() {
 	fB_Tag * pT;
 	char Pbuffer[6];
 	char buffer[100];
-	char datastr[16];
+	char datastr[MAXCHARSLINE+1];
 	buffer[0] = '\0';
 	uint8_t res =fat.openFile(filename,FILEMODE_TEXT_WRITE);
+
 	if(res!=NO_ERROR) return;
 	rtc.stamp(buffer);
 
@@ -167,10 +170,13 @@ void fB_Record::logWriteData() {
 		if(!pT) continue;
 		if(!(pT->flag16 & LOG)) continue;
 		if(strcmp( base, getPtext(Log(pT->fTag)->Pbase,Pbuffer) ) )continue;
-		if(pT->flag16 & UNDEF) 	sprintf(datastr,P("----"));
-		switch(pT->getFormat()){
+dbug(F("R LWD  %P f:%d"),pT->Ptitle,pT->flag16);
+
+		if(pT->flag16 & UNDEF) 	strcpy(datastr,P("----"));
+		else switch(pT->getFormat()){
 			case BLAMP:
 			case INT5:		sprintf(datastr,"%d",pT->iVal);break;
+			case D2STR:		
 			case FLOAT1:	
 			case FLOAT2:	menu.doubleToStr(pT->dVal->value,3,datastr); break;	
 			case TEXT:		sprintf(datastr,"%s",pT->ptext);break;
@@ -197,9 +203,9 @@ bool fB_Record::logArchive() {
 			sprintf(buf[j],"%s.A%d",base,i);
 			if(fat.getFile(buf[j])==NO_ERROR) fat.renameFile(buf[j],buf[k]);
 		}
-		dbug(F("REC LARCH RENAME DEF:%s to %s"),filename,buf[++j]); 
-		if(fat.renameFile(filename,buf[j])==NO_ERROR) logRemove();
-		//if(fat.renameFile(fat.DE.filename,buf[++j])==NO_ERROR) logRemove();
+		//dbug(F("REC LARCH RENAME DEF:%s to %s"),filename,buf[++j]); 
+		//if(fat.renameFile(filename,buf[j])==NO_ERROR) logRemove();
+		if(fat.renameFile(fat.DE.filename,buf[++j])==NO_ERROR) logRemove();
 		return true;
 	}
 	return false;
@@ -223,17 +229,18 @@ void fB_Record::logGetAttributes() {
 void fB_Record::logRemove() {
 		dbug(F("R FILE remove %s  "),filename);
 		fat.deleteFile(filename);
-
 	//fat.deleteFile(fat.DE.filename); //DO NOT DO THIS, THE CHAR POINTER CANNNOT POINT TO THE fat.DE. RECORD!
 }
 
 void fB_Record::logDump() {
    char buffer[MAXCHARSDUMP+1] = { NULL };
    if(fat.openFile(filename,FILEMODE_TEXT_READ)==NO_ERROR) {
-	 Serial.begin(SERIALSPEED);
-     Serial.print(F("FILENAME: "));
-     Serial.println(filename);
-     while(fat.readLn(buffer,MAXCHARSDUMP))  Serial.println(buffer);
+	 if(fat.DE.fileSize > 0) {
+		 Serial.begin(SERIALSPEED);
+		 Serial.print(F("FILENAME: "));
+		 Serial.println(filename);
+		 while(fat.readLn(buffer,MAXCHARSDUMP))  Serial.println(buffer);
+	 }
      fat.closeFile();	
 
    }

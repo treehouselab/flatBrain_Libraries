@@ -5,26 +5,24 @@ void defineSystem()  {
 
 	defineCard(BRAIN,BRAIN,0,0);
 
-	defineRow(HEADER,NULL,PAGE);
+	defineRow(HEADER,PAGE);
 
 	definePage(SYSTEM,HOME);
-		defineRow(FRAM,NULL,INT5 | NOACT);
+		defineRow(FRAM,INT5 | NOACT);
 		defineJump(CLOCK);
 		defineJump(APINS);
 		defineJump(DPINS);
 		defineJump(LOGS);
-		defineRow(ARCHIVES,NULL,NULL);
-		defineAlias(DPINS,DIGITAL PINS);
-		defineAlias(APINS,ANALOG PINS);
+		defineRow(ARCHIVES,NULL);
 
 	definePage(CLOCK,SYSTEM);
-		defineRow(CLKYR, NULL,INCR | INT5);
-		defineRow(CLKMO, NULL,INCR | INT5);
-		defineRow(CLKDY, NULL,INCR | INT5);
-		defineRow(CLKHH, NULL,INCR | INT5);
-		defineRow(CLKMM, NULL,INCR | INT5);
-		defineRow(CLKGET, NULL,BLANK);
-		defineRow(CLKSET, NULL,BLANK);
+		defineRow(CLKYR, INCR | INT5);
+		defineRow(CLKMO, INCR | INT5);
+		defineRow(CLKDY, INCR | INT5);
+		defineRow(CLKHH, INCR | INT5);
+		defineRow(CLKMM, INCR | INT5);
+		defineRow(CLKGET, BLANK);
+		defineRow(CLKSET, BLANK);
 		defineAlias(CLKYR,YEAR);
 		defineAlias(CLKMO,MONTH);
 		defineAlias(CLKDY,DAY);
@@ -34,13 +32,12 @@ void defineSystem()  {
 		defineAlias(CLKSET,SET DATETIME);
 
 
-
 	definePage(DPINS,SYSTEM);
-		defineRow(PNPIN,NULL,PTEXT );
-		defineRow(PNCRD,NULL,PTEXT | NOACT);
-		defineRow(PNROW,NULL,INT5  | NOACT);
-		defineRow(PNCOL,NULL,PTEXT | NOACT);
-		defineRow(PNTOG,NULL,BLAMP );
+		defineRow(PNPIN,PTEXT );
+		defineRow(PNCRD,PTEXT | NOACT);
+		defineRow(PNROW,INT5  | NOACT);
+		defineRow(PNCOL,PTEXT | NOACT);
+		defineRow(PNTOG,BLAMP );
 		if(secondPass){
 			Tag(PNCRD)->flag16 |= MARK;
 			Tag(PNROW)->flag16 |= MARK;
@@ -48,20 +45,21 @@ void defineSystem()  {
 		}
 		defineAlias(PNPIN,PIN);
 		defineAlias(PNCRD,CARD);
-		defineAlias(PNROW,COL);
+		defineAlias(PNROW,ROW);
+		defineAlias(PNCOL,COL);
 		defineAlias(PNTOG,TOGGLE);
 
 
 	definePage(APINS,SYSTEM);
-		defineRow(PNPIN,NULL,PTEXT );
-		defineRow(PNCRD,NULL,PTEXT | NOACT);
-		defineRow(PNROW,NULL,INT5  | NOACT);
-		defineRow(PNCOL,NULL,PTEXT | NOACT);
-		defineRow(PNGAT,NULL,BLAMP );
-		defineRow(PNADC,NULL,INT5  | UPDATE);
-		defineRow(PNVAL,NULL,FLOAT2 | NOACT);
-		defineRow(PNFAC,NULL,D2STR | NOACT);
-		defineRow(PNOFF,NULL,FLOAT2 | NOACT);
+		defineRow(PNPIN,PTEXT );
+		defineRow(PNCRD,PTEXT | NOACT);
+		defineRow(PNROW,INT5  | NOACT);
+		defineRow(PNCOL,PTEXT | NOACT);
+		defineRow(PNGAT,BLAMP );
+		defineRow(PNADC,INT5  | UPDATE);
+		defineRow(PNVAL,FLOAT2 | NOACT);
+		defineRow(PNFAC,D2STR | NOACT);
+		defineRow(PNOFF,FLOAT2 | NOACT);
 		if(secondPass){
 			Tag(PNVAL)->flag16 |= MARK;
 			Tag(PNFAC)->flag16 |= MARK;
@@ -79,11 +77,11 @@ void defineSystem()  {
 	defineRowList(LOGS,SYSTEM,TTITLE);
 
 	definePage(FPANEL,LOGS);
-		defineRow(FDATE,NULL, NOACT | TTITLE);
-		defineRow(FSIZE,NULL,INT5 | NOACT);
-		defineRow(FDUMP,NULL,BLANK);
-		defineRow(FSTD,NULL,NULL);
-		defineRow(FARCH,NULL,BLANK);
+		defineRow(FDATE, NOACT | TTITLE);
+		defineRow(FSIZE, NOACT | TEXT);
+		defineRow(FSTD,NULL);
+		defineRow(FDUMP,BLANK);
+		defineRow(FARCH,BLANK);
 		if(secondPass)Tag(FDATE)->flag16 |= MARK;
 		if(secondPass)Tag(FSIZE)->flag16 |= MARK;
 		defineAlias(FDATE,DATE);
@@ -95,15 +93,19 @@ void defineSystem()  {
 	
 /*
 	definePage(TPANEL,HOME);
-		defineRow(TLOG,NULL,NOACT);
-		defineRow(TINP,NULL,NOACT);
-		defineRow(TVAL,NULL,FLOAT2);
-		defineRow(TOPR,NULL,TEXT); 
-		defineRow(TFAC,NULL,FLOAT2);
+		defineRow(TLOG,NOACT);
+		defineRow(TINP,NOACT);
+		defineRow(TVAL,FLOAT2);
+		defineRow(TOPR,TEXT); 
+		defineRow(TFAC,FLOAT2);
 		if(secondPass)	Tag(TLOG)->flag16 |= MARK;
 		*/
 
-	defineRecord(TBOOT,SYSTAG,TSYS);// Probably also need to define row in fB_Menu.cpp
+	defineRecord(TBOOT,SYSTAG,TSYS);// Probably also need to define row in fB_Menu.cpp		
+	defineAlias(DPINS,DIGITAL PINS);
+	defineAlias(APINS,ANALOG PINS);
+	defineAlias(FRAM,FREE RAM);
+
 
 }
 

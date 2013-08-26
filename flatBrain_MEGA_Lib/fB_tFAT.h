@@ -114,7 +114,7 @@ class fB_tFAT
 public:
 	_master_boot_record	MBR;
 	_boot_sector		BS;
-	_file_attributes	DE;
+	_file_attributes	DE, currFile;
 	unsigned long		firstDirSector;
 	byte				buffer[512]; // the buffer cannot be any smaller, SD cards are read/written in blocks of 512 bytes
 	fB_tFAT();
@@ -141,7 +141,6 @@ public:
 	uint8_t 	createFile(char *fn);
 	byte		stampFile(char *fn,uint8_t  year,uint8_t  month,uint8_t  day,uint8_t  hour,uint8_t  min);
 	void		setSSpin(uint8_t pin);
-	_file_attributes	currFile;
 
 private:
 	int				DEcnt;

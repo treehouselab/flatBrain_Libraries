@@ -121,7 +121,6 @@ fB_Card* Card(uint16_t tag) {
 }
 
 fB_Tag* initTag(uint16_t tag,const __FlashStringHelper* Ptitle,uint32_t flags,uint8_t fTag=NULL,const __FlashStringHelper* Pbase  = NULL) {
-	char Pbuffer[MAXCHARSLINE+1];	
 	fB_Tag *pT = NULL;
 	if(!secondPass) {
 		packTempTagRay(tag); // add to tempTagRay if unique;
@@ -134,23 +133,23 @@ fB_Tag* initTag(uint16_t tag,const __FlashStringHelper* Ptitle,uint32_t flags,ui
 			pT->tag = tag;
 			pT->Ptitle = Ptitle;
 			pT->fTag = fTag;
-			//pT->tTag = tTag;
 			pT->pin = NULL;
 		}
-		else if(fTag) pT->fTag = fTag;
 		if(!pT->isDouble() && (flags & (FLOAT1 | FLOAT2 | D2STR)))	pT->dVal = new fB_Val;
 		pT->putFlags(flags);
 		pT->putFormat(flags);
 		pT->putAction(flags);
+
 		if(fTag && !(flags & PAGE)) {
+			pT->fTag = fTag;
 			pT->flag16 |= LOG;
-			if(bootStatus & SD) rec.logCreate(getPtext(Pbase,Pbuffer));
-			if(!Log(tag)) {
+			if(!Log(fTag)) {
 				logTagRay[logTagCount].tag = fTag;
 				logTagRay[logTagCount].Pbase = Pbase;
 				logTagCount++;
 			}
 		}
+//dbug(F("IT2  %P FT:%x"),pT->Ptitle, pT->flag16);
 	}
 	return pT;
 }
@@ -203,12 +202,14 @@ void initPin( uint16_t tag,const __FlashStringHelper* Ptitle, uint16_t ctag,uint
 	pT = initTag(tag,Ptitle,NULL,NULL,NULL);
 	if(secondPass)	{
 		pT->createPin(ctag,row,side,dir,onval) ;
+		pT->flag16 |= UNDEF;
 	}
 	pinCount++;
 }
 
 void  initCard(uint16_t tag,const __FlashStringHelper* Ptitle, uint8_t  type,uint8_t  i2cAddr, uint8_t  aChan ) {
-	if(secondPass)	pCardRay[cardCount++] = new fB_Card(tag,Ptitle,type,i2cAddr,aChan ); // Card array is separate from Tag array
+	if(secondPass)	pCardRay[cardCount] = new fB_Card(tag,Ptitle,type,i2cAddr,aChan ); // Card array is separate from Tag array
+	cardCount++;
 }
 
 void defineCalibrate( uint16_t tag, double factor=NULL,double offset=NULL) {
@@ -233,6 +234,7 @@ void initAlias(uint16_t tag, const __FlashStringHelper* Palias) {
 
 
 void flatBrainInit(){
+	char Pbuffer[MAXCHARSLINE+1];	
 
 
 	dbug(F(" "));
@@ -319,6 +321,8 @@ void flatBrainInit(){
 	for(int i=0; i< rowCount; i++) rTP[i].p = Tag(rTP[i].t); // might be obscure. ( see note at top of file ).
 															//  takes array of uint16_t tags and converts them to fB_Tag*
 
+	if(bootStatus & SD) for(int i=0;i<logTagCount;i++) 	rec.logCreate(getPtext(logTagRay[i].Pbase,Pbuffer));
+														
 	dbug(F("INIT PASS 2"));
 
 	pT = rec.EEgetTag(TBOOT);

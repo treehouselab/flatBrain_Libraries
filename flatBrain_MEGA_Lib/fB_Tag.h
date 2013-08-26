@@ -105,6 +105,7 @@ class fB_Tag {
 		unsigned int dRead();
 		bool isLatched();
 		uint16_t avgAnalogIn();
+		double calibrate() { return (dVal->value = iVal * dVal->factor + dVal->offset); }
 
 };
 

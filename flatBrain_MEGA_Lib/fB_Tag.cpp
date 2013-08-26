@@ -301,33 +301,31 @@ void fB_Tag::aWrite(unsigned int value) {
 			//if(getMode()== IO_D)  digitalWrite(getCpin(),value);
 			if(getMode()== IO_A)  analogWrite(getCpin(),value);
 			break;
-
 	}
 }
 
 unsigned int fB_Tag::read() {
+	uint8_t val;
 	switch(Card(getCtag())->type) {
 		case X50:
 		case X76:
-dbug(F("READ %P ,  onval:%d, mode:%d"),Ptitle,getOnVal(),getMode());
-
-			if(getMode()== IO_A  && getOnVal() == PGATE) {
-					return(avgAnalogIn());
-			}
+			if(getMode()== IO_A  && getOnVal() == PGATE) 	iVal = avgAnalogIn();
 			if(getMode()== IO_D) {
 				if(getDir()==OUTPUT) {
-					if (isLatched()) return HIGH;
-					else return LOW;
+					if (isLatched()) iVal =  HIGH;
+					else iVal = LOW;
 				}
-				else return (Card(getCtag())->MCPd_digitalRead(getCpin()));
+				else iVal = Card(getCtag())->MCPd_digitalRead(getCpin());
 			}
 			break;
 		case BRAIN:
-			if(getMode()== IO_D)  return digitalRead(getCpin());
-			if(getMode()== IO_A)  return analogRead(getCpin());
+			if(getMode()== IO_D)  iVal = digitalRead(getCpin()); 
+			if(getMode()== IO_A)  iVal =  analogRead(getCpin());  
 			break;
-
 	}
+//dbug(F("READ %P ,  onval:%d, mode:%d"),Ptitle,getOnVal(),getMode());
+	flag16 &= ~UNDEF;
+	return iVal;
 }
 bool fB_Tag::isLatched() {
 	uint16_t latches,bit;
@@ -348,7 +346,6 @@ unsigned int fB_Tag::dRead() {
 		case BRAIN:
 			return digitalRead(getCpin());
 			break;
-
 	}
 }
 unsigned int fB_Tag::aRead() {
@@ -366,10 +363,8 @@ unsigned int fB_Tag::aRead() {
 }
 uint16_t fB_Tag::avgAnalogIn() {
 	uint16_t  sum = 0;
-	dbug(F("AVGAI %P ,  onval:%d"),Ptitle,getOnVal());
+	//dbug(F("AVGAI %P ,  onval:%d"),Ptitle,getOnVal());
 	if(getOnVal() != PGATE) return 0;
-	dbug(F("AVGAI %P ,  onval:%d"),Ptitle,getOnVal());
-
     for(int i = 0; i < ANALOGSAMPLESIZE; i++) {
         sum += Card(getCtag())->CD_analogRead(getCpin());
 		delay(ANALOGSAMPLEDELAY);
