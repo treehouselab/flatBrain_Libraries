@@ -465,13 +465,13 @@ void fB_Menu::pinPageConstruct(uint8_t mode,uint8_t startDex, uint8_t hand ) {
 			if(pT->getDir() == OUTPUT) {
 				if(pT->isLatched()) Tag(PNTOG)->iVal = HIGH;
 				else Tag(PNTOG)->iVal = LOW;
-				Tag(PNTOG)->flag16 &= ~( NOACT | MARK);
-				Tag(PNTOG)->Ptext = PstrRay[P_TOGGLE];
+				Tag(PNTOG)->putAction(TOGGLE);
+				Tag(PNTOG)->Ptitle = PstrRay[P_TOGGLE];
 			}
 			if(pT->getDir() == INPUT){
-				Tag(PNTOG)->iVal = pT->read();
-				Tag(PNTOG)->flag16 |= ( NOACT | MARK);
-				Tag(PNTOG)->Ptext = PstrRay[P_INPUT];
+				Tag(PNTOG)->iVal = pT->readInt();
+				Tag(PNTOG)->putAction(NOACT);
+				Tag(PNTOG)->Ptitle = PstrRay[P_INPUT];
 			}
 		}
 		else  {
@@ -480,9 +480,9 @@ void fB_Menu::pinPageConstruct(uint8_t mode,uint8_t startDex, uint8_t hand ) {
 			Tag(PNOFF)->dVal->value = pT->dVal->offset;
 			if(pT->getOnVal() == PGATE) {
 				Tag(PNGAT)->iVal= HIGH;
-				uint16_t aVal = pT->read();
+				uint16_t aVal = pT->readInt();
 				Tag(PNADC)->iVal= aVal;
-				Tag(PNVAL)->dVal->value = pT->calibrate();
+				Tag(PNVAL)->dVal->value = pT->calibrate(aVal);
 				Tag(PNFAC)->dVal->value = pT->dVal->factor;
 				Tag(PNOFF)->dVal->value = pT->dVal->offset;
 				Tag(PNADC)->flag16 &= ~( NOACT | MARK | UNDEF);
@@ -588,10 +588,12 @@ void fB_Tag::action(uint8_t  hand) {
 					}
 					if(iVal == HIGH) {
 						pT->putOnVal(PGATE);
-						aVal= pT->read();
-						pT->dVal->value = (double) aVal * pT->dVal->factor + pT->dVal->offset;
-						Tag(PNVAL)->dVal->value = pT->dVal->value;
-						Tag(PNADC)->iVal = aVal;
+						aVal = pT->readInt();
+						Tag(PNADC)->iVal= aVal;
+						Tag(PNVAL)->dVal->value = pT->calibrate(aVal);
+						//if(Tag(PNVAL)->dVal->value < 0) = Tag(PNVAL)->dVal->value == 0;
+						Tag(PNFAC)->dVal->value = pT->dVal->factor;
+						Tag(PNOFF)->dVal->value = pT->dVal->offset;
 						Tag(PNADC)->flag16 &= ~( NOACT | MARK | UNDEF);
 						Tag(PNVAL)->flag16 &= ~( NOACT | MARK | UNDEF);
 					}
@@ -606,10 +608,9 @@ void fB_Tag::action(uint8_t  hand) {
 					return;
 				case PNADC:
 					pT = &tagRay[ Tag(PNPIN)->fTag];
-					aVal= pT->read();
-					Tag(PNADC)->iVal = aVal;
-					pT->dVal->value = (double) aVal * pT->dVal->factor + pT->dVal->offset;
-					Tag(PNVAL)->dVal->value = pT->dVal->value;
+					aVal = pT->readInt();
+					Tag(PNADC)->iVal= aVal;
+					Tag(PNVAL)->dVal->value = pT->calibrate(aVal);
 					menu.refreshRow();
 					menu.refreshRow(PNVAL);
 					return;

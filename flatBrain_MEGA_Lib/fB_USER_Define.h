@@ -8,9 +8,8 @@
 //#define MAXPINS		    8	// XIO
 //#define MAXCARDS	    2	// XIO 
 //#define MAXLOGS			5  // MAX LOGFILES
-#define MAXAFILES		10  
-
-#define ANALOGSAMPLESIZE	50
+#define MAXAFILES		    10  
+#define ANALOGSAMPLESIZE	20
 #define ANALOGSAMPLEDELAY	50
 
 
@@ -31,13 +30,15 @@
 #define	VLVD	6
 
 ///////////////////////////////////////////////////////////////////////////////
-//////////////  ALL USER-DEFINED TAG ARRAY Tags MUST BE > 500 //////////////////
+//////////////  USER-DEFINED TAGs //////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
 
 // Pin , Page, Row Tags, unique
+// User Page tag range: 50-255)
+// User Row tag range:	>= 500 )
 
-#define RPULSE	600
+#define RPULSE	60
 
 #define Y1			601 
 #define Y2			602 
@@ -48,7 +49,7 @@
 #define YRST		607
 #define YSHFT		608
 
-#define RSTATUS	620
+#define RSTATUS	62
 
 #define Y1S			621
 #define Y2S			622
@@ -57,8 +58,9 @@
 #define Y5S			625 
 #define Y6S			626
 
-#define SENSORS		640
+#define SENSORS		64
 
+#define V0			640
 #define V1			641
 #define V2			642
 #define V3			643

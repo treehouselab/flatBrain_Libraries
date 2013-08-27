@@ -101,11 +101,12 @@ class fB_Tag {
 		void aWrite(unsigned int value);
  		void dWrite(unsigned int value);
 		unsigned int read();
+		uint16_t readInt();
 		unsigned int aRead();
 		unsigned int dRead();
 		bool isLatched();
 		uint16_t avgAnalogIn();
-		double calibrate() { return (dVal->value = iVal * dVal->factor + dVal->offset); }
+		double calibrate(uint16_t intVal) { return (dVal->value = intVal * dVal->factor + dVal->offset); }
 
 };
 

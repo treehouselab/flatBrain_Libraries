@@ -32,9 +32,10 @@ void defineUser() {
 		definePin(Y5S,YCRD,20,COL_L,INPUT,LOW);
 		definePin(Y6S,YCRD,18,COL_R,INPUT,LOW);
 
-		definePin(V1,YCRD,22,COL_L,INPUT ,LOW); 
-		definePin(V2,YCRD,24,COL_R,INPUT,LOW); 
-		definePin(V3,YCRD,22,COL_R,INPUT,LOW); 
+		definePin(V0,YCRD,21,COL_L,INPUT,PGATE); 
+		definePin(V1,YCRD,22,COL_L,INPUT,PGATE); 
+		definePin(V2,YCRD,24,COL_R,INPUT,PGATE); 
+		definePin(V3,YCRD,22,COL_R,INPUT,PGATE); 
 		definePin(CZ,YCRD,21,COL_L,INPUT,LOW); 
 		definePin(CC,YCRD,23,COL_L,INPUT,LOW);
 		definePin(CL,YCRD,23,COL_R,INPUT,LOW); 
@@ -42,10 +43,24 @@ void defineUser() {
 	//////////////////////////////////////////
    	defineHome(FLATBRAIN);			// MUST HAVE A HOME
 		defineJump(SYSTEM);			// SYSTEM Page created in fB_SYS_Defines.cpp
-		defineJump(RPULSE);		// OPTIONAL User-Defined Rows start here
+		// OPTIONAL User-Defined Rows start here
 		defineJump(RSTATUS);
+		defineJump(RPULSE);		
 		defineJump(SENSORS);
 	//////////////////////////////////////////
+
+   	definePage(RSTATUS,HOME);
+		defineRow(V1, FLOAT1 | LOG);
+		defineRow(V2, FLOAT1 | LOG);
+		defineRow(V3, FLOAT1 | LOG);
+		defineRow(Y1S, BLAMP| UPDATE);
+		defineRow(Y2S, BLAMP| UPDATE);
+		defineRow(Y3S, BLAMP| UPDATE);
+		defineRow(Y4S, BLAMP| UPDATE);
+		defineRow(Y5S, BLAMP| UPDATE);
+		defineRow(Y6S, BLAMP| UPDATE);
+		//defineRow(MSG, PTEXT | MARK);
+
 
    	definePage(RPULSE,HOME);
 		defineRow(Y1,BLANK | SHFTPULSE);
@@ -57,21 +72,13 @@ void defineUser() {
 		defineRow(YRST,BLANK | SHFTPULSE);
 		defineAlias(YRST,RESET ALL);
 
-   	definePage(RSTATUS,HOME);
-		defineRow(Y1S, BLAMP| UPDATE);
-		defineRow(Y2S, BLAMP| UPDATE);
-		defineRow(Y3S, BLAMP| UPDATE);
-		defineRow(Y4S, BLAMP| UPDATE);
-		defineRow(Y5S, BLAMP| UPDATE);
-		defineRow(Y6S, BLAMP| UPDATE);
-
    	definePage(SENSORS,HOME);
 		defineRow(V1, FLOAT1 | LOG);
 		defineRow(V2, FLOAT1 | LOG);
 		defineRow(V3, FLOAT1 | LOG);
-		defineRow(CZ, FLOAT2 | LOG);
-		defineRow(CC, FLOAT2 | LOG);
-		defineRow(CL, FLOAT2 | LOG);
+		defineRow(CZ, FLOAT1 | LOG);
+		defineRow(CC, FLOAT1 | LOG);
+		defineRow(CL, FLOAT1 | LOG);
  
 
  	//////////// DEFINE RECORDS
@@ -83,15 +90,25 @@ void defineUser() {
 	defineRecord(CC,LOG1,NULL);
 	defineRecord(CL,LOG1,NULL);
 
-	defineCalibrate(V1,.004882,0.19);
-	defineCalibrate(V2,.004882,0.19);
-	defineCalibrate(V3,.004882,0.19);
+	defineCalibrate(V0,0.0807,-56.8);
+	defineCalibrate(V1,0.0807,-56.8);
+	defineCalibrate(V2,0.0807,-56.8);
+	defineCalibrate(V3,0.0807,-56.8);
 	defineCalibrate(CZ,.004882,0.19);
 	defineCalibrate(CC,.004882,0.19);
 	defineCalibrate(CL,.004882,0.19);
 
 	defineAlias(RSTATUS,RELAY STATUS);
 	defineAlias(RPULSE,RELAY SWITCH);
+	defineAlias(V1,VOLTS B1);
+	defineAlias(V2,VOLTS B2);
+	defineAlias(V3,VOLTS B3);
+	defineAlias(Y1S,RELAY 1);
+	defineAlias(Y2S,RELAY 2);
+	defineAlias(Y3S,RELAY 3);
+	defineAlias(Y4S,INVERTER);
+	defineAlias(Y5S,LOAD);
+	defineAlias(Y6S,FAN);
 
 
 

@@ -132,7 +132,7 @@ fB_Tag* initTag(uint16_t tag,const __FlashStringHelper* Ptitle,uint32_t flags,ui
 			pT =  &tagRay[tagCount++]; 
 			pT->tag = tag;
 			pT->Ptitle = Ptitle;
-			pT->fTag = fTag;
+			pT->fTag = fTag;  // 8bit 
 			pT->pin = NULL;
 		}
 		if(!pT->isDouble() && (flags & (FLOAT1 | FLOAT2 | D2STR)))	pT->dVal = new fB_Val;
@@ -216,8 +216,10 @@ void defineCalibrate( uint16_t tag, double factor=NULL,double offset=NULL) {
 	if(secondPass) {
 		fB_Tag *pT;
 		pT = Tag(tag);
-		if(!pT->isDouble()) pT->dVal = new fB_Val;
-		pT->putFormat(D2STR);
+		if(!pT->isDouble()) {
+			pT->dVal = new fB_Val;
+			pT->putFormat(FLOAT2);
+		}
 		if(!factor || factor < 0.00001 ) factor=1;
 		pT->dVal->factor = factor;
 		pT->dVal->offset = offset;
@@ -341,7 +343,6 @@ void flatBrainInit(){
 	dbug(F("INIT TFT"));
 	//dbug(F("FBf  %P , flags:%x"),Tag(HOME)->Ptitle,Tag(HOME)->flags);
 
-	menu.showPage(HOME);
 
 	alarm.play(ALARM_INIT);
 

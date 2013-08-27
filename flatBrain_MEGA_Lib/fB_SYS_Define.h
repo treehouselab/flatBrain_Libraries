@@ -71,9 +71,6 @@ XCARDS		Ox20-27
 #define ROUNDOFF		.0005  // added to calcs to round off displayed values
 #define BASEGLOBAL		0 // allows 25 gSys objects
 #define	PULSEMSECS		200
-#define ANALOGSAMPLESIZE	10
-#define ANALOGSAMPLEDELAY	50
-
 
 #define MAXEETAGS		25  // for eeprom runaway only
 #define MAXCHARSDUMP	256  // reduce this if logfile dump collides with heap 
@@ -268,7 +265,7 @@ XCARDS		Ox20-27
 
 ///// TAG ARRAY tags, unique////////////////////////////////////////////
 ///////////////////////////////////////////////////////////
-// PAGE tags
+// PAGE tags (SYSTEM Page tag range: 1-28)
 #define	HOME		1   
 #define	SYSTEM		2
 #define FPANEL		3	
@@ -280,8 +277,7 @@ XCARDS		Ox20-27
 #define	APINS		9
 #define	ARCHIVES	10
 
-
-#define LOGS		19   //   11 RESERVED FOR LOGS
+#define LOGS		29   //   11 RESERVED FOR LOGS
 
 #define HEADER		60
 #define TBOOT		61	//SYSTEM TAGS
@@ -293,6 +289,7 @@ XCARDS		Ox20-27
 #define FRAM		67
 #define TIAT		69
 #define TSAT		70
+#define MSG			71
 
 
 #define CLKYR			100		    
