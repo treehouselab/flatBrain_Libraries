@@ -214,7 +214,6 @@ unsigned int fB_Card::MCPd_analogRead(uint8_t  pin) {
 unsigned int fB_Card::MCPd_digitalRead(uint8_t  pin) {
 	if(!i2cAddr) return fERR;
 	MCPd->pinMode((uint8_t )pin,(uint8_t )INPUT);	
-//dbug(F("CARD mcpd_dr pin:%d val:%d"),pin,MCPd->digitalRead(pin));
 	return (MCPd->digitalRead(pin));
 }
 unsigned int fB_Card::MCPd_getLatches() {

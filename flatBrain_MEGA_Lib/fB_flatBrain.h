@@ -61,6 +61,52 @@ void defineSystem();
 
 
 ///////////////////// GLOBAL to main.c FUNCTIONS ////////////////////////////////////////////////////////////////
+double readVcc() {
+	long vRefScale = 1125300L; // default;
+
+  // Read 1.1V reference against AVcc
+  // set the reference to Vcc and the measurement to the internal 1.1V reference
+  #if defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+    ADMUX = _BV(REFS0) | _BV(MUX4) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
+  #elif defined (__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny84__)
+    ADMUX = _BV(MUX5) | _BV(MUX0);
+  #elif defined (__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__)
+    ADMUX = _BV(MUX3) | _BV(MUX2);
+  #else
+    ADMUX = _BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
+  #endif  
+
+  delay(2); // Wait for Vref to settle
+  ADCSRA |= _BV(ADSC); // Start conversion
+  while (bit_is_set(ADCSRA,ADSC)); // measuring
+
+  uint8_t low  = ADCL; // must read ADCL first - it then locks ADCH  
+  uint8_t high = ADCH; // unlocks both
+
+  long result = (high<<8) | low;
+  //return (double) (vRefScale/result)/1000; // Vcc in Volts
+
+   //  more accurate chip-specific scaling factor:
+  //  scale = internal.1Ref * 1023 * 1000
+  //  where internal.1Ref = 1.1 * Vcc1 (per voltmeter) / Vcc2 (per readVcc() function)
+
+	//MEASURED, THIS CHIP 4.81/4.8710 = 0.9875
+	// 0.9875 * vrEFsCALE = 1111234l
+	vRefScale = 1111234L; // default;
+	return (double) (vRefScale/result)/1000; // Vcc in Volts
+
+}
+
+/*
+ void softReset() // Restarts program from beginning but does not reset the peripherals and registers
+  {
+	asm volatile ("  jmp 0");  
+  }
+*/
+// free RAM check for debugging. SRAM for ATmega328p = 2048Kb.
+//  1024 with ATmega168
+
+
 void navigate() {   menu.buttonCode = tft.readButtons(); }  // tft button interrupt handler
 
 int freeRAM () {
@@ -357,6 +403,7 @@ void flatBrainInit(){
 	//alarm.bootBeepDisable();
 	dbug(F("free RAM %d"),freeRAM());
 	Tag(FRAM)->iVal = freeRAM();
+	Tag(VCC)->dVal->value = readVcc();
 }
 
 void dbug(const __FlashStringHelper* Ptitle, ... ){
@@ -430,15 +477,6 @@ void dbug(const __FlashStringHelper* Ptitle, ... ){
   Serial.println(prefix);
 }
 
-
-/*
- void softReset() // Restarts program from beginning but does not reset the peripherals and registers
-  {
-	asm volatile ("  jmp 0");  
-  }
-*/
-// free RAM check for debugging. SRAM for ATmega328p = 2048Kb.
-//  1024 with ATmega168
  
 
 

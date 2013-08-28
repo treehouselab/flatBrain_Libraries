@@ -8,12 +8,13 @@ void defineSystem()  {
 	defineRow(HEADER,PAGE);
 
 	definePage(SYSTEM,HOME);
-		defineRow(FRAM,INT5 | NOACT);
-		defineJump(CLOCK);
 		defineJump(APINS);
 		defineJump(DPINS);
 		defineJump(LOGS);
 		defineRow(ARCHIVES,NULL);
+		defineJump(CLOCK);
+		defineRow(FRAM,INT5 | NOACT);
+		defineRow(VCC,D2STR | NOACT);
 
 	definePage(CLOCK,SYSTEM);
 		defineRow(CLKYR, INCR | INT5);

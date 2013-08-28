@@ -161,16 +161,21 @@ void fB_Tag::createPin(uint16_t ctag,uint8_t   row,uint8_t   side,   uint8_t  di
 			//if(getMode()== IO_D)    pinMode(getCpin(),iodir);
 			break;
 	}
-	pull(~onval); // pulls to OFF for both input and output getMode()s
+	//if(mode == INPUT) {
+		if(onval == HIGH) pull(LOW);
+		else pull(HIGH);
+	//}
+
+	//pull(~onval); // pulls to OFF for both input and output getMode()s
 
 	pin = 0;
-	pin |= (dir   << 15);
-	pin |= (mode  << 14);
+	pin |= ((dir   << 15)& 0x8000);
+	pin |= ((mode  << 14) & 0x4000);
 	//unused flag bits 9-13
-	pin |= ((onval  << 7)& 0x0300);  //2bit
+	pin |= ((onval  << 7)& 0x0180);  //2bit
 	pin |= ((ctag  << 4)&  0x0070);  //3bits
 	pin |= (cPin & 0x0F);			 //4bits
-//dbug(F("CP %P  r:%d,d:%d,M:%d,m:%d,v:%d "),Ptitle,row,getDir(),mode,getMode(),getOnVal());
+dbug(F("CP %P  pin:0x%x , cpin:%d/%d,m:%d/%d,onv:%d/%d "),Ptitle,pin,cPin,getCpin(),mode,getMode(),onval,getOnVal());
 //dbug(F(""));
 
 }
@@ -178,12 +183,12 @@ void fB_Tag::createPin(uint16_t ctag,uint8_t   row,uint8_t   side,   uint8_t  di
 uint8_t fB_Tag::getDir()	{return ( pin >> 15 ) &  0X01 ;}
 uint8_t fB_Tag::getMode()   {return ( pin >> 14 ) &  0X01 ;}
 uint8_t fB_Tag::getOnVal()	{return ( pin >>  7 ) &  0x03 ;}
-uint8_t fB_Tag::getCtag()   {return ( pin >>  4 ) &  0X0F ;}
+uint8_t fB_Tag::getCtag()   {return ( pin >>  4 ) &  0X07 ;}
 uint8_t fB_Tag::getCpin()   {return ( pin & 0X0F );}
 
 void fB_Tag::putOnVal(uint8_t onval) {
-	pin &= ~0x0300;
-	pin |= ((onval  << 7)& 0x0300);  //2bit
+	pin &= ~0x0180;
+	pin |= ((onval  << 7)& 0x0180);  //2bit
 }
 
 
@@ -251,7 +256,7 @@ void fB_Tag::pulse(unsigned int msecs) {
 		pinMode(INPUT);
 }
 void fB_Tag::write(unsigned int value) {
-	dbug(F("tw %P ,  onval:%d, vAL:%d"),Ptitle,getOnVal(),value);
+	//dbug(F("tw %P ,  onval:%d, vAL:%d"),Ptitle,getOnVal(),value);
 
 	if(!pin) return;
 
@@ -264,7 +269,7 @@ void fB_Tag::write(unsigned int value) {
 			if(getMode()== IO_D)  {
 				value &= 0x0001;
 				Card(getCtag())->MCPd_digitalWrite(getCpin(),value);
-				dbug(F("tw2 %P ,  ctag:%d, cp:%d,type:%d, val:%d"),Ptitle,getCtag(),getCpin(),Card(getCtag())->type,value);
+				//dbug(F("tw2 %P ,  ctag:%d, cp:%d,type:%d, val:%d"),Ptitle,getCtag(),getCpin(),Card(getCtag())->type,value);
 			}
 			break;
 		case BRAIN:

@@ -25,12 +25,12 @@ void defineUser() {
 		definePin(YRST,YCRD,25,COL_L,INPUT,LOW);
 		definePin(YSHFT,YCRD,25,COL_R,INPUT,LOW);
 
-		definePin(Y1S,YCRD,18,COL_L,INPUT,LOW); 
-		definePin(Y2S,YCRD,19,COL_R,INPUT,LOW); 
-		definePin(Y3S,YCRD,19,COL_L,INPUT,LOW); 
-		definePin(Y4S,YCRD,20,COL_R,INPUT,LOW); 
-		definePin(Y5S,YCRD,20,COL_L,INPUT,LOW);
-		definePin(Y6S,YCRD,18,COL_R,INPUT,LOW);
+		definePin(Y1S,YCRD,18,COL_L,INPUT,HIGH); 
+		definePin(Y2S,YCRD,19,COL_R,INPUT,HIGH); 
+		definePin(Y3S,YCRD,19,COL_L,INPUT,HIGH); 
+		definePin(Y4S,YCRD,20,COL_R,INPUT,HIGH); 
+		definePin(Y5S,YCRD,20,COL_L,INPUT,HIGH);
+		definePin(Y6S,YCRD,18,COL_R,INPUT,HIGH);
 
 		definePin(V0,YCRD,21,COL_L,INPUT,PGATE); 
 		definePin(V1,YCRD,22,COL_L,INPUT,PGATE); 

@@ -260,8 +260,6 @@ XCARDS		Ox20-27
 
 // SYSTEM LOG tags, Range 1-9
 #define	SYSTAG		1	
-#define	MTAG2		2	 //test
-#define	MTAG		1009	 //test
 
 ///// TAG ARRAY tags, unique////////////////////////////////////////////
 ///////////////////////////////////////////////////////////
@@ -290,6 +288,7 @@ XCARDS		Ox20-27
 #define TIAT		69
 #define TSAT		70
 #define MSG			71
+#define VCC			72
 
 
 #define CLKYR			100		    

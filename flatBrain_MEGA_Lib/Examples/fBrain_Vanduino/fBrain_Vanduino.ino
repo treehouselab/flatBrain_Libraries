@@ -29,6 +29,7 @@ fB_Relay *R1, *R2, *R3,*R4, *R5, *R6;
 float v1, v2, v3;
 uint8_t   Cstate;
 uint8_t   Rstate;
+uint8_t changeFlag = 0;
 
 
 
@@ -95,7 +96,7 @@ void setup(){
 	R3 = new fB_Relay(Y3,Y3S,V3,RSTATUS);
 	R4 = new fB_Relay(Y4,Y4S,NULL,RSTATUS);
 	R5 = new fB_Relay(Y5,Y5S,NULL,RSTATUS);
-	R6  = new fB_Relay(Y6,Y6S,NULL,RSTATUS);
+	R6 = new fB_Relay(Y6,Y6S,NULL,RSTATUS);
 
 	timer.every(2000,updateDisplay);
 	initState();
@@ -106,6 +107,7 @@ void setup(){
 
 void loop() {
 	menu.checkButtonCode();
+	
 	if(curr.pageTag== RSTATUS) timer.update();
 
 	if(Cstate) {
@@ -145,7 +147,7 @@ void loop() {
 			}
 		}
 	}
-
+*/
 }
 
 /*

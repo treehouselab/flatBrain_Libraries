@@ -54,6 +54,7 @@ extern	fB_Card**		pCardRay;			// sparse array of pointers to Card objects
 void dbug(const __FlashStringHelper* Pdata,... );
 
 int freeRAM();
+double readVcc();
 char* getPstr(uint16_t tag, char *buffer);
 char* getPtext(const __FlashStringHelper* Ptext,char *buffer);
 void getPtextU(const __FlashStringHelper* Ptext,char *buffer);

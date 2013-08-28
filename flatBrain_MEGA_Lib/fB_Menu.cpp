@@ -375,7 +375,7 @@ void fB_Tag::showRow(uint8_t  rowIndex, uint8_t  option) {  //when option == REF
 		//Serial.println(format,DEC);
 		//Serial.println(format,HEX);
 	if(getAction() == UPDATE && pin){
-		dbug(F("SR0 %P ival:%d "),Ptitle,iVal);
+		//dbug(F("SR0 %P ival:%d "),Ptitle,iVal);
 		read();
 	}
 	if(format == BLAMP) {
