@@ -577,6 +577,8 @@ void fB_Tag::action(uint8_t  hand) {
 						menu.refreshRow(PNGAT);
 						menu.refreshRow(PNADC);
 						menu.refreshRow(PNVAL);
+						menu.refreshRow(PNFAC);
+						menu.refreshRow(PNOFF);
 					}
 					curr.selectRow();
 					return;

@@ -62,7 +62,7 @@ fB_Relay::fB_Relay(uint16_t triggerTag, uint16_t stateTag, uint16_t  voltTag, ui
  void fB_Relay::updateVolts() {
 	double oldVolts = Volts;
 	pV->read();
-dbug(F("uVS %P val:%f"),pV->Ptitle,pV->dVal->value);
+//dbug(F("uVS %P val:%f"),pV->Ptitle,pV->dVal->value);
 	if(pV->dVal->value <0) pV->dVal->value = 0;
 	Volts = pV->dVal->value;
 	if((fabs(oldVolts-Volts)> 0.1) && curr.pageTag == pTag) menu.refreshRow(vTag);

@@ -15,6 +15,7 @@
 #define RSPIN	2     // for port banging RS pin on TFT ( corresponds to ARDUINO D24  )
 #define RSPORT	PORTA // for port banging RS pin on TFT ( corresponds to ARDUINO D24  )
 #define RSDDR	DDRA // for port banging WR pin on TFT ( corresponds to ARDUINO D24  )
+#define VREFADJ	0.9827
 
 #define AT_SPISS 		    53 //  dedicated Mega d53 pin for Chip Select pin for ATTINYs
 

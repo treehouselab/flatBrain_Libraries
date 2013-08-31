@@ -15,6 +15,7 @@ fB_Record   rec;
 fB_Curr		curr; 
 //fB_Seg		seg;
 
+double VccRef;  // adjusted Vcc
 //fB_WTV   audio;
 //fB_VLVD   vlvd;
 const __FlashStringHelper* PstrRay[MAXPSTRCOUNT];
@@ -92,8 +93,11 @@ double readVcc() {
 
 	//MEASURED, THIS CHIP 4.81/4.8710 = 0.9875
 	// 0.9875 * vrEFsCALE = 1111234l
-	vRefScale = 1111234L; // default;
-	return (double) (vRefScale/result)/1000; // Vcc in Volts
+	//vRefScale = 1111232L; // default;
+	dbug(F("VREF Vcc: %f"),((double)(vRefScale/result)/1000) * VREFADJ); 
+	return ((double) (vRefScale/result)/1000) * VREFADJ; // Vcc in Volts
+
+
 
 }
 
@@ -394,6 +398,8 @@ void flatBrainInit(){
 
 	attachInterrupt(NAV_INT, navigate,FALLING);
 
+	VccRef = readVcc();
+
 	//set interrupt pins to high
 	pinMode(NAV_INTPIN,INPUT_PULLUP);
 	pinMode(K0_INTPIN,INPUT_PULLUP);
@@ -403,7 +409,7 @@ void flatBrainInit(){
 	//alarm.bootBeepDisable();
 	dbug(F("free RAM %d"),freeRAM());
 	Tag(FRAM)->iVal = freeRAM();
-	Tag(VCC)->dVal->value = readVcc();
+	Tag(VCC)->dVal->value = VccRef;
 }
 
 void dbug(const __FlashStringHelper* Ptitle, ... ){

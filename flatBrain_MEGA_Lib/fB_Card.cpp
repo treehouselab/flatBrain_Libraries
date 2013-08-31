@@ -195,6 +195,7 @@ void fB_Card::MCP_digitalWrite(uint8_t  pin, unsigned int value) {
 	MCP->digitalWrite(pin,value);
 }
 void fB_Card::MCPd_digitalWrite(uint8_t  pin, unsigned int value) {
+	//dbug(F("pin on ********* %d"),pin);
 	if(!i2cAddr) return;
 	MCPd->pinMode((uint8_t )pin,(uint8_t )OUTPUT);
 	MCPd->digitalWrite(pin,value);

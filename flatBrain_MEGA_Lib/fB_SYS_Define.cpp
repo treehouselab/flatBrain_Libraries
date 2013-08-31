@@ -14,7 +14,7 @@ void defineSystem()  {
 		defineRow(ARCHIVES,NULL);
 		defineJump(CLOCK);
 		defineRow(FRAM,INT5 | NOACT);
-		defineRow(VCC,D2STR | NOACT);
+		defineRow(VCC,FLOAT2 | NOACT);
 
 	definePage(CLOCK,SYSTEM);
 		defineRow(CLKYR, INCR | INT5);

@@ -42,8 +42,9 @@ void updateDisplay() {
 		R6->updateState();
 		R1->updateVolts();
 		R2->updateVolts();
-		R3->updateVolts();
-		updateState();
+		//R3->updateVolts();
+		updateBusVolts();
+		//updateState();
 }
 void updateState() {
 
@@ -97,9 +98,13 @@ void setup(){
 	R4 = new fB_Relay(Y4,Y4S,NULL,RSTATUS);
 	R5 = new fB_Relay(Y5,Y5S,NULL,RSTATUS);
 	R6 = new fB_Relay(Y6,Y6S,NULL,RSTATUS);
+	Tag(V0)->dVal->value = 0;
+	Tag(V1)->dVal->value = 0;
+	Tag(V2)->dVal->value = 0;
+	Tag(V3)->dVal->value = 0;
 
 	timer.every(2000,updateDisplay);
-	initState();
+	//initState();
 
 }
 
@@ -109,7 +114,7 @@ void loop() {
 	menu.checkButtonCode();
 	
 	if(curr.pageTag== RSTATUS) timer.update();
-
+/*
 	if(Cstate) {
 		if(Cstate & CS1) {  // main charge power
 			if(v2 < INITCHARGEVOLTS2) {
@@ -150,12 +155,16 @@ void loop() {
 */
 }
 
-/*
+
  void updateBusVolts() {
-	fB_Tag* pT;
-	pT = Tag(V0);
-	pT->read();
-	if(pT->dVal->value <0) pT->dVal->value = 0;
-	if(curr.pageTag ==RSTATUS) menu.refreshRow(V0);
+	static double oldVolts = 0;
+	fB_Tag* pV;
+	pV = Tag(V0);
+	pV->read();
+//dbug(F("uVS %P val:%f"),pV->Ptitle,pV->dVal->value);
+	if(pV->dVal->value <0) pV->dVal->value = 0;
+	if((fabs(oldVolts - pV->dVal->value)> 0.1) && curr.pageTag == RSTATUS) menu.refreshRow(V0);
+	oldVolts = pV->dVal->value;
+
  }
- */
+

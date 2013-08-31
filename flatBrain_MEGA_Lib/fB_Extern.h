@@ -51,6 +51,7 @@ extern	fB_Tag*			tagRay;			// array of Tag objects
 extern	fB_Tag*			rowTagRay;		// array of tags, preserves menu structure
 extern	fB_Card**		pCardRay;			// sparse array of pointers to Card objects
 
+extern  double VccRef;  // adjusted Vcc
 void dbug(const __FlashStringHelper* Pdata,... );
 
 int freeRAM();

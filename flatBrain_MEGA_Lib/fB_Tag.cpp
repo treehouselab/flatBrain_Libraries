@@ -175,7 +175,7 @@ void fB_Tag::createPin(uint16_t ctag,uint8_t   row,uint8_t   side,   uint8_t  di
 	pin |= ((onval  << 7)& 0x0180);  //2bit
 	pin |= ((ctag  << 4)&  0x0070);  //3bits
 	pin |= (cPin & 0x0F);			 //4bits
-dbug(F("CP %P  pin:0x%x , cpin:%d/%d,m:%d/%d,onv:%d/%d "),Ptitle,pin,cPin,getCpin(),mode,getMode(),onval,getOnVal());
+//dbug(F("CP %P  pin:0x%x , cpin:%d/%d,m:%d/%d,onv:%d/%d "),Ptitle,pin,cPin,getCpin(),mode,getMode(),onval,getOnVal());
 //dbug(F(""));
 
 }

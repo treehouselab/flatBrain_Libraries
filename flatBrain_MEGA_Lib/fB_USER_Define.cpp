@@ -14,7 +14,7 @@ void defineUser() {
 	//////////////////////////////////////////
 
  	//////////// DEFINE CARDS AND PINS
-		defineCard(YCRD,X76,C0,B1);	
+		defineCard(YCRD,X76,C0,B0);	
 
 		definePin(Y1,YCRD,26,COL_L,INPUT,LOW); 
 		definePin(Y2,YCRD,26,COL_R,INPUT,LOW); 
@@ -35,7 +35,7 @@ void defineUser() {
 		definePin(V0,YCRD,21,COL_L,INPUT,PGATE); 
 		definePin(V1,YCRD,22,COL_L,INPUT,PGATE); 
 		definePin(V2,YCRD,24,COL_R,INPUT,PGATE); 
-		definePin(V3,YCRD,22,COL_R,INPUT,PGATE); 
+		definePin(V3,YCRD,22,COL_R,INPUT,LOW); 
 		definePin(CZ,YCRD,21,COL_L,INPUT,LOW); 
 		definePin(CC,YCRD,23,COL_L,INPUT,LOW);
 		definePin(CL,YCRD,23,COL_R,INPUT,LOW); 
@@ -59,7 +59,7 @@ void defineUser() {
 		defineRow(Y4S, BLAMP| UPDATE);
 		defineRow(Y5S, BLAMP| UPDATE);
 		defineRow(Y6S, BLAMP| UPDATE);
-		//defineRow(MSG, PTEXT | MARK);
+		defineRow(V0, FLOAT2 | LOG);
 
 
    	definePage(RPULSE,HOME);
@@ -90,10 +90,10 @@ void defineUser() {
 	defineRecord(CC,LOG1,NULL);
 	defineRecord(CL,LOG1,NULL);
 
-	defineCalibrate(V0,0.0807,-56.8);
-	defineCalibrate(V1,0.0807,-56.8);
-	defineCalibrate(V2,0.0807,-56.8);
-	defineCalibrate(V3,0.0807,-56.8);
+	defineCalibrate(V0,.032895,-13.26);
+	defineCalibrate(V1,0.032468,-12.8);
+	defineCalibrate(V2,0.032468,-12.8);
+	defineCalibrate(V3,0.032468,-12.8);
 	defineCalibrate(CZ,.004882,0.19);
 	defineCalibrate(CC,.004882,0.19);
 	defineCalibrate(CL,.004882,0.19);

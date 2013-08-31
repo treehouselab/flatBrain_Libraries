@@ -3,6 +3,9 @@
 
 #include "fB_Header.h"
 
+
+extern	double VccRef;  // adjusted Vcc
+
 class fB_Tag;// pre-declare
 
 class fB_Curr {
@@ -106,7 +109,9 @@ class fB_Tag {
 		unsigned int dRead();
 		bool isLatched();
 		uint16_t avgAnalogIn();
-		double calibrate(uint16_t intVal) { return (dVal->value = intVal * dVal->factor + dVal->offset); }
+		double calibrate(uint16_t intVal) { return (dVal->value = intVal * dVal->factor + dVal->offset);}
+		//double calibrate(uint16_t intVal) { return (dVal->value = intVal * dVal->factor + dVal->offset)*VccRef/1024/VREFADJ; }
+
 
 };
 
