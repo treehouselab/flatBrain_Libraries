@@ -13,12 +13,17 @@ fB_tFAT     fat;
 fB_Alarm    alarm; 
 fB_Record   rec; 
 fB_Curr		curr; 
+fB_WarnDelay	warn;
+fB_Timer		timer;
+
 //fB_Seg		seg;
 
 double VccRef;  // adjusted Vcc
 //fB_WTV   audio;
 //fB_VLVD   vlvd;
 const __FlashStringHelper* PstrRay[MAXPSTRCOUNT];
+
+typedef double (*pFunc)(fB_Tag* pT,uint16_t ival); 
 
 typedef union  PandT {			// array of tags, preserves menu structure
 	fB_Tag*		p;				// allows me to re-use array,first to store
@@ -60,6 +65,12 @@ void dbug(const __FlashStringHelper* Ptitle, ... );
 void defineUser();
 void defineSystem();
 
+void playWarning();
+void startWarnDelay();
+void startWarning();
+void endWarning();
+
+
 
 ///////////////////// GLOBAL to main.c FUNCTIONS ////////////////////////////////////////////////////////////////
 double readVcc() {
@@ -94,7 +105,8 @@ double readVcc() {
 	//MEASURED, THIS CHIP 4.81/4.8710 = 0.9875
 	// 0.9875 * vrEFsCALE = 1111234l
 	//vRefScale = 1111232L; // default;
-	dbug(F("VREF Vcc: %f"),((double)(vRefScale/result)/1000) * VREFADJ); 
+	//dbug(F("VREF Vcc: %f"),((double)(vRefScale/result)/1000) * VREFADJ); 
+	//return ((double) (vRefScale/result)/1000) ; // Vcc in Volts
 	return ((double) (vRefScale/result)/1000) * VREFADJ; // Vcc in Volts
 
 
@@ -111,7 +123,8 @@ double readVcc() {
 //  1024 with ATmega168
 
 
-void navigate() {   menu.buttonCode = tft.readButtons(); }  // tft button interrupt handler
+void navigate() {   menu.buttonCode = tft.readButtons(); }  // tft button interrupt handler 
+
 
 int freeRAM () {
   extern int __heap_start, *__brkval; 
@@ -162,7 +175,7 @@ logTag* Log(uint8_t tag) {
 }
 
 fB_Tag* Tag(uint16_t tag) {
-	if(tag != NULL) for(int i=0;i < tagCount;i++) if(tagRay[i].tag == tag) return &tagRay[i];
+	if(tag != NULL) for(int i=1;i < tagCount;i++) if(tagRay[i].tag == tag) return &tagRay[i];
 	return NULL;
 }
 fB_Card* Card(uint16_t tag) {	
@@ -174,7 +187,7 @@ fB_Tag* initTag(uint16_t tag,const __FlashStringHelper* Ptitle,uint32_t flags,ui
 	fB_Tag *pT = NULL;
 	if(!secondPass) {
 		packTempTagRay(tag); // add to tempTagRay if unique;
-		if(fTag && !(flags & PAGE)) logTagCount++;
+		if(fTag && !(flags & _PAGE)) logTagCount++;
 	}
 	else {
 		pT = Tag(tag);
@@ -185,14 +198,17 @@ fB_Tag* initTag(uint16_t tag,const __FlashStringHelper* Ptitle,uint32_t flags,ui
 			pT->fTag = fTag;  // 8bit 
 			pT->pin = NULL;
 		}
-		if(!pT->isDouble() && (flags & (FLOAT1 | FLOAT2 | D2STR)))	pT->dVal = new fB_Val;
+		if(!(pT->flag16 & _DUBL) && (flags & (FLOAT1 | FLOAT2 | D2STR)))	{
+			pT->dVal = new fB_Val;
+			pT->flag16 |= _DUBL;
+		}
 		pT->putFlags(flags);
 		pT->putFormat(flags);
 		pT->putAction(flags);
 
-		if(fTag && !(flags & PAGE)) {
+		if(fTag && !(flags & _PAGE)) {
 			pT->fTag = fTag;
-			pT->flag16 |= LOG;
+			pT->flag16 |= _LOG;
 			if(!Log(fTag)) {
 				logTagRay[logTagCount].tag = fTag;
 				logTagRay[logTagCount].Pbase = Pbase;
@@ -206,7 +222,7 @@ fB_Tag* initTag(uint16_t tag,const __FlashStringHelper* Ptitle,uint32_t flags,ui
 
 void initPage( uint16_t tag,const __FlashStringHelper* Ptitle, uint16_t parentTag){  
 	fB_Tag * pT;
-	pT = initTag(tag,Ptitle,PAGE,parentTag,NULL);  // for PAGE, fTag holds parentTag (8bits)
+	pT = initTag(tag,Ptitle,_PAGE,parentTag,NULL);  // for _PAGE, fTag holds parentTag (8bits)
 	if(secondPass) { 
 		rTP[rowCount].t = tag;
 		pT->iVal = rowCount;		// index in tagRay of first row of Page
@@ -226,6 +242,7 @@ void initJump(uint16_t tag) {
 	}
 	rowCount++;
 }
+
 void initRow(uint16_t tag, const __FlashStringHelper* Ptitle,uint32_t  flags){
 	initTag(tag,Ptitle,flags,NULL,NULL);
 	if(secondPass) 	{
@@ -240,6 +257,7 @@ void initRowList(uint16_t tag,const __FlashStringHelper* Ptitle,uint16_t parentT
 	initPage(tag,Ptitle,parentTag);
 	for(int i=0; i<MAXLISTROWS; i++)  initRow(tag+i+1,NULL,flags);
 }
+
 void initSpace() { 	
 	if(secondPass) 	{
 		rTP[rowCount].t = NULL;
@@ -247,12 +265,17 @@ void initSpace() {
 	}
 	rowCount++;
 }
+
 void initPin( uint16_t tag,const __FlashStringHelper* Ptitle, uint16_t ctag,uint8_t   row,uint8_t   side,   uint8_t  dir, uint8_t  onval) {
 	fB_Tag *pT;
 	pT = initTag(tag,Ptitle,NULL,NULL,NULL);
 	if(secondPass)	{
 		pT->createPin(ctag,row,side,dir,onval) ;
-		pT->flag16 |= UNDEF;
+		pT->flag16 |= _UNDEF;
+		if(!(pT->flag16 & _DUBL) && pT->getMode()== _ANALOG) {
+			pT->dVal = new fB_Val;
+			pT->flag16 |= _DUBL;
+		}
 	}
 	pinCount++;
 }
@@ -262,25 +285,32 @@ void  initCard(uint16_t tag,const __FlashStringHelper* Ptitle, uint8_t  type,uin
 	cardCount++;
 }
 
-void defineCalibrate( uint16_t tag, double factor=NULL,double offset=NULL) {
+void defineCalibrate( uint16_t tag, pFunc _vFunc, double factor=1,double offset=NULL) {
 	if(secondPass) {
 		fB_Tag *pT;
 		pT = Tag(tag);
-		if(!pT->isDouble()) {
+		if(pT && !(pT->flag16 & _DUBL)) {
 			pT->dVal = new fB_Val;
 			pT->putFormat(FLOAT2);
 		}
+		pT->dVal->vFunc = _vFunc;
 		if(!factor || factor < 0.00001 ) factor=1;
 		pT->dVal->factor = factor;
 		pT->dVal->offset = offset;
-		//dbug(F("CALIB t:%d, %P %f"),tag,pT->Ptitle, factor);
-		//dbug(F("CL0 P:%P fac:%f"), Tag(CL)->Ptitle, Tag(CL)->dVal->factor);
-
 	}
 }
+
+void defineTarget(uint16_t tag,uint16_t tTag){
+		fB_Tag *pT = Tag(tag);
+		if(pT) pT->tTag = tTag;
+
+}
+
 void initAlias(uint16_t tag, const __FlashStringHelper* Palias) {
 	if(secondPass) {
-		Tag(tag)->Ptitle = Palias;
+		fB_Tag *pT;
+		pT = Tag(tag);
+		if(pT) pT->Ptitle = Palias;
 	}
 }
 
@@ -304,18 +334,18 @@ void flatBrainInit(){
 
 	// turn off legacy SPI SS pin ( Mega D53) so it does not conflict w/ SD card or other SPI	
 	// enable explicitly when you want to use (eg. ATTINY SPI uses legacy SS)
-	pinMode(AT_SPISS,OUTPUT);  
+	pinMode(AT_SPISS,_OUTPUT);  
     digitalWrite(AT_SPISS,LOW);
 
 	bootStatus = 0;
 
 	alarm.enable();
-	alarm.play(ALARM_1);
+	alarm.play(ALARM_INIT);
 
 
 	res = rtc.init();
 	if(res) {
-		alarm.play(ALARM_2);
+		alarm.play(ALARM_FAIL);
 		dbug(F("RTC FAILED"));
 	}
 	else {
@@ -326,7 +356,7 @@ void flatBrainInit(){
 	res = fat.initFAT(SPISPEED);
 	if(res) {
 		dbug(F("SD ERROR 0X%h"),res);
-		alarm.play(ALARM_2);
+		alarm.play(ALARM_FAIL);
 	}
 	else {
 		bootStatus |= SD;
@@ -334,12 +364,12 @@ void flatBrainInit(){
 	}
 
 	secondPass = 0;  // 1st pass , determine array sizes
-	tempTagRay = (uint16_t*) calloc( MAXTEMPTAG,2); // temp array for packed tag list
 
+	tempTagRay = (uint16_t*) calloc( MAXTEMPTAG,2); // temp array for packed tag list
 	defineSystem();
 	defineUser();
-
 	free(tempTagRay);
+
 	dbug(F("free RAM3 %d"),freeRAM());
 	tagRay =	(fB_Tag *) calloc(tagCount,sizeof(fB_Tag));			// array of Tag objects
 	rTP    =	(PandT *) calloc(rowCount,sizeof(PandT));			// array of tags or pointers, for menu operations
@@ -397,11 +427,13 @@ void flatBrainInit(){
 	alarm.play(ALARM_INIT);
 
 	attachInterrupt(NAV_INT, navigate,FALLING);
+	attachInterrupt(WARN_INT, startWarnDelay ,FALLING);
 
 	VccRef = readVcc();
 
 	//set interrupt pins to high
 	pinMode(NAV_INTPIN,INPUT_PULLUP);
+	pinMode(WARN_INTPIN,INPUT_PULLUP);
 	pinMode(K0_INTPIN,INPUT_PULLUP);
 	pinMode(K1_INTPIN,INPUT_PULLUP);
 

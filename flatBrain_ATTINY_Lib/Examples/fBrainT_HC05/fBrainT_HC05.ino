@@ -17,10 +17,10 @@ int led = 10;
 void setup() 
 { 
   pinMode(RxD, INPUT);
-  pinMode(TxD, OUTPUT);
+  pinMode(TxD, _OUTPUT);
   setupBlueToothConnection();
   
-  pinMode(led,OUTPUT);
+  pinMode(led,_OUTPUT);
   digitalWrite(led,HIGH);
  
 } 

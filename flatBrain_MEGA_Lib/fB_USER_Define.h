@@ -9,11 +9,10 @@
 //#define MAXCARDS	    2	// XIO 
 //#define MAXLOGS			5  // MAX LOGFILES
 #define MAXAFILES		    10  
-#define ANALOGSAMPLESIZE	20
-#define ANALOGSAMPLEDELAY	50
+#define ANALOGSAMPLESIZE	50
+#define ANALOGSAMPLEDELAY	10
 
-
-
+#define VREFADJ	0.9901
 
 // LOG TAGS ("LOGDEF" IS RESERVED FOR DEFAULT LOG DEFINITION)
 // RANGE: 10-255
@@ -57,6 +56,8 @@
 #define Y4S			624
 #define Y5S			625 
 #define Y6S			626
+#define WARN		627
+#define WLED		628
 
 #define SENSORS		64
 
@@ -65,8 +66,10 @@
 #define V2			642
 #define V3			643
 #define CZ			644
-#define CC			645
+#define CX			645
 #define CL			646 
+#define IGN			647 
+#define ALT			648 
 
 
 

@@ -15,7 +15,6 @@
 #define RSPIN	2     // for port banging RS pin on TFT ( corresponds to ARDUINO D24  )
 #define RSPORT	PORTA // for port banging RS pin on TFT ( corresponds to ARDUINO D24  )
 #define RSDDR	DDRA // for port banging WR pin on TFT ( corresponds to ARDUINO D24  )
-#define VREFADJ	0.9827
 
 #define AT_SPISS 		    53 //  dedicated Mega d53 pin for Chip Select pin for ATTINYs
 
@@ -29,9 +28,11 @@
 
 #define NAV_INT			5 // Display Navigation button interrupt number, corresp. to Mega pin 18
 #define NAV_INTPIN		18
-#define K0_INT			0 // Display Navigation button interrupt number, corresp. to Mega pin 2
+#define WARN_INT		4 // Alarm warning interrupt number, corresp. to Mega pin 20
+#define WARN_INTPIN		19
+#define K0_INT			0 //  interrupt number, corresp. to Mega pin 2
 #define K0_INTPIN		2 
-#define K1_INT			1 // Display Navigation button interrupt number, corresp. to Mega pin 3
+#define K1_INT			1 //  interrupt number, corresp. to Mega pin 3
 #define K1_INTPIN		3
 
 /* CUSTOMARY I2C ADDRESSES:
@@ -49,17 +50,24 @@ XCARDS		Ox20-27
 #define EE_ADDRESS		0x52
 
 // IOX Card I2C allowed card addresses: 
-// CARD TYPE X50 TAKES SINGLE ADDRESS, UP TO 8
-// CARD TYPE X76 RESERVES 2 ADDRESS PAIRS, UP TO 4
-#define	C0		0x20	// X50 OR X76
-#define C1		0x21	// X50 IF C0 !X76
-#define	C2		0x22	// X50 OR X76
-#define C3		0x23	// X50 IF C2 !X76
-#define	C4		0x24	// X50 OR X76  
-#define C5		0x25	// X50 IF C4 !X76 
-#define	C6		0x26	// X50 OR X76
-#define C7		0x27	// X50 IF C6 !X76   
+// CARD TYPE _X50 TAKES SINGLE ADDRESS, UP TO 8
+// CARD TYPE _X76 RESERVES 2 ADDRESS PAIRS, UP TO 4
+#define	_C0		0x20	// _X50 OR _X76
+#define _C1		0x21	// _X50 IF C0 !_X76
+#define	_C2		0x22	// _X50 OR _X76
+#define _C3		0x23	// _X50 IF C2 !_X76
+#define	_C4		0x24	// _X50 OR _X76  
+#define _C5		0x25	// _X50 IF C4 !_X76 
+#define	_C6		0x26	// _X50 OR _X76
+#define _C7		0x27	// _X50 IF C6 !_X76   
 
+#define _TIMER_MAX_EVENTS		10     
+#define	_TIMER_UPDATE			0 
+#define	_TIMER_WARNDELAY		1 
+#define	_TIMER_WARN				2
+#define	_TIMER_ALARM			3 
+#define	_TIMER_LED				4 
+#define	_TIMER_FREEINDEXSTART	5 
 
 #define fERR  -1
 
@@ -82,60 +90,61 @@ XCARDS		Ox20-27
 //#define MAXVDRDEX		6 
 #define	MAXPSTRCOUNT	11
 #define	MAXTEMPTAG		500
+#define	MAXZEROADC		250 // max ADC reading that qualifies for binary zero
 
 
 // Bus to Arduino Mega pin mapping
-#define	B0		A8
-#define B1		A9
-#define	B2		A10
-#define	B3		A11
+#define	_B0		A8
+#define _B1		A9
+#define	_B2		A10
+#define	_B3		A11
 
-#define	K0		44
-#define	K1		42
-#define	K2		2
-#define	K3		3
+#define	_K0		44
+#define	_K1		42
+#define	_K2		2
+#define	_K3		3
 
 // Card types
 #define	BRAIN			0
-#define X50				1
-#define X76				2
+#define _X50			1
+#define _X76			2
 
 // Pin DIRECTION
-#define	INPUT		0
-#define	OUTPUT		1
+#define	_INPUT		0
+#define	_OUTPUT		1
 
 // Pin sides
-#define	COL_L		0
-#define	COL_R		1
+#define	_L		0
+#define	_R		1
 
 //Pin types		unique4, 0..7
-#define	IO_D		0
-#define IO_A		1
+#define	_DIGITAL	0
+#define _ANALOG		1
 
 
 // Pin mapping for IOX cards 
-// CARD TYPE X50 
-#define X50AA			7	// MCP PIN MAPS TO CD4051 A ADDRESS PIN, FOR ANALOG CHANNEL
-#define X50AB			6	// MCP PIN MAPS TO CD4051 A ADDRESS PIN, FOR ANALOG CHANNEL
-#define X50AC			5	// MCP PIN MAPS TO CD4051 A ADDRESS PIN, FOR ANALOG CHANNEL
-#define X50BA			4	// MCP PIN MAPS TO CD4051 B ADDRESS PIN, FOR VD CHANNEL
-#define X50BB			3	// MCP PIN MAPS TO CD4051 B ADDRESS PIN, FOR VD CHANNEL
-#define X50BC			2	// MCP PIN MAPS TO CD4051 B ADDRESS PIN, FOR VD CHANNEL
-#define X50LD			1	// MCP PIN MAPS TO  BOARD LED
-#define X50GT			0	// MCP PIN MAPS TO  opiso gate
+// CARD TYPE _X50 
+#define _X50AA			7	// MCP PIN MAPS TO CD4051 A ADDRESS PIN, FOR ANALOG CHANNEL
+#define _X50AB			6	// MCP PIN MAPS TO CD4051 A ADDRESS PIN, FOR ANALOG CHANNEL
+#define _X50AC			5	// MCP PIN MAPS TO CD4051 A ADDRESS PIN, FOR ANALOG CHANNEL
+#define _X50BA			4	// MCP PIN MAPS TO CD4051 B ADDRESS PIN, FOR VD CHANNEL
+#define _X50BB			3	// MCP PIN MAPS TO CD4051 B ADDRESS PIN, FOR VD CHANNEL
+#define _X50BC			2	// MCP PIN MAPS TO CD4051 B ADDRESS PIN, FOR VD CHANNEL
+#define _X50LD			1	// MCP PIN MAPS TO  BOARD LED
+#define _X50GT			0	// MCP PIN MAPS TO  opiso gate
 
-// CARD TYPE X76 
-#define X76AA			11	// MCP PIN MAPS TO CD4067 A ADDRESS PIN, FOR ANALOG CHANNEL
-#define X76AB			12	// MCP PIN MAPS TO CD4067 A ADDRESS PIN, FOR ANALOG CHANNEL
-#define X76AC			9	// MCP PIN MAPS TO CD4067 A ADDRESS PIN, FOR ANALOG CHANNEL
-#define X76AD			8	// MCP PIN MAPS TO CD4067 A ADDRESS PIN, FOR ANALOG CHANNEL
-#define X76IN			10	// MCP PIN MAPS TO CD4067 A INHIBIT PIN
-#define X76BA			4	// MCP PIN MAPS TO CD4051 B ADDRESS PIN, FOR VD CHANNEL
-#define X76BB			3	// MCP PIN MAPS TO CD4051 B ADDRESS PIN, FOR VD CHANNEL
-#define X76BC			2	// MCP PIN MAPS TO CD4051 B ADDRESS PIN, FOR VD CHANNEL
-#define X76RS			13	// MCP PIN MAPS TO 2nd MCP _RST pin
-#define X76LD			1	// MCP PIN MAPS TO  BOARD LED
-#define X76GT			0	// MCP PIN MAPS TO  op-iso gate
+// CARD TYPE _X76 
+#define _X76AA			11	// MCP PIN MAPS TO CD4067 A ADDRESS PIN, FOR ANALOG CHANNEL
+#define _X76AB			12	// MCP PIN MAPS TO CD4067 A ADDRESS PIN, FOR ANALOG CHANNEL
+#define _X76AC			9	// MCP PIN MAPS TO CD4067 A ADDRESS PIN, FOR ANALOG CHANNEL
+#define _X76AD			8	// MCP PIN MAPS TO CD4067 A ADDRESS PIN, FOR ANALOG CHANNEL
+#define _X76IN			10	// MCP PIN MAPS TO CD4067 A INHIBIT PIN
+#define _X76BA			4	// MCP PIN MAPS TO CD4051 B ADDRESS PIN, FOR VD CHANNEL
+#define _X76BB			3	// MCP PIN MAPS TO CD4051 B ADDRESS PIN, FOR VD CHANNEL
+#define _X76BC			2	// MCP PIN MAPS TO CD4051 B ADDRESS PIN, FOR VD CHANNEL
+#define _X76RS			13	// MCP PIN MAPS TO 2nd MCP _RST pin
+#define _X76LD			1	// MCP PIN MAPS TO  BOARD LED
+#define _X76GT			0	// MCP PIN MAPS TO  op-iso gate
 
 // Used when invoking analogRead/Write using an MPC digital line
 #define  AD_HIGH    1024   // returned when MPC_analogRead senses HIGH
@@ -181,28 +190,27 @@ XCARDS		Ox20-27
 #define	SD			0x02   
 
 
-#define	HIDE			1 
-#define	PGATE			2
+#define	_PGATE			2
 #define	ON				1
 #define	OFF				0
 
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
-// Tag->flags is 16 bits, top 4bits is used for fow count buffer
-#define	PAGE			0x0001	 
-#define	TSYS			0x0002	// System Tag
-#define	STOREE			0x0004	// EEPROM Store 
-#define	LOG				0x0008	// Log to SD card
-#define	MARK			0x0010	// Mark row
-#define	HIDE			0x0020
-#define	TTITLE			0x0040	// use char* ptitle for row title instead of Ptitle
-//#define			    0x0080
-#define	UNDEF			0x0100
-#define	LOCAL			0x0200 
-//#define				0x0400
+// Tag->flags is 16 bits, top 4bits is used for row count buffer
+#define	_PAGE			0x0001	 
+#define	_TSYS			0x0002	// System Tag
+#define	_STOREE			0x0004	// EEPROM Store 
+#define	_LOG				0x0008	// Log to SD card
+#define	_MARK			0x0010	// Mark row
+#define	_HIDE			0x0020
+#define	_TTITLE			0x0040	// use char* ptitle for row title instead of Ptitle
+#define	_TTAG			0x0080  // has target tag stored in pin/tTag union
+#define	_UNDEF			0x0100
+#define	_LOCAL			0x0200 
+#define	_DUBL			0x0400
 //#define				0x0800
-#define	MASKP			0xF000	// 4 bits reserved ROWCOUNT
-#define	RCOFFSET		12	    // Offset of rowCount in Tag flag
+#define	_MASKP			0xF000	// 4 bits reserved ROWCOUNT
+#define	_RCOFFSET		12	    // Offset of rowCount in Tag flag
 
 ////////////////////////////////////////////////////////////////////////////////
 //Tag->format is 8 bits. The low 4bits of Tag->format contain one of 11 possible 
@@ -215,12 +223,12 @@ XCARDS		Ox20-27
 #define	MASK8A			0x0F	 
 #define	MASK32A			0x003FF000L
 //#define				0x00000000L	
-#define	PINTOG			0x00001000L	
+//#define			0x00001000L	
 #define	INCR			0x00002000L	
 #define	SHFTPULSE		0x00004000L	
 #define	PULSE			0x00008000L
 #define	UPDATE			0x00010000L
-#define	TGATE			0x00020000L
+//#define			0x00020000L
 #define	NOACT			0x00040000L
 #define	TOGGLE			0x00080000L
 //#define		       	0x00100000L
@@ -278,6 +286,7 @@ XCARDS		Ox20-27
 
 #define LOGS		29   //   11 RESERVED FOR LOGS
 
+#define TAGZERO		0
 #define HEADER		60
 #define TBOOT		61	//SYSTEM TAGS
 #define TUTAGS		62

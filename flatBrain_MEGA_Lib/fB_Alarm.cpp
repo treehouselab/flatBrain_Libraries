@@ -31,7 +31,8 @@ prog_char alarm_0[] PROGMEM = ":d=16,o=5,b=140:g,f,c6";
 prog_char alarm_1[] PROGMEM = ":d=16,o=5,b=120:c,p,g";
 prog_char alarm_2[] PROGMEM = ":d=16,o=5,b=120:d,p,a,p,a";
 prog_char alarm_3[] PROGMEM = ":d=16,o=5,b=120:g,p,c6,p,c6,p,c6";
-prog_char alarm_4[] PROGMEM = ":d=16,o=5,b=140:2e6,4p,2e6,4p,2e6";
+prog_char alarm_4[] PROGMEM = ":d=16,o=5,b=140:2e6,4p";
+prog_char alarm_5[] PROGMEM = ":d=16,o=5,b=140:2e6,4p,2e6,4p,2e6";
 
  const char *alarmTable[] PROGMEM= {   
   alarm_0,
@@ -39,6 +40,7 @@ prog_char alarm_4[] PROGMEM = ":d=16,o=5,b=140:2e6,4p,2e6,4p,2e6";
   alarm_2,
   alarm_3,
   alarm_4,
+  alarm_5,
  };
 
 
@@ -156,8 +158,8 @@ void fB_Alarm::playTone(uint16_t frequency, uint32_t duration)
   uint32_t ocr = 0;
 
      
-	// Set the pinMode as OUTPUT
-	pinMode(pin, OUTPUT);
+	// Set the pinMode as _OUTPUT
+	pinMode(pin, _OUTPUT);
 
 	// two choices for the 16 bit timers: ck/1 or ck/64
 	ocr = F_CPU / frequency / 2 - 1;
@@ -196,7 +198,7 @@ bool fB_Alarm::isPlaying(void)
 }
 
 
-void fB_Alarm::play(uint8_t  alarmTag)
+void fB_Alarm::play(uint8_t  alarmTag )
 {
   // Absolutely no error checking in here
 
@@ -367,3 +369,62 @@ void fB_Alarm::play(uint8_t  alarmTag)
   }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////
+
+
+fB_WarnDelay::fB_WarnDelay() {
+	currID = NULL;
+	action = _WD_OFF;
+}
+void fB_WarnDelay::stop() {
+	//dbug(F("STOP"));
+	timer.stop(_TIMER_ALARM);
+	timer.stop(_TIMER_WARN);
+	timer.stop(_TIMER_WARNDELAY);
+	timer.stop(_TIMER_LED);
+	action = _WD_OFF;
+}
+
+uint8_t fB_WarnDelay::warning(uint8_t id, uint8_t wdSecs,uint8_t wSecs, uint8_t aSecs, uint16_t tled) {
+	//dbug(F("warndelay ENTRY"));
+	if(currID && id != currID) return _WD_SKIP;
+	if(!currID) {
+		currID = id;
+		warnDelaySecs = wdSecs;
+		warnSecs = wSecs;
+		alarmIntervalSecs = aSecs;
+		tLED = tled;
+		startWarning();
+	}
+	//dbug(F("warndelay ACTION %d"), action);
+	if(action == _WD_ACT) warn.currID = NULL;
+	return action;
+}
+
+//////////////////// these methods are not in class because they need to be callable functions ///////////////////////////////////////
+
+void playWarning() { alarm.play(ALARM_WARN); };
+
+void endWarning() {
+	//dbug(F("ENDWARN wid:%d"),_TIMER_WARN);
+	warn.stop();
+	warn.action = _WD_ACT;
+	alarm.play(ALARM_ACT);
+}
+void startWarning() {
+	//dbug(F("startWARN"));
+	//warn.stop();
+	timer.after(_TIMER_WARN,(unsigned long)warn.warnSecs * 1000, endWarning);
+	timer.every(_TIMER_ALARM,(unsigned long)warn.alarmIntervalSecs * 1000,playWarning, 25);
+	warn.action = _WD_WARN;
+	if(warn.tLED) timer.oscillateTag(_TIMER_LED,warn.tLED, 500,LOW, -1);
+	playWarning();
+	//dbug(F("end startWARN"));
+}
+void startWarnDelay() {  // alarm delay interrupt handler
+	//dbug(F("STRTwarndelay INT ENTRY"));
+	if(!warn.currID) return;
+	warn.stop();
+	timer.after(_TIMER_WARNDELAY,(unsigned long)warn.warnDelaySecs * 1000, startWarning);
+	warn.action = _WD_DELAY;
+}

@@ -6,72 +6,94 @@
 #include <avr/io.h>
 
 // in this block,  D coresponds to MCP pin, A to CD pin
-
+/*
 uint8_t XmapB[40] PROGMEM={
-	12,COL_L,IO_A,8,  // BO
-	12,COL_R,IO_A,9,  // B1
-	13,COL_L,IO_A,10,  // B2
-	13,COL_R,IO_A,11,  // B3
-	14,COL_L,IO_D,0,   // VD
-	14,COL_R,IO_D,0,   // K0
-	15,COL_L,IO_D,44,  // K1
-	15,COL_R,IO_D,42,  // K2
-	16,COL_L,IO_D,2,  // K3
-	16,COL_R,IO_D,3  // K4
+	12,_L,_ANALOG,8,  // BO
+	12,_R,_ANALOG,9,  // B1
+	13,_L,_ANALOG,10,  // B2
+	13,_R,_ANALOG,11,  // B3
+	14,_L,_DIGITAL,0,   // VD
+	14,_R,_DIGITAL,0,   // K0
+	15,_L,_DIGITAL,44,  // K1
+	15,_R,_DIGITAL,42,  // K2
+	16,_L,_DIGITAL,2,  // K3
+	16,_R,_DIGITAL,3  // K4
 };
+*/
+uint8_t Xmap50[104] PROGMEM={
+	12,_L,_ANALOG,8,  // BO
+	12,_R,_ANALOG,9,  // B1
+	13,_L,_ANALOG,10,  // B2
+	13,_R,_ANALOG,11,  // B3
+	14,_L,_DIGITAL,0,   // VD
+	14,_R,_DIGITAL,0,   // K0
+	15,_L,_DIGITAL,44,  // K1
+	15,_R,_DIGITAL,42,  // K2
+	16,_L,_DIGITAL,2,  // K3
+	16,_R,_DIGITAL,3,  // K4
 
-uint8_t Xmap50[64] PROGMEM={
-	17,COL_L,IO_D,9,
-	17,COL_R,IO_D,8,
-	18,COL_L,IO_D,11,
-	18,COL_R,IO_D,10,
-	19,COL_L,IO_D,13,
-	19,COL_R,IO_D,12,
-	20,COL_L,IO_D,15,
-	20,COL_R,IO_D,14,
-	21,COL_L,IO_A,7,
-	21,COL_R,IO_A,5,
-	22,COL_L,IO_A,4,
-	22,COL_R,IO_A,6,
-	23,COL_L,IO_A,0,
-	23,COL_R,IO_A,2,
-	24,COL_L,IO_A,3,
-	24,COL_R,IO_A,1
+	17,_L,_DIGITAL,9,
+	17,_R,_DIGITAL,8,
+	18,_L,_DIGITAL,11,
+	18,_R,_DIGITAL,10,
+	19,_L,_DIGITAL,13,
+	19,_R,_DIGITAL,12,
+	20,_L,_DIGITAL,15,
+	20,_R,_DIGITAL,14,
+	21,_L,_ANALOG,7,
+	21,_R,_ANALOG,5,
+	22,_L,_ANALOG,4,
+	22,_R,_ANALOG,6,
+	23,_L,_ANALOG,0,
+	23,_R,_ANALOG,2,
+	24,_L,_ANALOG,3,
+	24,_R,_ANALOG,1
 };
 	
-uint8_t Xmap76[128] PROGMEM={
-	17,COL_L,IO_D,8,
-	17,COL_R,IO_D,9,
-	18,COL_L,IO_D,11,
-	18,COL_R,IO_D,10,
-	19,COL_L,IO_D,13,
-	19,COL_R,IO_D,12,
-	20,COL_L,IO_D,15,
-	20,COL_R,IO_D,14,
-	21,COL_L,IO_A,6,
-	21,COL_R,IO_A,7,
-	22,COL_L,IO_A,4,
-	22,COL_R,IO_A,5,
-	23,COL_L,IO_A,2,
-	23,COL_R,IO_A,3,
-	24,COL_L,IO_A,0,
-	24,COL_R,IO_A,1,
-	25,COL_L,IO_D,7,
-	25,COL_R,IO_D,6,
-	26,COL_L,IO_D,5,
-	26,COL_R,IO_D,4,
-	27,COL_L,IO_D,3,
-	27,COL_R,IO_D,2,
-	28,COL_L,IO_D,1,
-	28,COL_R,IO_D,0,
-	29,COL_L,IO_A,12,
-	29,COL_R,IO_A,11,
-	30,COL_L,IO_A,10,
-	30,COL_R,IO_A,9,	
-	31,COL_L,IO_A,13,  
-	31,COL_R,IO_A,8,
-	32,COL_L,IO_A,14,  
-	32,COL_R,IO_A,15
+uint8_t Xmap76[168] PROGMEM={
+	12,_L,_ANALOG,8,  // BO
+	12,_R,_ANALOG,9,  // B1
+	13,_L,_ANALOG,10,  // B2
+	13,_R,_ANALOG,11,  // B3
+	14,_L,_DIGITAL,0,   // VD
+	14,_R,_DIGITAL,0,   // K0
+	15,_L,_DIGITAL,44,  // K1
+	15,_R,_DIGITAL,42,  // K2
+	16,_L,_DIGITAL,2,  // K3
+	16,_R,_DIGITAL,3,  // K4
+
+	17,_L,_DIGITAL,8,
+	17,_R,_DIGITAL,9,
+	18,_L,_DIGITAL,11,
+	18,_R,_DIGITAL,10,
+	19,_L,_DIGITAL,13,
+	19,_R,_DIGITAL,12,
+	20,_L,_DIGITAL,15,
+	20,_R,_DIGITAL,14,
+	21,_L,_ANALOG,6,
+	21,_R,_ANALOG,7,
+	22,_L,_ANALOG,4,
+	22,_R,_ANALOG,5,
+	23,_L,_ANALOG,2,
+	23,_R,_ANALOG,3,
+	24,_L,_ANALOG,0,
+	24,_R,_ANALOG,1,
+	25,_L,_DIGITAL,7,
+	25,_R,_DIGITAL,6,
+	26,_L,_DIGITAL,5,
+	26,_R,_DIGITAL,4,
+	27,_L,_DIGITAL,3,
+	27,_R,_DIGITAL,2,
+	28,_L,_DIGITAL,1,
+	28,_R,_DIGITAL,0,
+	29,_L,_ANALOG,12,
+	29,_R,_ANALOG,11,
+	30,_L,_ANALOG,10,
+	30,_R,_ANALOG,9,	
+	31,_L,_ANALOG,13,  
+	31,_R,_ANALOG,8,
+	32,_L,_ANALOG,14,  
+	32,_R,_ANALOG,15
 };
 /*
 	f struct 

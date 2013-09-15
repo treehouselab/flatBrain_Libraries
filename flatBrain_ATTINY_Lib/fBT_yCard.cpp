@@ -42,12 +42,12 @@ void fBT_yCard::initCard() {
 	int i;
 
 	for(i=0;i<mapCount;i++ ) {
-		pinMode(yMap[i].Bd,INPUT);			// init button pin
+		pinMode(yMap[i].Bd,_INPUT);			// init button pin
 		digitalWrite(yMap[i].Bd,HIGH);		// set pullup
-		pinMode(yMap[i].Yd,OUTPUT);		    // init relay pin
+		pinMode(yMap[i].Yd,_OUTPUT);		    // init relay pin
 		digitalWrite(yMap[i].Yd,LOW);		// set relay pin
 	}
-	pinMode(shiftBut.Bd,INPUT);			// init shift button pin
+	pinMode(shiftBut.Bd,_INPUT);			// init shift button pin
 	digitalWrite(shiftBut.Bd,HIGH);		// set pullup
 }
 

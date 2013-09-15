@@ -31,6 +31,7 @@
 * Public Constants
 *************************************************/
 
+
 #define NOTE_B0  31
 #define NOTE_C1  33
 #define NOTE_CS1 35
@@ -124,11 +125,17 @@
 #define OCTAVE_OFFSET 0
 #define isdigit(n) (n >= '0' && n <= '9')
 
- #define ALARM_INIT	0
- #define ALARM_1	1
- #define ALARM_2	2
- #define ALARM_3	3
- #define ALARM_4	4
+#define ALARM_INIT	0
+#define ALARM_WARN	4
+#define ALARM_FAIL	2
+#define ALARM_ACT	3
+
+#define _WD_OFF			0  // FOR WARNDELAY CODE
+#define _WD_SKIP		1  
+#define _WD_WARN		2
+#define _WD_DELAY		3
+#define _WD_ACT			4
+
 
 class fB_Alarm
 {
@@ -149,4 +156,20 @@ class fB_Alarm
     uint8_t  pin;
 };
 
+class fB_WarnDelay {
+	public:
+		uint8_t currID;
+		uint8_t warnDelaySecs;		 
+		uint8_t warnSecs;
+		uint8_t alarmIntervalSecs;
+		uint8_t action;
+		uint16_t tLED;  // LED tag
+
+		fB_WarnDelay();
+		void init();
+		void stop();
+		uint8_t warning(uint8_t id, uint8_t wdSecs,uint8_t wSecs, uint8_t aSecs, uint16_t tLED = NULL) ;
+};	
+
+	
 #endif

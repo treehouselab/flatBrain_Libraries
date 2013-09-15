@@ -38,13 +38,13 @@ void fB_Record::createTagDefLog() {
 	if(!(bootStatus & SD) || !rec.logCreate(P("TAGDEF"))) return;	
 	if(fat.openFile(filename,FILEMODE_TEXT_WRITE)==NO_ERROR) { 
 		//sprintf(buffer,P("GLOBAL,GTAG,LOG, VALUE,FACTOR, GPIN, GSYS, GINIT,GINP, GBIAS"));
-		fat.writeLn(P("NAME,TAG,LOG, VALUE,FACTOR, OFFSET, TPIN, TSYS, STOREE"));
+		fat.writeLn(P("NAME,TAG,LOG, VALUE,FACTOR, OFFSET, TPIN, _TSYS, _STOREE"));
 		for(int i=0;i<tagCount;i++){
 			pT = &tagRay[i];
-			if(!pT || !(pT->flag16 & (TSYS | LOG) && !pT->pin)) continue;
+			if(!pT || !(pT->flag16 & (_TSYS | _LOG) && !pT->pin)) continue;
 			getPtext(pT->Ptitle,title);
 			char datastr[16];
-			if(pT->flag16 & UNDEF) 	sprintf(datastr,P("----"));
+			if(pT->flag16 & _UNDEF) 	sprintf(datastr,P("----"));
 			else switch(pT->getFormat()){
 				case BLAMP:
 				case INT5:		sprintf(datastr,"%d",pT->iVal);break;
@@ -56,8 +56,8 @@ void fB_Record::createTagDefLog() {
 			}
 
 			sprintf(buffer,P("%s,%d,%s, %s,%s, %d,%d,%d,%d,%d"),title,pT->tag ,base,datastr	,menu.doubleToStr(pT->dVal->factor,3,datastr),menu.doubleToStr(pT->dVal->offset,3,datastr),
-				1 && pT->flag16 & TSYS
-				,1 && pT->flag16 & STOREE
+				1 && pT->flag16 & _TSYS
+				,1 && pT->flag16 & _STOREE
 //					,1 && pT->flag16 & 0x04
 //					,1 && pT->flag16 & 0x08
 //					,1 && pT->flag16 & 0x10
@@ -141,7 +141,7 @@ void fB_Record::logWriteHeader() {
 	for(int k = 0;k<tagCount;k++) {	
 		pT = &tagRay[k];
 		if(!pT) continue;
-		if(!(pT->flag16 & LOG)) continue;
+		if(!(pT->flag16 & _LOG)) continue;
 		if(strcmp(base,getPtext(Log(pT->fTag)->Pbase,Pbuffer)))continue;
 		getPtext(pT->Ptitle,title);
 		strcat(buffer,",");
@@ -168,11 +168,11 @@ void fB_Record::logWriteData() {
 	for(int k = 0;k<tagCount;k++) {	
 		pT = &tagRay[k];
 		if(!pT) continue;
-		if(!(pT->flag16 & LOG)) continue;
+		if(!(pT->flag16 & _LOG)) continue;
 		if(strcmp( base, getPtext(Log(pT->fTag)->Pbase,Pbuffer) ) )continue;
 dbug(F("R LWD  %P f:%d"),pT->Ptitle,pT->flag16);
 
-		if(pT->flag16 & UNDEF) 	strcpy(datastr,P("----"));
+		if(pT->flag16 & _UNDEF) 	strcpy(datastr,P("----"));
 		else switch(pT->getFormat()){
 			case BLAMP:
 			case INT5:		sprintf(datastr,"%d",pT->iVal);break;
@@ -257,7 +257,7 @@ void fB_Record::EEwriteTags() {
 	for(int i=0;i<tagCount;i++){
 		pT = &tagRay[i];
 		if(!pT) continue;
-		if(!pT->flag16 & STOREE) continue;
+		if(!pT->flag16 & _STOREE) continue;
 		getPtext(pT->Ptitle,title);
 		tAddr = j*32+BASEGLOBAL;
 		ee.setBlock(tAddr,'\0',48); // leaves a zeroed 8 bits at end of glist to mark end
@@ -282,7 +282,7 @@ void fB_Record::EEinitTags() {
 	for(int k = 0;k<tagCount;k++) {	
 		pT = &tagRay[k];
 		if(!pT) continue;
-		if(!(pT->flag16 & STOREE)) continue;
+		if(!(pT->flag16 & _STOREE)) continue;
 		EEgetTag(pT->tag);
 	}
 }

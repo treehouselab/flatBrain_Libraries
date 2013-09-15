@@ -70,7 +70,7 @@ void MCP23017::pinMode(uint8_t  p, uint8_t  d) {
   iodir = i2c.receive();
 
   // set the pin and direction
-  if (d == INPUT) {
+  if (d == _INPUT) {
     iodir |= 1 << p; 
   } else {
     iodir &= ~(1 << p);

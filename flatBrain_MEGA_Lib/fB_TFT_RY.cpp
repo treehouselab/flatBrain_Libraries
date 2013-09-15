@@ -7,30 +7,30 @@ void fB_TFT::init(uint8_t orientation=PORTRAIT)
 { 
 	/*
    //initTpin(uint8_t  tDex, uint8_t   cAddr, uint8_t  cPin, uint8_t  iodir);
-	initTpin(0, TL,  TLADDR,  0, OUTPUT); 
-	initTpin(1, TL,  TLADDR, 1, OUTPUT);
-	initTpin(2, TL,  TLADDR, 2, OUTPUT);
-	initTpin(3, TL,  TLADDR, 3, OUTPUT);
-	initTpin(4, TL,  TLADDR, 4, OUTPUT);
-	initTpin(5, TL,  TLADDR, 5, OUTPUT);
-	initTpin(6, TL,  TLADDR, 6, OUTPUT);
-	initTpin(7, TL,  TLADDR, 7, OUTPUT);
+	initTpin(0, TL,  TLADDR,  0, _OUTPUT); 
+	initTpin(1, TL,  TLADDR, 1, _OUTPUT);
+	initTpin(2, TL,  TLADDR, 2, _OUTPUT);
+	initTpin(3, TL,  TLADDR, 3, _OUTPUT);
+	initTpin(4, TL,  TLADDR, 4, _OUTPUT);
+	initTpin(5, TL,  TLADDR, 5, _OUTPUT);
+	initTpin(6, TL,  TLADDR, 6, _OUTPUT);
+	initTpin(7, TL,  TLADDR, 7, _OUTPUT);
 
-	initTpin(8,  TH, THADDR, 0, OUTPUT);
-	initTpin(9,  TH, THADDR,1, OUTPUT);
-	initTpin(10, TH, THADDR,2, OUTPUT);
-	initTpin(11, TH, THADDR,3, OUTPUT);
-	initTpin(12, TH, THADDR,4, OUTPUT);
-	initTpin(13, TH, THADDR,5, OUTPUT);
-	initTpin(14, TH, THADDR,6, OUTPUT);
-	initTpin(15, TH, THADDR,7, OUTPUT);
+	initTpin(8,  TH, THADDR, 0, _OUTPUT);
+	initTpin(9,  TH, THADDR,1, _OUTPUT);
+	initTpin(10, TH, THADDR,2, _OUTPUT);
+	initTpin(11, TH, THADDR,3, _OUTPUT);
+	initTpin(12, TH, THADDR,4, _OUTPUT);
+	initTpin(13, TH, THADDR,5, _OUTPUT);
+	initTpin(14, TH, THADDR,6, _OUTPUT);
+	initTpin(15, TH, THADDR,7, _OUTPUT);
 
     // new
-	initTpin(L_CS,  TC, TCADDR,0, OUTPUT);
-	initTpin(L_RST, TC, TCADDR,1, OUTPUT);
-	initTpin(T_CLK, TC, TCADDR,4, OUTPUT);
-	initTpin(T_CS,  TC, TCADDR,5, OUTPUT);
-	initTpin(T_DIN, TC, TCADDR,6, OUTPUT);
+	initTpin(L_CS,  TC, TCADDR,0, _OUTPUT);
+	initTpin(L_RST, TC, TCADDR,1, _OUTPUT);
+	initTpin(T_CLK, TC, TCADDR,4, _OUTPUT);
+	initTpin(T_CS,  TC, TCADDR,5, _OUTPUT);
+	initTpin(T_DIN, TC, TCADDR,6, _OUTPUT);
 	initTpin(T_OUT, TC, TCADDR,7, INPUT);
 	
 	initTpin(TSW_RT,  TS,  TSADDR,0, INPUT);
@@ -1116,9 +1116,9 @@ void fB_TFT::bangTFTbit(uint8_t  tDex, int value) {
 	i2c.write((uint8_t )tPin[tDex].caddr, (uint8_t )tftCtrlReg);
 
 }
-	initTpin(T_CLK, TC, TCADDR,0, OUTPUT);
-	initTpin(T_DIN,  TC, TCADDR,1, OUTPUT);
-	initTpin(T_CS,  TC, TCADDR,2, OUTPUT);
+	initTpin(T_CLK, TC, TCADDR,0, _OUTPUT);
+	initTpin(T_DIN,  TC, TCADDR,1, _OUTPUT);
+	initTpin(T_CS,  TC, TCADDR,2, _OUTPUT);
 	initTpin(T_OUT, TC, TCADDR,3, INPUT);
 	initTpin(T_IRQ,		TM,NULL ,  M5, INPUT);
 
@@ -1184,7 +1184,7 @@ void fB_TFT::initTouch()
 		bangTFTbit(T_CLK, HIGH);
 		delayMicroseconds(30);
 
-  pinMode(2,INPUT);
+  pinMode(2,_INPUT);
   digitalWrite(2,HIGH);
 
 }

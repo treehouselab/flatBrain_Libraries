@@ -13,12 +13,15 @@ extern fB_Record	record;
 extern fB_Curr		curr;
 extern fB_Record	rec;
 extern uint8_t 		_i2cspeed;
+extern fB_WarnDelay	warn;
+extern fB_Timer		timer;
 
-extern uint8_t  XmapB[];
 extern uint8_t  Xmap50[];
 extern uint8_t  Xmap76[];
 
 extern const __FlashStringHelper* PstrRay[MAXPSTRCOUNT];
+
+typedef double (*pFunc)(fB_Tag* pT, uint16_t ival); 
 
 typedef union  PandT {			// array of tags, preserves menu structure
 	fB_Tag*		p;				// allows me to re-use array,first to store
@@ -71,8 +74,20 @@ void initPin( uint16_t tag,const __FlashStringHelper* Ptitle, uint16_t ctag,uint
 void initCard(uint16_t tag,const __FlashStringHelper* Ptitle, uint8_t  type,uint8_t  i2cAddr, uint8_t  aChan );
 void initRow(uint16_t tag, const __FlashStringHelper* Ptitle,uint32_t  flags);
 void initRowList(uint16_t tag,const __FlashStringHelper* Ptitle,uint16_t parentTag,uint32_t flags);
-void defineCalibrate( uint16_t tag, double factor=NULL,double offset=NULL) ;
+void defineCalibrate( uint16_t tag, pFunc _vFunc, double factor=1,double offset=NULL);		
+void defineTarget(uint16_t tag,uint16_t tTag);
+
 void initLog(uint16_t fTag,const __FlashStringHelper* Ptitle ) ;	
 void navigate();
+void playWarning();
+void startWarnDelay();
+void startWarning();
+void endWarning();
+
+
+double posOnly(fB_Tag* pT,uint16_t intVal);
+double sysAmps(fB_Tag* pT,uint16_t intVal);
+double loadAmps(fB_Tag* pT,uint16_t intVal);
+
 #endif
 

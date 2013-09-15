@@ -2,10 +2,11 @@
 
 
 void defineSystem()  {
+	initTag(TAGZERO,F("TAGZERO"),FLOAT2); // bad tag catch
 
 	defineCard(BRAIN,BRAIN,0,0);
 
-	defineRow(HEADER,PAGE);
+	defineRow(HEADER,_PAGE);
 
 	definePage(SYSTEM,HOME);
 		defineJump(APINS);
@@ -40,9 +41,9 @@ void defineSystem()  {
 		defineRow(PNCOL,PTEXT | NOACT);
 		defineRow(PNTOG,BLAMP );
 		if(secondPass){
-			Tag(PNCRD)->flag16 |= MARK;
-			Tag(PNROW)->flag16 |= MARK;
-			Tag(PNCOL)->flag16 |= MARK;
+			Tag(PNCRD)->flag16 |= _MARK;
+			Tag(PNROW)->flag16 |= _MARK;
+			Tag(PNCOL)->flag16 |= _MARK;
 		}
 		defineAlias(PNPIN,PIN);
 		defineAlias(PNCRD,CARD);
@@ -58,33 +59,34 @@ void defineSystem()  {
 		defineRow(PNCOL,PTEXT | NOACT);
 		defineRow(PNGAT,BLAMP );
 		defineRow(PNADC,INT5  | UPDATE);
-		defineRow(PNVAL,FLOAT2 | NOACT);
-		defineRow(PNFAC,D2STR | NOACT);
-		defineRow(PNOFF,FLOAT2 | NOACT);
+		//defineRow(PNVAL,FLOAT2 | NOACT);
+		defineRow(PNVAL,D2STR | NOACT);
+		//defineRow(PNFAC,D2STR | NOACT);
+		//defineRow(PNOFF,D2STR | NOACT);
 		if(secondPass){
-			Tag(PNVAL)->flag16 |= MARK;
-			Tag(PNFAC)->flag16 |= MARK;
-			Tag(PNOFF)->flag16 |= MARK;
+			Tag(PNVAL)->flag16 |= _MARK;
+		//	Tag(PNFAC)->flag16 |= _MARK;
+		//	Tag(PNOFF)->flag16 |= _MARK;
 		}
 		defineAlias(PNGAT,GATE);
 		defineAlias(PNADC,ADC);
 		defineAlias(PNVAL,VALUE);
-		defineAlias(PNFAC,FACTOR);
-		defineAlias(PNOFF,OFFSET);
+		//defineAlias(PNFAC,FACTOR);
+		//defineAlias(PNOFF,OFFSET);
 
 	//definePage(RECORD,SYSTEM );
 	//	defineJump(LOGS);
 
-	defineRowList(LOGS,SYSTEM,TTITLE);
+	defineRowList(LOGS,SYSTEM,_TTITLE);
 
 	definePage(FPANEL,LOGS);
-		defineRow(FDATE, NOACT | TTITLE);
+		defineRow(FDATE, NOACT | _TTITLE);
 		defineRow(FSIZE, NOACT | TEXT);
 		defineRow(FSTD,NULL);
 		defineRow(FDUMP,BLANK);
 		defineRow(FARCH,BLANK);
-		if(secondPass)Tag(FDATE)->flag16 |= MARK;
-		if(secondPass)Tag(FSIZE)->flag16 |= MARK;
+		if(secondPass)Tag(FDATE)->flag16 |= _MARK;
+		if(secondPass)Tag(FSIZE)->flag16 |= _MARK;
 		defineAlias(FDATE,DATE);
 		defineAlias(FSIZE,SIZE);
 		defineAlias(FDUMP,SERIAL DUMP);
@@ -99,10 +101,10 @@ void defineSystem()  {
 		defineRow(TVAL,FLOAT2);
 		defineRow(TOPR,TEXT); 
 		defineRow(TFAC,FLOAT2);
-		if(secondPass)	Tag(TLOG)->flag16 |= MARK;
+		if(secondPass)	Tag(TLOG)->flag16 |= _MARK;
 		*/
 
-	defineRecord(TBOOT,SYSTAG,TSYS);// Probably also need to define row in fB_Menu.cpp		
+	defineRecord(TBOOT,SYSTAG,_TSYS);// Probably also need to define row in fB_Menu.cpp		
 	defineAlias(DPINS,DIGITAL PINS);
 	defineAlias(APINS,ANALOG PINS);
 	defineAlias(FRAM,FREE RAM);

@@ -7,7 +7,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <Wire.h>
-//#include "..\Wire\Wire.h"
+#include <Timer.h>
 
 #include "fB_PCF8574.h"
 #include "fB_MCP23017.h"
@@ -25,6 +25,7 @@
 #include "fB_Record.h"
 #include "fB_Define.h"
 #include "fB_Menu.h"
+#include "fB_Timer.h"
 //#include "fBT_Seg.h"
 #endif
 
