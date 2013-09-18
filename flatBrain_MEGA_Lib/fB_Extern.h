@@ -83,6 +83,8 @@ void playWarning();
 void startWarnDelay();
 void startWarning();
 void endWarning();
+uint16_t	getY(uint8_t rowIndex);
+
 
 
 double posOnly(fB_Tag* pT,uint16_t intVal);

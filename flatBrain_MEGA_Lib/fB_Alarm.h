@@ -24,8 +24,7 @@
 #ifndef FB_ALARM_H
 #define FB_ALARM_H
 
-
-//#include <stdint.h>
+#include "fB_Header.h"
 
 /*************************************************
 * Public Constants
@@ -163,12 +162,14 @@ class fB_WarnDelay {
 		uint8_t warnSecs;
 		uint8_t alarmIntervalSecs;
 		uint8_t action;
-		uint16_t tLED;  // LED tag
+		fB_Tag *pT;  // LED tag
+		uint8_t LEDonVal;
 
-		fB_WarnDelay();
 		void init();
 		void stop();
-		uint8_t warning(uint8_t id, uint8_t wdSecs,uint8_t wSecs, uint8_t aSecs, uint16_t tLED = NULL) ;
+		void reset();
+
+		uint8_t warning(uint8_t id, uint8_t wdSecs,uint8_t wSecs, uint8_t aSecs, uint16_t tled = NULL) ;
 };	
 
 	

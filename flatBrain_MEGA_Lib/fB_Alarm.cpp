@@ -372,17 +372,31 @@ void fB_Alarm::play(uint8_t  alarmTag )
 ///////////////////////////////////////////////////////////////////////////////////////
 
 
-fB_WarnDelay::fB_WarnDelay() {
+void fB_WarnDelay::init() {
 	currID = NULL;
 	action = _WD_OFF;
+	pT = Tag(_ALARM_LED);
+	if(pT) {
+		LEDonVal = pT->getOnVal();
+		pT->write(~LEDonVal);
+	}
 }
+
+
+void fB_WarnDelay::reset() {
+	stop();
+	currID = 0;
+}
+
 void fB_WarnDelay::stop() {
 	//dbug(F("STOP"));
 	timer.stop(_TIMER_ALARM);
 	timer.stop(_TIMER_WARN);
 	timer.stop(_TIMER_WARNDELAY);
-	timer.stop(_TIMER_LED);
 	action = _WD_OFF;
+	if(pT) 	pT->write(~LEDonVal);
+	//warn.setMsg(P_BLANK);
+
 }
 
 uint8_t fB_WarnDelay::warning(uint8_t id, uint8_t wdSecs,uint8_t wSecs, uint8_t aSecs, uint16_t tled) {
@@ -393,8 +407,8 @@ uint8_t fB_WarnDelay::warning(uint8_t id, uint8_t wdSecs,uint8_t wSecs, uint8_t 
 		warnDelaySecs = wdSecs;
 		warnSecs = wSecs;
 		alarmIntervalSecs = aSecs;
-		tLED = tled;
-		startWarning();
+		startWarning();	
+		action = _WD_WARN;
 	}
 	//dbug(F("warndelay ACTION %d"), action);
 	if(action == _WD_ACT) warn.currID = NULL;
@@ -403,21 +417,26 @@ uint8_t fB_WarnDelay::warning(uint8_t id, uint8_t wdSecs,uint8_t wSecs, uint8_t 
 
 //////////////////// these methods are not in class because they need to be callable functions ///////////////////////////////////////
 
-void playWarning() { alarm.play(ALARM_WARN); };
+void playWarning() { 
+	if(warn.pT) warn.pT->write(warn.LEDonVal);
+	alarm.play(ALARM_WARN); 
+	if(warn.pT) warn.pT->write(~warn.LEDonVal);
+}
 
 void endWarning() {
 	//dbug(F("ENDWARN wid:%d"),_TIMER_WARN);
 	warn.stop();
 	warn.action = _WD_ACT;
 	alarm.play(ALARM_ACT);
+	//warn.setMsg(P_BLANK);
+
 }
 void startWarning() {
 	//dbug(F("startWARN"));
-	//warn.stop();
+	if(warn.pT) warn.pT->write(~warn.LEDonVal);
 	timer.after(_TIMER_WARN,(unsigned long)warn.warnSecs * 1000, endWarning);
 	timer.every(_TIMER_ALARM,(unsigned long)warn.alarmIntervalSecs * 1000,playWarning, 25);
-	warn.action = _WD_WARN;
-	if(warn.tLED) timer.oscillateTag(_TIMER_LED,warn.tLED, 500,LOW, -1);
+	//menu.showMessage(warn.msgIndex,warn.msgText);
 	playWarning();
 	//dbug(F("end startWARN"));
 }
@@ -427,4 +446,8 @@ void startWarnDelay() {  // alarm delay interrupt handler
 	warn.stop();
 	timer.after(_TIMER_WARNDELAY,(unsigned long)warn.warnDelaySecs * 1000, startWarning);
 	warn.action = _WD_DELAY;
+	//menu.showMessage(warn.msgIndex,warn.msgText);
+	if(warn.pT) warn.pT->write(warn.LEDonVal);
+
+
 }

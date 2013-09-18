@@ -125,7 +125,7 @@ void fB_Curr::incrRowCount() {
 void fB_Curr::selectRow(uint8_t rowIndex) {
 	if(!rowIndex) rowIndex = rowDex;
 	tft.setColor(FCOLOR,GCOLOR);
-	tft.drawHLine(STARTX,tag()->getY(rowIndex)+ROWHT-8,MAXPIXELWID);
+	tft.drawHLine(STARTX,getY(rowIndex)+ROWHT-8,MAXPIXELWID);
 	tft.resetDefColors();	
 	rSelected = 1;
 	
@@ -135,7 +135,7 @@ void fB_Curr::deselectRow(uint8_t rowIndex) {
 	if(!rSelected) return;
 	if(!rowIndex) rowIndex = rowDex;
 	tft.setAll2Bcolor();
-	tft.drawHLine(STARTX,tag()->getY(rowIndex)+ROWHT-8,MAXPIXELWID);
+	tft.drawHLine(STARTX,getY(rowIndex)+ROWHT-8,MAXPIXELWID);
 	tft.resetDefColors();
 	rSelected = 0;
 }
@@ -260,6 +260,12 @@ void fB_Tag::pulse(unsigned int msecs) {
 		write(getOnVal());
 		delay(msecs);
 		pinMode(_INPUT);
+}
+void fB_Tag::flash(unsigned int msecs) {
+		if(!pin) return;
+		write(getOnVal());
+		delay(msecs);
+		write(~getOnVal());
 }
 void fB_Tag::write(unsigned int value) {
 	//dbug(F("tw %P ,  onval:%d, vAL:%d"),Ptitle,getOnVal(),value);

@@ -11,8 +11,6 @@ class fB_Menu {
 		int			sListStart ;		
 
 		uint8_t 	buttonCode;  // set by tft.readButtons in interrupt
-		uint16_t 	PstrCount;	
-
 
 		void		showPage(uint16_t tag, uint8_t option = NULL);
 		void		clearPage(uint8_t fullFlag=NULL);
@@ -26,6 +24,10 @@ class fB_Menu {
 		void		getFileList(); 
 		void		pinPageConstruct(uint8_t mode,uint8_t startDex, uint8_t hand=RIGHT);
 		void		refreshRow(uint16_t tag = NULL);
+		void		showMessage(uint8_t Pindex, char *text = ""); 
+		void		clearRow(uint8_t rowIndex);
+
+
 		void		init();
 		uint8_t		dPlaces(double value, uint8_t size);
 		char *		d2str(double value, uint8_t size, char* buffer) ;

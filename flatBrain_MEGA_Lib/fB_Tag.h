@@ -73,11 +73,9 @@ class fB_Tag {
 		void		action(uint8_t hand);
 		void		showRow(uint8_t rowIndex, uint8_t  pageOption=NULL);
 
-		uint16_t	getY(uint8_t rowIndex);
 		//void		frame();
 		//void		unframe();
 		void		clearRow1(uint8_t rowIndex);
-		void		clearRow(uint8_t rowIndex);
 		void		hideRow(uint8_t rowIndex);
 
 		void		clearFlags() { flag16 &= ~0x0FFF; }
@@ -98,6 +96,7 @@ class fB_Tag {
 		void pull(unsigned int value);  // HIGH or LOW
 		void pinMode(unsigned int iodir); //_INPUT or _OUTPUT
 		void pulse(unsigned int msecs); 
+		void flash(unsigned int msecs); 
 		void YshiftPulse(unsigned int msecs); 
 		uint8_t getOnVal();
 		uint8_t getDir();

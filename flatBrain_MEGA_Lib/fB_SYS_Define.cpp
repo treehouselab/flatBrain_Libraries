@@ -7,6 +7,7 @@ void defineSystem()  {
 	defineCard(BRAIN,BRAIN,0,0);
 
 	defineRow(HEADER,_PAGE);
+	defineRow(_MSG, TEXT);
 
 	definePage(SYSTEM,HOME);
 		defineJump(APINS);

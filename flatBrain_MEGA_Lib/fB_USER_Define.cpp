@@ -15,7 +15,6 @@ void defineUser() {
 
  	//////////// DEFINE CARDS AND PINS
 		defineCard(YCRD,_X76,_C0,_B3);	
-
 		definePin(Y1,YCRD,26,_L,_INPUT,LOW); 
 		definePin(Y2,YCRD,26,_R,_INPUT,LOW); 
 		definePin(Y3,YCRD,27,_R,_INPUT,LOW); 
@@ -31,9 +30,8 @@ void defineUser() {
 		definePin(Y4S,YCRD,20,_R,_INPUT,HIGH); 
 		definePin(Y5S,YCRD,20,_L,_INPUT,HIGH);
 		definePin(Y6S,YCRD,18,_R,_INPUT,HIGH);
-
-		definePin(WARN,YCRD,17,_R,_INPUT,HIGH);
-		definePin(WLED,YCRD,17,_L,_OUTPUT,LOW);
+		definePin(_WARN_OVR,YCRD,17,_R,_INPUT,HIGH);
+		definePin(_ALARM_LED,YCRD,17,_L,_OUTPUT,HIGH);
 
 		definePin(IGN,YCRD,24,_L,_INPUT,_PGATE); 
 		definePin(CL,YCRD,23,_R,_INPUT,_PGATE); 
@@ -58,7 +56,7 @@ void defineUser() {
 		defineRow(V1, FLOAT1 | _LOG);
 		defineRow(V2, FLOAT1 | _LOG);
 		defineRow(V3, FLOAT1 | _LOG);
-		defineRow(V0, FLOAT1 | _LOG);
+		//defineRow(V0, FLOAT1 | _LOG);
 		//defineRow(CZ,  FLOAT2 | _LOG);
 		defineRow(CX,  FLOAT2 | _LOG);
 		defineRow(CL,  FLOAT2 | _LOG);

@@ -20,11 +20,12 @@ void setup(){
 
 	vduino.init(RSTATUS);
 
-	menu.showPage(APINS);
+	menu.showPage(RSTATUS);
 
+        vduinoUpdate();
 	//i2c.scan();
 	//Card(YCRD)->LED(HIGH);
-	timer.every(_TIMER_UPDATE,4000,vduinoUpdate);
+	timer.every(_TIMER_UPDATE,10000,vduinoUpdate);
 	//initState();
 
 }
@@ -40,7 +41,7 @@ void loop() {
 
 void vduinoUpdate() {
 	vduino.getState();
-	//vduino.action();
+	vduino.nextState();
+	vduino.setState();
 	vduino.showState();
 }
-

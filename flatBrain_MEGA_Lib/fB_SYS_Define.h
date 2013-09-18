@@ -66,8 +66,7 @@ XCARDS		Ox20-27
 #define	_TIMER_WARNDELAY		1 
 #define	_TIMER_WARN				2
 #define	_TIMER_ALARM			3 
-#define	_TIMER_LED				4 
-#define	_TIMER_FREEINDEXSTART	5 
+#define	_TIMER_FREEINDEXSTART	4 
 
 #define fERR  -1
 
@@ -83,12 +82,12 @@ XCARDS		Ox20-27
 
 #define MAXEETAGS		25  // for eeprom runaway only
 #define MAXCHARSDUMP	256  // reduce this if logfile dump collides with heap 
-#define MAXLISTROWS		10 
+#define MAXLISTROWS		9 
+#define	MESSAGE_Y		295
 #define MAXCHARSLINE	15 
 #define MAXCHARSTEXT	8 
 #define MAXCHARSD2STR	6 
 //#define MAXVDRDEX		6 
-#define	MAXPSTRCOUNT	11
 #define	MAXTEMPTAG		500
 #define	MAXZEROADC		250 // max ADC reading that qualifies for binary zero
 
@@ -287,6 +286,8 @@ XCARDS		Ox20-27
 #define LOGS		29   //   11 RESERVED FOR LOGS
 
 #define TAGZERO		0
+#define _WARN_OVR	58  // used by warnDelay system, can be pins defined in fB_USR_defines.cpp or fB_SYS_Defines.cpp
+#define _ALARM_LED	59
 #define HEADER		60
 #define TBOOT		61	//SYSTEM TAGS
 #define TUTAGS		62
@@ -297,7 +298,7 @@ XCARDS		Ox20-27
 #define FRAM		67
 #define TIAT		69
 #define TSAT		70
-#define MSG			71
+#define _MSG			71
 #define VCC			72
 
 
@@ -328,7 +329,29 @@ XCARDS		Ox20-27
 #define FDEL			141	
 #define FDUMP			142	
 #define	FSTD			143  // tag for FPANEL row that can hgouse either FSTAMP or FDELETE subtype
-#define CLK				144		  
+#define CLK				144		 
+
+#define P_LEFT			0
+#define P_RIGHT			1
+#define P_STAMP			2
+#define P_DELETE		3
+#define P_NOLOG			4
+#define P_INPUT			5
+#define P_AMP			6
+#define P_STRIKE		7
+#define P_TOGGLE		8
+#define P_GATE			9
+#define P_LOGS			10
+#define P_SHUTDOWN		11
+#define P_SWITCHTO		12
+#define P_DELAYSHUT		13
+#define P_DELAYSW2		14
+#define P_CHGALT		15
+#define P_CHGEXT		16
+#define P_BLANK			17
+
+#define	MAXPSTRCOUNT	18
+
 
 	
 #endif

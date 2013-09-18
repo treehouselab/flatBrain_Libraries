@@ -1,5 +1,13 @@
 #include "fB_Include.h"
 
+uint16_t getY(uint8_t rowIndex) { 
+	if(rowIndex == -1) {
+		curr.farY = MESSAGE_Y + ROWHT;
+		return MESSAGE_Y;
+	}
+	else return ( STARTY + (ROWHT) * rowIndex); 
+}
+
 uint8_t fB_Menu::dPlaces(double value, uint8_t size) {  // returns number if visible decimal places in double if format is "size" chars and point is one character width.
 	int j = 0;
 	double dint,test;
@@ -98,30 +106,6 @@ void fB_Menu::init(){
 
 	fListStart = 0;
 	buttonCode = 0;
-	PstrCount = 0;	
-
-	#define P_LEFT 0
-	createPstr("L");
-	#define P_RIGHT 1
-	createPstr("R");
-	#define P_STAMP 2
-	createPstr("STAMP");
-	#define P_DELETE 3
-	createPstr("DELETE");
-	#define P_NOLOG 4
-	createPstr("NO LOG");
-	#define P_INPUT 5
-	createPstr("INPUT");
-	#define P_AMP 6
-	createPstr("AMP");
-	#define P_STRIKE 7
-	createPstr("----");
-	#define P_TOGGLE 8
-	createPstr("TOGGLE");
-	#define P_GATE 9
-	createPstr("GATE");
-	#define P_LOGS 10
-	createPstr("LOGS");
 
 	Tag(FPANEL)->flag16 |= _TTITLE;  // for filename
 
@@ -322,7 +306,6 @@ void fB_Menu:: showPage(uint16_t tag, uint8_t pageOption) {
 
  ///////////////////////////////////////// ROW METHODS //////////////////////////////////////////////
 
-uint16_t fB_Tag::getY(uint8_t rowIndex) {  return ( STARTY + (ROWHT) * rowIndex); }
 
 void fB_Menu::refreshRow(uint16_t tag) {  
 	uint8_t rowIndex;
@@ -338,6 +321,27 @@ void fB_Menu::refreshRow(uint16_t tag) {
 	pT->showRow(rowIndex);
 
 }
+/*
+void fB_Menu::showMessage(uint8_t PstrIndex,char* text) { 
+	uint8_t option;
+	if(PstrIndex == P_BLANK) option = _CLEAR
+	else option = NULL;
+	fB_Tag* pT = Tag(_MSG);
+	pT->Ptitle = PstrRay[PstrIndex];
+	pT->ptext = text;
+	pT->showRow(-1,option);
+}
+*/
+void fB_Menu::showMessage(uint8_t PstrIndex,char* text) {  
+	if(PstrIndex == P_BLANK) clearRow(-1);
+	else {
+		fB_Tag* pT = Tag(_MSG);
+		pT->Ptitle = PstrRay[PstrIndex];
+		pT->ptext = text;
+		pT->showRow(-1);
+	}
+
+}
 
 void fB_Tag::showRow(uint8_t  rowIndex, uint8_t  option) {  //when option == REFRESH, only right col data is updated
 
@@ -349,7 +353,7 @@ void fB_Tag::showRow(uint8_t  rowIndex, uint8_t  option) {  //when option == REF
 	if( (flag16 & _HIDE)) 	tft.setAll2Bcolor();
 	else if(flag16 & _MARK)	tft.setColor(FCOLOR,HCOLOR);
 	format = getFormat();
-//dbug(F("SR %P t:%d , f16: 0x%x format:%L"),Ptitle, tag,flag16,format);
+dbug(F("SR %P t:%d , f16: 0x%x format:%L"),Ptitle, tag,flag16,format);
 	
 
 	if(option != REFRESHPAGE) {
@@ -370,15 +374,7 @@ void fB_Tag::showRow(uint8_t  rowIndex, uint8_t  option) {  //when option == REF
 		} 
 	}
 	if( option != REFRESHPAGE || format == TEXT || format == PTEXT || flag16 & _TTITLE) tft.print(STARTX +ROWTEXTX,getY(rowIndex),pTitleText,MAXCHARSLINE);
-		//dbug(F("SR format H: 0x%J"),format);
-		//Serial.println(format,DEC);
-		//Serial.println(format,HEX);
-	if(getAction() == UPDATE && pin){
-		read();
-	}
-
-		//dbug(F("SR0 %P ival:%d "),Ptitle,iVal);
-
+	if(getAction() == UPDATE && pin)	read();
 	if(format == BLAMP) {
 			int x = STARTX +ROWSTATEX; int y = getY(rowIndex)+ROWSTATEY+2;
 			tft.drawCircle(x,y,8);
@@ -746,7 +742,7 @@ void fB_Tag::unframe() {
 	tft.resetDefColors();
 }
 */
-void fB_Tag::clearRow(uint8_t rowIndex) {
+void fB_Menu::clearRow(uint8_t rowIndex) {
 	tft.setAll2Bcolor();
 	tft.fillRect(STARTX +1,getY(rowIndex)+1,STARTX +MAXPIXELWID-1,getY(rowIndex)+ROWHT-1,tft.bColor);
 	tft.resetDefColors();

@@ -3,6 +3,7 @@
 
 #include "fB_Header.h"
 
+
 uint8_t 	_i2cspeed = I2CSLOW;			
 fB_I2C		i2c;
 fB_RTC      rtc; 
@@ -51,6 +52,7 @@ uint8_t		logFileCount	= 0;
 uint8_t		archiveCount	= 0;
 
 
+
 PandT*			rTP;	
 uint16_t*		tempTagRay;		// temp array for packed tag list
 logTag*			logTagRay;		// array of structs containing log tag and basename pointer
@@ -73,6 +75,27 @@ void endWarning();
 
 
 ///////////////////// GLOBAL to main.c FUNCTIONS ////////////////////////////////////////////////////////////////
+void buildPstrRay() {
+	createPstr(P_LEFT,"L");
+	createPstr(P_RIGHT , "R");
+	createPstr(P_STAMP , "STAMP");
+	createPstr(P_DELETE , "DELETE");
+	createPstr(P_NOLOG , "NO LOG");
+	createPstr(P_INPUT , "INPUT");
+	createPstr(P_AMP , "AMP");
+	createPstr(P_STRIKE, "----");
+	createPstr(P_TOGGLE , "TOGGLE");
+	createPstr(P_GATE , "GATE");
+	createPstr(P_LOGS , "LOGS");
+	createPstr(P_SHUTDOWN , "SHUTDOWN");
+	createPstr(P_DELAYSHUT , "DELAY SHUT");
+	createPstr(P_DELAYSW2 , "DELAY SW2");
+	createPstr(P_CHGALT , "ALT CHARGE");
+	createPstr(P_CHGEXT, "EXT CHARGE");
+	createPstr(P_SWITCHTO, "SWITCHING TO");
+	createPstr(P_BLANK , "");
+}
+
 double readVcc() {
 	long vRefScale = 1125300L; // default;
 
@@ -329,6 +352,8 @@ void flatBrainInit(){
 	i2c.setSpeed(I2CSPEED);
 	i2c.timeOut(I2CTIMEOUT);
 
+	buildPstrRay();
+
 	uint8_t  res=0;
 	fB_Tag* pT;
 
@@ -442,7 +467,9 @@ void flatBrainInit(){
 	dbug(F("free RAM %d"),freeRAM());
 	Tag(FRAM)->iVal = freeRAM();
 	Tag(VCC)->dVal->value = VccRef;
+	warn.init();
 }
+
 
 void dbug(const __FlashStringHelper* Ptitle, ... ){
   char fmt[ 60 ]; //Size array as needed.
