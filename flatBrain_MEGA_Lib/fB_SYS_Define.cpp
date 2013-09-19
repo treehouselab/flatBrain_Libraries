@@ -2,12 +2,12 @@
 
 
 void defineSystem()  {
-	initTag(TAGZERO,F("TAGZERO"),FLOAT2); // bad tag catch
+	initTag(TAGZERO,F("TAGZERO"),_FLOAT2); // bad tag catch
 
 	defineCard(BRAIN,BRAIN,0,0);
 
 	defineRow(HEADER,_PAGE);
-	defineRow(_MSG, TEXT);
+	defineRow(_MSG, _TEXT);
 
 	definePage(SYSTEM,HOME);
 		defineJump(APINS);
@@ -15,17 +15,17 @@ void defineSystem()  {
 		defineJump(LOGS);
 		defineRow(ARCHIVES,NULL);
 		defineJump(CLOCK);
-		defineRow(FRAM,INT5 | NOACT);
-		defineRow(VCC,FLOAT2 | NOACT);
+		defineRow(FRAM,_INT5 | NOACT);
+		defineRow(VCC,_FLOAT2 | NOACT);
 
 	definePage(CLOCK,SYSTEM);
-		defineRow(CLKYR, INCR | INT5);
-		defineRow(CLKMO, INCR | INT5);
-		defineRow(CLKDY, INCR | INT5);
-		defineRow(CLKHH, INCR | INT5);
-		defineRow(CLKMM, INCR | INT5);
-		defineRow(CLKGET, BLANK);
-		defineRow(CLKSET, BLANK);
+		defineRow(CLKYR, _INCR | _INT5);
+		defineRow(CLKMO, _INCR | _INT5);
+		defineRow(CLKDY, _INCR | _INT5);
+		defineRow(CLKHH, _INCR | _INT5);
+		defineRow(CLKMM, _INCR | _INT5);
+		defineRow(CLKGET, _BLANK);
+		defineRow(CLKSET, _BLANK);
 		defineAlias(CLKYR,YEAR);
 		defineAlias(CLKMO,MONTH);
 		defineAlias(CLKDY,DAY);
@@ -36,10 +36,10 @@ void defineSystem()  {
 
 
 	definePage(DPINS,SYSTEM);
-		defineRow(PNPIN,PTEXT );
-		defineRow(PNCRD,PTEXT | NOACT);
-		defineRow(PNROW,INT5  | NOACT);
-		defineRow(PNCOL,PTEXT | NOACT);
+		defineRow(PNPIN,_PTEXT );
+		defineRow(PNCRD,_PTEXT | NOACT);
+		defineRow(PNROW,_INT5  | NOACT);
+		defineRow(PNCOL,_PTEXT | NOACT);
 		defineRow(PNTOG,BLAMP );
 		if(secondPass){
 			Tag(PNCRD)->flag16 |= _MARK;
@@ -54,16 +54,16 @@ void defineSystem()  {
 
 
 	definePage(APINS,SYSTEM);
-		defineRow(PNPIN,PTEXT );
-		defineRow(PNCRD,PTEXT | NOACT);
-		defineRow(PNROW,INT5  | NOACT);
-		defineRow(PNCOL,PTEXT | NOACT);
+		defineRow(PNPIN,_PTEXT );
+		defineRow(PNCRD,_PTEXT | NOACT);
+		defineRow(PNROW,_INT5  | NOACT);
+		defineRow(PNCOL,_PTEXT | NOACT);
 		defineRow(PNGAT,BLAMP );
-		defineRow(PNADC,INT5  | UPDATE);
-		//defineRow(PNVAL,FLOAT2 | NOACT);
-		defineRow(PNVAL,D2STR | NOACT);
-		//defineRow(PNFAC,D2STR | NOACT);
-		//defineRow(PNOFF,D2STR | NOACT);
+		defineRow(PNADC,_INT5  | UPDATE);
+		//defineRow(PNVAL,_FLOAT2 | NOACT);
+		defineRow(PNVAL,_D2STR | NOACT);
+		//defineRow(PNFAC,_D2STR | NOACT);
+		//defineRow(PNOFF,_D2STR | NOACT);
 		if(secondPass){
 			Tag(PNVAL)->flag16 |= _MARK;
 		//	Tag(PNFAC)->flag16 |= _MARK;
@@ -82,10 +82,10 @@ void defineSystem()  {
 
 	definePage(FPANEL,LOGS);
 		defineRow(FDATE, NOACT | _TTITLE);
-		defineRow(FSIZE, NOACT | TEXT);
+		defineRow(FSIZE, NOACT | _TEXT);
 		defineRow(FSTD,NULL);
-		defineRow(FDUMP,BLANK);
-		defineRow(FARCH,BLANK);
+		defineRow(FDUMP,_BLANK);
+		defineRow(FARCH,_BLANK);
 		if(secondPass)Tag(FDATE)->flag16 |= _MARK;
 		if(secondPass)Tag(FSIZE)->flag16 |= _MARK;
 		defineAlias(FDATE,DATE);
@@ -99,9 +99,9 @@ void defineSystem()  {
 	definePage(TPANEL,HOME);
 		defineRow(TLOG,NOACT);
 		defineRow(TINP,NOACT);
-		defineRow(TVAL,FLOAT2);
-		defineRow(TOPR,TEXT); 
-		defineRow(TFAC,FLOAT2);
+		defineRow(TVAL,_FLOAT2);
+		defineRow(TOPR,_TEXT); 
+		defineRow(TFAC,_FLOAT2);
 		if(secondPass)	Tag(TLOG)->flag16 |= _MARK;
 		*/
 

@@ -20,12 +20,12 @@ void setup(){
 
 	vduino.init(RSTATUS);
 
-	menu.showPage(RSTATUS);
+	menu.showPage(HOME);
 
-        vduinoUpdate();
+    vduinoUpdate();
 	//i2c.scan();
 	//Card(YCRD)->LED(HIGH);
-	timer.every(_TIMER_UPDATE,10000,vduinoUpdate);
+	timer.every(_TIMER_UPDATE,5000,vduinoUpdate);
 	//initState();
 
 }
@@ -35,13 +35,11 @@ void setup(){
 void loop() {
 	menu.checkButtonCode();
 	
-	if(curr.pageTag == RSTATUS) timer.update();
+        timer.update();
 }
 
 
 void vduinoUpdate() {
-	vduino.getState();
 	vduino.nextState();
-	vduino.setState();
 	vduino.showState();
 }

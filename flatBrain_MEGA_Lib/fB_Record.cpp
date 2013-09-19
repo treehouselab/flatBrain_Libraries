@@ -47,12 +47,12 @@ void fB_Record::createTagDefLog() {
 			if(pT->flag16 & _UNDEF) 	sprintf(datastr,P("----"));
 			else switch(pT->getFormat()){
 				case BLAMP:
-				case INT5:		sprintf(datastr,"%d",pT->iVal);break;
-				case FLOAT1:	
-				case FLOAT2:	menu.doubleToStr(pT->dVal->value,3,datastr); break;	
-				case TEXT:		sprintf(datastr,"%s",pT->ptext); break;
-				case PTEXT:		getPtext(pT->Ptext, datastr);break;
-				case BLANK:		datastr[0] = '\0' ;break;
+				case _INT5:		sprintf(datastr,"%d",pT->iVal);break;
+				case _FLOAT1:	
+				case _FLOAT2:	menu.doubleToStr(pT->dVal->value,3,datastr); break;	
+				case _TEXT:		sprintf(datastr,"%s",pT->ptext); break;
+				case _PTEXT:		getPtext(pT->Ptext, datastr);break;
+				case _BLANK:		datastr[0] = '\0' ;break;
 			}
 
 			sprintf(buffer,P("%s,%d,%s, %s,%s, %d,%d,%d,%d,%d"),title,pT->tag ,base,datastr	,menu.doubleToStr(pT->dVal->factor,3,datastr),menu.doubleToStr(pT->dVal->offset,3,datastr),
@@ -175,13 +175,13 @@ dbug(F("R LWD  %P f:%d"),pT->Ptitle,pT->flag16);
 		if(pT->flag16 & _UNDEF) 	strcpy(datastr,P("----"));
 		else switch(pT->getFormat()){
 			case BLAMP:
-			case INT5:		sprintf(datastr,"%d",pT->iVal);break;
-			case D2STR:		
-			case FLOAT1:	
-			case FLOAT2:	menu.doubleToStr(pT->dVal->value,3,datastr); break;	
-			case TEXT:		sprintf(datastr,"%s",pT->ptext);break;
-			case PTEXT:		getPtext(pT->Ptext, datastr);break;
-			case BLANK:		datastr[0] = '\0' ;break;
+			case _INT5:		sprintf(datastr,"%d",pT->iVal);break;
+			case _D2STR:		
+			case _FLOAT1:	
+			case _FLOAT2:	menu.doubleToStr(pT->dVal->value,3,datastr); break;	
+			case _TEXT:		sprintf(datastr,"%s",pT->ptext);break;
+			case _PTEXT:		getPtext(pT->Ptext, datastr);break;
+			case _BLANK:		datastr[0] = '\0' ;break;
 		}
 		sprintf(buffer,P("%s,%s"),buffer,datastr);
 	}

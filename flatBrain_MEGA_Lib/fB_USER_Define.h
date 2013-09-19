@@ -71,6 +71,17 @@
 #define IGN			647 
 #define ALT			648 
 
+#define VLIMITS		70
 
+#define CHLO			701
+#define CHHI			702
+#define DLO1			703
+#define DLO2			704
+#define DLO3			705
+#define DHI1			706
+#define DHI2			707 
+#define DHI3			708 
+#define VEXS			709 
+#define VALT			710 
 
 #endif

@@ -8,8 +8,8 @@
 #define EXTN		0x0004  //  External (shore,solar) charge on
 #define BT2			0x0008  //  Batt2 exists
 #define BT3			0X0010  //  Batt3 exists
-#define CT2			0x0020	//  Alt charging Batt2
-#define CT3			0x0040	//  Alt charging Batt3
+#define AT2			0x0020	//  Alt charging Batt2
+#define AT3			0x0040	//  Alt charging Batt3
 #define XT1			0x0080	//  Ext charging Batt1
 #define XT3			0x0100	//  Ext charging Batt3
 //#define 		0x0200
@@ -20,32 +20,32 @@
 #define RT5		0x4000
 #define RT6		0x8000
 
-#define VOLTSEXIST		9.0		// Volts > this indicates: BATTERY EXISTS
-#define VOLTSALT		13.8	// Volts > this indicates: ALTERNATOR ACTIVE
+#define VOLTSEXIST	ptVEXS->dVal->value	// Volts > this indicates: BATTERY EXISTS
+#define VOLTSALT	ptVALT->dVal->value	// Volts > this indicates: ALTERNATOR ACTIVE
 
-#define CHGLOV1			12.6	// Volts < this indicates: READY TO CHARGE
-#define CHGLOV2			12.6
-#define CHGLOV3			12.6
+#define CHGLOV1		ptCHLO->dVal->value 	// Volts < this indicates: READY TO CHARGE
+#define CHGLOV2		ptCHLO->dVal->value	
+#define CHGLOV3		ptCHLO->dVal->value
 
-#define CHGHIV1		13.9	// Volts > this indicates: STOP CHARGING
-#define CHGHIV2		13.9
-#define CHGHIV3		13.9
+#define CHGHIV1		ptCHHI->dVal->value	// Volts > this indicates: STOP CHARGING
+#define CHGHIV2		ptCHHI->dVal->value
+#define CHGHIV3		ptCHHI->dVal->value
 
-#define LVDLOV1		12.5	// Volts < this indicates: LOW VOLTAGE DISCONNECT 
-#define LVDLOV2		11.0
-#define LVDLOV3		10.0
+#define LVDLOV1		ptDLO1->dVal->value	// Volts < this indicates: LOW VOLTAGE DISCONNECT 
+#define LVDLOV2		ptDLO2->dVal->value
+#define LVDLOV3		ptDLO3->dVal->value
 
-#define LVDHIV1		13		// Volts > this indicates: LVD RECOVER
-#define LVDHIV2		12.0
-#define LVDHIV3		11.0
+#define LVDHIV1		ptDHI1->dVal->value		// Volts > this indicates: LVD RECOVER
+#define LVDHIV2		ptDHI2->dVal->value
+#define LVDHIV3		ptDHI3->dVal->value
 
 #define sALT		(state.flags & ALTN?1:0)	// Alternator active
 #define sIGN		(state.flags & IGTN?1:0)// Ignition switch on (Accesory switch ?)
 #define sEXT		(state.flags & EXTN?1:0)	// External charge active (Solar, shore)
 #define sB2			(state.flags & BT2?1:0)		// Battery 2 exists
 #define sB3			(state.flags & BT3?1:0)		// Battery 3 exists
-#define sC2			(state.flags & CT2?1:0)		// Alt charging Battery 2 
-#define sC3			(state.flags & CT3?1:0)    		// Alt charging Battery 3 
+#define sA2			(state.flags & AT2?1:0)		// Alt charging Battery 2 
+#define sA3			(state.flags & AT3?1:0)    	// Alt charging Battery 3 
 #define sX1			(state.flags & XT1?1:0)		// Ext charging Battery 1 
 #define sX3			(state.flags & XT3?1:0)		// Ext charging Battery 3 
 #define sR1			(state.flags & RT1?1:0)		// Relay 1  
@@ -86,19 +86,19 @@
 #define pCL			prev.dCL	// Load Amps
 #define pCX			prev.dCX	// EXT Charging Amps
 
-#define R1_ON			Relay[0].turn(ON)	
-#define R1_OFF			Relay[0].turn(OFF)	
-#define R2_ON			Relay[1].turn(ON)	
-#define R2_OFF			Relay[1].turn(OFF)	
-#define R3_ON			Relay[2].turn(ON)	
-#define R3_OFF			Relay[2].turn(OFF)	
-#define R4_ON			Relay[3].turn(ON)	
-#define R4_OFF			Relay[3].turn(OFF)	
-#define R5_ON			Relay[4].turn(ON)	
-#define R5_OFF			Relay[4].turn(OFF)	
-#define R6_ON			Relay[5].turn(ON)	
-#define R6_OFF			Relay[5].turn(OFF)
-#define RL_OFF			Relay[3].turn(OFF);Relay[4].turn(OFF);Relay[5].turn(OFF)
+#define R1_ON			relay1.turn(ON)	
+#define R1_OFF			relay1.turn(OFF)	
+#define R2_ON			relay2.turn(ON)	
+#define R2_OFF			relay2.turn(OFF)	
+#define R3_ON			relay3.turn(ON)	
+#define R3_OFF			relay3.turn(OFF)	
+#define R4_ON			relay4.turn(ON)	
+#define R4_OFF			relay4.turn(OFF)	
+#define R5_ON			relay5.turn(ON)	
+#define R5_OFF			relay5.turn(OFF)	
+#define R6_ON			relay6.turn(ON)	
+#define R6_OFF			relay6.turn(OFF)
+#define RL_OFF			relay4.turn(OFF);relay5.turn(OFF);relay6.turn(OFF)
 
 
 		
@@ -190,24 +190,28 @@ class fB_Vanduino {
 		V_State		prev;
 		V_State		next;
 		V_State		state;
-		V_Relay		Relay[6];
-		fB_Tag		*ptCL, *ptCX, *ptIGN, *ptALT, *ptV1, *ptV2, *ptV3;
-		uint16_t	pTag;
+		V_Relay		relay1, relay2, relay3, relay4, relay5, relay6;
+		fB_Tag		*ptCL, *ptCX, *ptIGN, *ptALT, *ptV1, *ptV2, *ptV3, *ptVALT, *ptVEXS;
+		fB_Tag		*ptCHLO, *ptCHHI, *ptDLO1, *ptDLO2, *ptDLO3, *ptDHI1, *ptDHI2, *ptDHI3;
+		uint16_t	pageTag;
 		uint8_t		refresh;
 
 		void getState();
+		double getStateAnalogTag(uint16_t tag);
+		uint8_t getStateRelayIndex(uint8_t index) ;
+		void getStateRelays() { for(int i=1;i<7;i++) getStateRelayIndex(i); }
 		void showState();
 		void nextState() ;
-		void setState() ;
-		void action();
+		void setRelays() ;
+		void buildNextState() ;
+		//void action();
 		void setBit(uint16_t bit, uint16_t value);
 		void setNext(uint16_t bit, uint16_t value);
 		void setMsg(uint16_t bit, uint16_t value);
 		void init(uint8_t pageTag);
 		uint8_t priorityShutdownLoad(uint16_t relay);
-		uint8_t checkVolts(uint16_t relay);
 		uint8_t switchShutdown(uint8_t index,uint8_t relaySrc, uint8_t relayDst );
-		//void alarmLVD();
+		uint8_t checkVolts(uint16_t relay);
 
 		fB_Vanduino();
 };
@@ -216,14 +220,15 @@ fB_Vanduino::fB_Vanduino() {
 	refresh = 1;
 }
 
-void fB_Vanduino::init(uint8_t pageTag) { 
-	pTag = pageTag; 
-	Relay[0].setTags(Y1,Y1S);
-	Relay[1].setTags(Y2,Y2S);
-	Relay[2].setTags(Y3,Y3S);
-	Relay[3].setTags(Y4,Y4S);
-	Relay[4].setTags(Y5,Y5S);
-	Relay[5].setTags(Y6,Y6S);
+void fB_Vanduino::init(uint8_t pTag) { 
+
+	pageTag  =  pTag; 
+	relay1.setTags(Y1,Y1S);
+	relay2.setTags(Y2,Y2S);
+	relay3.setTags(Y3,Y3S);
+	relay4.setTags(Y4,Y4S);
+	relay5.setTags(Y5,Y5S);
+	relay6.setTags(Y6,Y6S);
 
 	ptCL = Tag(CL);
 	ptCX = Tag(CX);
@@ -232,13 +237,40 @@ void fB_Vanduino::init(uint8_t pageTag) {
 	ptV3 = Tag(V3);
 	ptIGN = Tag(IGN);
 	ptALT = Tag(ALT);
+	ptVEXS = Tag(VEXS);
+	ptVALT = Tag(VALT);
+	ptCHLO = Tag(CHLO);
+	ptCHHI = Tag(CHHI);
+	ptDLO1 = Tag(DLO1);
+	ptDLO2 = Tag(DLO2);
+	ptDLO3 = Tag(DLO3);
+	ptDHI1 = Tag(DHI1);
+	ptDHI2 = Tag(DHI2);
+	ptDHI3 = Tag(DHI3);
 
-	// check state of relays, record
-	// turn off all relays
-	//check existence of batts
-	//check existence of EXT
-	// set flags
-	// restore relays
+	getStateRelays();
+	state.copyTo(&next); // save original relays
+
+	// find BT2, BT3, should be constant for this session
+	getStateAnalogTag(V2);
+	if(!sR2) next.setBit(BT2,sV2 > VOLTSEXIST);
+	else {
+		if(sR3) R3_OFF;
+		if(sR1) R1_OFF;
+		getStateAnalogTag(V2);
+		next.setBit(BT2,sV2 > VOLTSEXIST);
+	}
+	getStateRelayIndex(3); 
+	getStateAnalogTag(V3);
+	if(!sR3) next.setBit(BT3,sV3 > VOLTSEXIST);
+	else {
+		if(sR1) R1_OFF;
+		getStateAnalogTag(V3);
+		next.setBit(BT2,sV3 > VOLTSEXIST);
+	}
+	// reset original relays
+	next.copyTo(&state);
+	setRelays();   
 }
 
 void fB_Vanduino::setBit(uint16_t bitVal, uint16_t ival) { 
@@ -255,30 +287,15 @@ void fB_Vanduino::getState() {
 	//uint16_t bState;
 	uint8_t  ign;
 	//V_Relay* pR;
+	//state.copyTo(&prev);
 
-	state.copyTo(&prev);
+	getStateRelays();
 
-	state.setBit(RT1,Relay[0].getRstate());
-	state.setBit(RT2,Relay[1].getRstate());
-	state.setBit(RT3,Relay[2].getRstate());
-	state.setBit(RT4,Relay[3].getRstate());
-	state.setBit(RT5,Relay[4].getRstate());
-	state.setBit(RT6,Relay[5].getRstate());
-
-	ptCL->read();
-	ptCX->read();
-	ptV1->read();
-	ptV2->read();
-	ptV3->read();
-
-	state.dCL = ptCL->dVal->value;
-	state.dCX = ptCX->dVal->value;
-	state.dV1 = ptV1->dVal->value;
-	state.dV2 = ptV2->dVal->value;
-	state.dV3 = ptV3->dVal->value;
-
-	state.setBit(BT2,sV2 > VOLTSEXIST);
-	state.setBit(BT3,sV3 > VOLTSEXIST);
+	getStateAnalogTag(CL);
+	getStateAnalogTag(CX);
+	getStateAnalogTag(V1);
+	getStateAnalogTag(V2);
+	getStateAnalogTag(V3);
 
 	if(ptIGN->readInt() > 500) ign = 1;
 	else ign = 0;
@@ -294,15 +311,40 @@ void fB_Vanduino::getState() {
 	
 	state.setBit(EXTN,!sALT && sCX > 0); // external source charging
 
-//dbug(F("gstateS flags:0x%x "),state.flags);
 //dbug(F("gstateS sr1:%d, sr2:%d, sr3:%d "),sR1,sR2,sR3);
 
-	state.setBit(CT2, sR1 && sR2 && sALT);		// Alternator charging Batt 2
-	state.setBit(CT3, sR1 && sR3 && sALT);		// Alternator charging Batt 3
+	state.setBit(AT2, sR1 && sR2 && sALT);		// Alternator charging Batt 2
+	state.setBit(AT3, sR1 && sR3 && sALT);		// Alternator charging Batt 3
 	state.setBit(XT1, sR1 && sR2 && sEXT);		// External charging Batt 1
 	state.setBit(XT3, sR3 && sR2 && sEXT);		// External charging Batt 3
 
-	state.copyTo(&next);
+//dbug(F("gstateS flags:0x%x sext:%d, sx1:%d"),state.flags, sEXT,sX1);
+
+}
+
+double fB_Vanduino::getStateAnalogTag(uint16_t tag) {
+	fB_Tag* pT = Tag(tag);
+	pT->read();
+	switch(tag) {
+		case CL:	return state.dCL = pT->dVal->value;
+		case CX:	return state.dCX = pT->dVal->value; 
+		case V1:	return state.dV1 = pT->dVal->value; 
+		case V2:	return state.dV2 = pT->dVal->value;
+		case V3:	return state.dV3 = pT->dVal->value; 
+	}
+	return 0;
+}
+
+uint8_t fB_Vanduino::getStateRelayIndex(uint8_t index) {
+	switch(index) {
+		case 1: state.setBit(RT1,relay1.getRstate()); return sR1;
+		case 2: state.setBit(RT2,relay2.getRstate()); return sR2;
+		case 3: state.setBit(RT3,relay3.getRstate()); return sR3;
+		case 4: state.setBit(RT4,relay4.getRstate()); return sR4;
+		case 5: state.setBit(RT5,relay5.getRstate()); return sR5;
+		case 6: state.setBit(RT6,relay6.getRstate()); return sR6;
+	}
+	return 0;
 }
 
 
@@ -310,17 +352,17 @@ uint8_t fB_Vanduino::checkVolts(uint16_t relay) {
 	switch(relay) {
 		case RT1:
 			ptV1->read();
-			sV1 = ptV1->dVal->value;
+			state.dV1 = ptV1->dVal->value;
 			if(sV1 > LVDLOV1) return 1;
 			break;
 		case RT2:
 			ptV2->read();
-			sV2 = ptV2->dVal->value;
+			state.dV2 = ptV2->dVal->value;
 			if(sV2 > LVDLOV2) return 1;
 			break;
 		case RT3:
 			ptV3->read();
-			sV3 = ptV3->dVal->value;
+			state.dV3 = ptV3->dVal->value;
 			if(sV3 > LVDLOV3) return 1;
 			break;
 	}
@@ -328,6 +370,15 @@ uint8_t fB_Vanduino::checkVolts(uint16_t relay) {
 }
 
 void fB_Vanduino::nextState() {
+
+	getState();
+	state.copyTo(&next);
+	buildNextState();
+	next.copyTo(&state);
+	setRelays();
+}
+
+void fB_Vanduino::buildNextState() {
 	uint8_t warnAction;
 
 	next.setMsg(P_BLANK); 
@@ -342,14 +393,14 @@ void fB_Vanduino::nextState() {
 			next.setMsg(P_CHGALT,"B2"); 
 			return; 
 		}
-		if(!sC2 && sV3 < CHGLOV3){ // alternator on and not charging batt 2 and batt 3 low
+		if(!sA2 && sV3 < CHGLOV3){ // alternator on and not charging batt 2 and batt 3 low
 			next.setBit(RT1, ON); 
 			next.setBit(RT3, ON); 
 			next.setBit(RT2, OFF); 
 			next.setMsg(P_CHGALT,"B3"); 
 			return; 
 		}
-		if((sC2 && sV2 > CHGHIV2) || (sC3 && sV3 > CHGHIV3)){ // alternator on and ( charging batt 2 and batt 2  topped OR charging batt 3 and batt 3  topped)
+		if((sA2 && sV2 > CHGHIV2) || (sA3 && sV3 > CHGHIV3)){ // alternator on and ( charging batt 2 and batt 2  topped OR charging batt 3 and batt 3  topped)
 			next.setBit(RT2, ON); 
 			next.setBit(RT3, OFF); 
 			next.setBit(RT1, OFF); 
@@ -364,14 +415,15 @@ void fB_Vanduino::nextState() {
 			next.setBit(RT6, OFF);  
 		}
 
-		//if(sC2 || sC3)  next.setBit(RT1, OFF);  
+		//if(sA2 || sA3)  next.setBit(RT1, OFF);  
 		dbug(F("NS !sSalt"));
-		next.setBit(RT1, OFF);  
+		//next.setBit(RT1, OFF);  
 		if(sEXT) {								// external charge active
-		dbug(F("NS sEXT"));
+		dbug(F("NS sEXT0  sV2:%f"),sV2);
 			if(sV2 > CHGHIV2) {					// batt2 charged
+		dbug(F("NS sEXT1 sV1:%f"),sV1);
 				if(sV1 < CHGHIV1 )	{			// charge batt 1 by external source
-		dbug(F("NS sEXT1"));
+		dbug(F("NS sEXT2"));
 					next.setBit(RT2, ON);   
 					next.setBit(RT1, ON);   
 					next.setBit(RT3, OFF);   
@@ -379,7 +431,6 @@ void fB_Vanduino::nextState() {
 					return; 
 				}	
 				if(sB3 && sV3 < CHGHIV3 )	{	// charge batt 3 by external source
-		dbug(F("NS sEXT2"));
 					next.setBit(RT2, ON);   
 					next.setBit(RT3, ON);   
 					next.setBit(RT1, OFF);   
@@ -388,19 +439,23 @@ void fB_Vanduino::nextState() {
 				}
 			}
 			else if(sR2 && sV2 < CHGLOV2) {
-		dbug(F("NS sEXT3"));
-				next.setBit(RT1, OFF);   
-				next.setBit(RT3, OFF);
+		dbug(F("NS sEXT4"));
+				if(sX1) next.setBit(RT1, OFF);   
+				if(sX3) next.setBit(RT3, OFF);
 			}
-			next.setMsg(P_CHGEXT,"B1");
+			next.setMsg(P_CHGEXT,"B2");
 		}
-		//if(state.msgIndex == P_CHGEXT) next.setMsg(P_BLANK);
-		next.setMsg(P_BLANK);
-	    // not EXT charging	
+		// not EXT charging	
+
+		if(sX1) next.setBit(RT1, OFF);   
+		if(sX3) next.setBit(RT3, OFF);
+
+		// these calls do not switch relays without showing message
 		if(sR1 && switchShutdown(1,RT1,RT2)) return;
 		if(sR2 && switchShutdown(2,RT2,RT3)) return;
 		if(sR3 && switchShutdown(3,RT3,NULL)) return;
 	}
+
 }
 
 
@@ -408,7 +463,7 @@ uint8_t fB_Vanduino::switchShutdown(uint8_t index,uint8_t relaySrc, uint8_t rela
 	uint8_t relayX, battX;
 	double vSrc,vDst, LowSrc, LowDst;
 	char *textSrc,*textDst;
-		dbug(F("ssD entry"));
+		//dbug(F("ssD entry"));
 
 	switch(relaySrc) {
 		case RT1:
@@ -519,18 +574,19 @@ uint8_t fB_Vanduino::priorityShutdownLoad(uint16_t relay) {
 }
 
 
-void fB_Vanduino::setState() {
-		Relay[0].turn(nR1);
-		Relay[1].turn(nR2);
-		Relay[2].turn(nR3);
-		Relay[3].turn(nR4);
-		Relay[4].turn(nR5);
-		Relay[5].turn(nR6);
+void fB_Vanduino::setRelays() {
 
-		next.copyTo(&state);
+		relay1.turn(sR1);
+		relay2.turn(sR2);
+		relay3.turn(sR3);
+		relay4.turn(sR4);
+		relay5.turn(sR5);
+		relay6.turn(sR6);
 }
 
  void fB_Vanduino::showState() {
+	 if(curr.pageTag != pageTag) return;
+	 getState();
 // dbug(F("vSS flags:0x%x "),state.flags);
 	 /*
 	 if(fabs(state.sAL - prevState.sAL) > 0.1)  pAL->showRow(curr.row(AL));
@@ -550,7 +606,9 @@ void fB_Vanduino::setState() {
 	 if((state.flags & ALTN) != (prev.flags & ALTN )) {
 		 ptALT->showRow(curr.row(ALT));
 	 }
-	 if(prev.msgIndex != state.msgIndex && prev.msgText != state.msgText) menu.showMessage(state.msgIndex,state.msgText);
+	 if(prev.msgIndex != state.msgIndex || prev.msgText != state.msgText) menu.showMessage(state.msgIndex,state.msgText);
+	 
+	 state.copyTo(&prev);
  }
 
 

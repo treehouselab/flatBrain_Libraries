@@ -68,14 +68,15 @@ fB_Card* Card(uint16_t tag) ;
 fB_Tag* initTag(uint16_t tag,const __FlashStringHelper* Ptitle,uint32_t flags,uint8_t fTag=NULL,const __FlashStringHelper* Plog  = NULL);
 fB_Tag* initPage( uint16_t tag,const __FlashStringHelper* Ptitle, uint16_t parentTag); 
 void initJump(uint16_t tag);
-void initSpace();
 void initAlias(uint16_t tag, const __FlashStringHelper* Palias);
 void initPin( uint16_t tag,const __FlashStringHelper* Ptitle, uint16_t ctag,uint8_t   row,uint8_t   side,   uint8_t  dir, uint8_t  onval) ;
 void initCard(uint16_t tag,const __FlashStringHelper* Ptitle, uint8_t  type,uint8_t  i2cAddr, uint8_t  aChan );
 void initRow(uint16_t tag, const __FlashStringHelper* Ptitle,uint32_t  flags);
 void initRowList(uint16_t tag,const __FlashStringHelper* Ptitle,uint16_t parentTag,uint32_t flags);
-void defineCalibrate( uint16_t tag, pFunc _vFunc, double factor=1,double offset=NULL);		
+void defineCalibrate( uint16_t tag, pFunc _vFunc, double factor=1,double offset=NULL);	
+void defineIncrement( uint16_t tag, double value,double offset);
 void defineTarget(uint16_t tag,uint16_t tTag);
+void defineSpace();
 
 void initLog(uint16_t fTag,const __FlashStringHelper* Ptitle ) ;	
 void navigate();

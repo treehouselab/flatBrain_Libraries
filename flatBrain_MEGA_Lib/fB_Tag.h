@@ -88,7 +88,7 @@ class fB_Tag {
 		uint8_t		getAction8() { 	return  (flag8 & MASK8A); }
 		void		putAction(uint32_t flags32);
 		uint32_t	assignFormat(double value);
-		//uint8_t		isDouble();					// is format a FLOAT1 or FLOAT2?
+		//uint8_t		isDouble();					// is format a _FLOAT1 or _FLOAT2?
 		//double		getDval() { return dVal->value = read() * dVal->factor + dVal->offset; };
 		//void		putDval(double value) { if(isDouble()) 	dVal->value = value; }
 

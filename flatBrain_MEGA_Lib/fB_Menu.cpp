@@ -373,7 +373,7 @@ dbug(F("SR %P t:%d , f16: 0x%x format:%L"),Ptitle, tag,flag16,format);
 			return;
 		} 
 	}
-	if( option != REFRESHPAGE || format == TEXT || format == PTEXT || flag16 & _TTITLE) tft.print(STARTX +ROWTEXTX,getY(rowIndex),pTitleText,MAXCHARSLINE);
+	if( option != REFRESHPAGE || format == _TEXT || format == _PTEXT || flag16 & _TTITLE) tft.print(STARTX +ROWTEXTX,getY(rowIndex),pTitleText,MAXCHARSLINE);
 	if(getAction() == UPDATE && pin)	read();
 	if(format == BLAMP) {
 			int x = STARTX +ROWSTATEX; int y = getY(rowIndex)+ROWSTATEY+2;
@@ -390,27 +390,27 @@ dbug(F("SR %P t:%d , f16: 0x%x format:%L"),Ptitle, tag,flag16,format);
 	}
 		
 	else switch(format) {
-		case INT5:
+		case _INT5:
 			if(flag16 & _UNDEF) tft.print( RIGHT, getY(rowIndex), getPstr(P_STRIKE,Pbuffer));
 			else tft.printInt(STARTX +MONX,getY(rowIndex),iVal,6,RIGHT);
 			break;
-		case FLOAT1:
+		case _FLOAT1:
 			if(flag16 & _UNDEF) tft.print( RIGHT, getY(rowIndex), getPstr(P_STRIKE,Pbuffer));
 			else tft.printFloat(STARTX +MONX,getY(rowIndex),dVal->value,1,RIGHT);
 			break;
-		case FLOAT2:
+		case _FLOAT2:
 			if(flag16 & _UNDEF) tft.print( RIGHT, getY(rowIndex), getPstr(P_STRIKE,Pbuffer));
 			else tft.printFloat(STARTX +MONX,getY(rowIndex),dVal->value,AR4_2,RIGHT);
 			break;
-		case D2STR:
+		case _D2STR:
 			if(flag16 & _UNDEF) tft.print( RIGHT, getY(rowIndex), getPstr(P_STRIKE,Pbuffer));
-			else tft.print( RIGHT, getY(rowIndex),menu.d2str(dVal->value,MAXCHARSD2STR,Pbuffer));
+			else tft.print( RIGHT, getY(rowIndex),menu.d2str(dVal->value,MAXCHARS_D2STR,Pbuffer));
 			break;
-		case TEXT:
+		case _TEXT:
 			if(flag16 & _UNDEF) tft.print( RIGHT, getY(rowIndex), getPstr(P_STRIKE,Pbuffer));
 			else tft.print( RIGHT, getY(rowIndex), ptext);
 			break;
-		case PTEXT:
+		case _PTEXT:
 			if(flag16 & _UNDEF) tft.print( RIGHT, getY(rowIndex), getPstr(P_STRIKE,Pbuffer));
 			else tft.print(  RIGHT, getY(rowIndex),getPtext(Ptext,Pbuffer));
 			break;
@@ -474,7 +474,7 @@ void fB_Menu::pinPageConstruct(uint8_t mode,uint8_t startDex, uint8_t hand ) {
 			}
 		}
 		else  {
-			Tag(PNVAL)->putFormat(D2STR);		
+			Tag(PNVAL)->putFormat(_D2STR);		
 			Tag(PNVAL)->dVal->value = 0;		
 			if(pT->getOnVal() == _PGATE) {
 	//dbug(F("PPC %P ,  F16:0x%x, fac:%f"),pT->Ptitle,pT->flag16,pT->dVal->factor);
@@ -680,8 +680,8 @@ void fB_Tag::action(uint8_t  hand) {
 					if(pin) YshiftPulse(PULSEMSECS);
 					menu.refreshRow();
 					return;
-				case INCR:
-					iVal++;
+				case _INCR: 
+					dVal->value += dVal->offset;
 					menu.refreshRow();
 					return;
 				case UPDATE:
@@ -710,6 +710,12 @@ void fB_Tag::action(uint8_t  hand) {
 						//menu.refreshRow(PNOFF);
 					}
 					curr.selectRow();
+					return;
+			}
+			switch(getAction()) {
+				case _INCR:
+					dVal->value -= dVal->offset;
+					menu.refreshRow();
 					return;
 			}
 			break;
@@ -759,16 +765,16 @@ void fB_Menu::clearRow(uint8_t rowIndex) {
 					Tag(TVAL)->tTag = pT->tag;
 					Tag(TVAL)->iVal = pT->getValue();
 					Tag(TVAL)->format = pT->format;
-					Tag(TINC)->format = FLOAT2;
+					Tag(TINC)->format = _FLOAT2;
 					Tag(TINC)->iVal = 0.01;
 					Tag(TINP)->iVal = pT->iVal;
 					Tag(TOPR)->tTag = pT->tag;
 					Tag(TINP)->status |= _MARK;
 
 					switch(pT->format) {
-						case INT5:   Tag(TINC)->iVal = 1; break;
-						case FLOAT1: Tag(TINC)->iVal = .1; break;
-						case FLOAT2: 
+						case _INT5:   Tag(TINC)->iVal = 1; break;
+						case _FLOAT1: Tag(TINC)->iVal = .1; break;
+						case _FLOAT2: 
 						default:     Tag(TINC)->iVal = .01; break;
 					}
 
@@ -789,14 +795,14 @@ void fB_Menu::clearRow(uint8_t rowIndex) {
 							Tag(TVAL)->status |= _MARK;
 
 							Tag(TINP)->format = pT->format;
-							Tag(TOPR)->format = TEXT;
+							Tag(TOPR)->format = _TEXT;
 							Tag(TFAC)->format = pT->format;
 							Tag(TFAC)->type = TADJ;
 							Tag(TOPR)->type = TARB;
 							Tag(TVAL)->type = NOACT;
 								Tag(TOPR)->ptext =getPstr(P_AMP,Pbuffer);
 								if(!pT->factor) pT->factor = 1;
-								Tag(TINC)->format = FLOAT2;
+								Tag(TINC)->format = _FLOAT2;
  					    //}
 						menu.jumpPage(TPANEL);
 
@@ -879,13 +885,13 @@ void fB_Menu::clearRow(uint8_t rowIndex) {
 				case TINC:
 						value/=10;
 						switch (format) {
-							case INT5:
+							case _INT5:
 								if(value<1) value=1;
 								break;
-							case FLOAT1:
+							case _FLOAT1:
 								if(value < 0.1) value=0.1;
 								break;
-							case FLOAT2:
+							case _FLOAT2:
 								if(value < 0.01) value=0.01;
 								break;
 						}
@@ -934,9 +940,9 @@ void fB_Window:: show(uint8_t  flag) {
 			if(status == NOSTATUS) for(int i=0, dx=30;i<4;i++,dx+=30) tft.printSpecChar( STARTX + dx, Y+ tft.cfont.y_size/2 +5,DASH);
 			else {
 				switch(type) {
-					case FLOAT1: tft.printFloat(STARTX +GSTARTX,Y+GSTARTY,value,1); break;
-					case FLOAT2: tft.printFloat(STARTX +GSTARTX,Y+GSTARTY,value,AR4_2); break;
-					case INT5  : tft.printInt(STARTX +GSTARTX,Y+GSTARTY,(long)value,6); break;
+					case _FLOAT1: tft.printFloat(STARTX +GSTARTX,Y+GSTARTY,value,1); break;
+					case _FLOAT2: tft.printFloat(STARTX +GSTARTX,Y+GSTARTY,value,AR4_2); break;
+					case _INT5  : tft.printInt(STARTX +GSTARTX,Y+GSTARTY,(long)value,6); break;
 				}
 			}
 			tft.setFont(BigFont);

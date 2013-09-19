@@ -221,7 +221,7 @@ fB_Tag* initTag(uint16_t tag,const __FlashStringHelper* Ptitle,uint32_t flags,ui
 			pT->fTag = fTag;  // 8bit 
 			pT->pin = NULL;
 		}
-		if(!(pT->flag16 & _DUBL) && (flags & (FLOAT1 | FLOAT2 | D2STR)))	{
+		if(!(pT->flag16 & _DUBL) && (flags & (_FLOAT1 | _FLOAT2 | _D2STR)))	{
 			pT->dVal = new fB_Val;
 			pT->flag16 |= _DUBL;
 		}
@@ -281,7 +281,7 @@ void initRowList(uint16_t tag,const __FlashStringHelper* Ptitle,uint16_t parentT
 	for(int i=0; i<MAXLISTROWS; i++)  initRow(tag+i+1,NULL,flags);
 }
 
-void initSpace() { 	
+void defineSpace() { 	// does not work!!!
 	if(secondPass) 	{
 		rTP[rowCount].t = NULL;
 		curr.incrRowCount(); // increment rowCount for this page, store in page flags
@@ -314,11 +314,21 @@ void defineCalibrate( uint16_t tag, pFunc _vFunc, double factor=1,double offset=
 		pT = Tag(tag);
 		if(pT && !(pT->flag16 & _DUBL)) {
 			pT->dVal = new fB_Val;
-			pT->putFormat(FLOAT2);
+			pT->putFormat(_FLOAT2);
 		}
 		pT->dVal->vFunc = _vFunc;
 		if(!factor || factor < 0.00001 ) factor=1;
 		pT->dVal->factor = factor;
+		pT->dVal->offset = offset;
+	}
+}
+void defineIncrement( uint16_t tag, double value,double offset) {
+	if(secondPass) {
+		fB_Tag *pT;
+		pT = Tag(tag);
+		pT->dVal->vFunc = NULL;
+		pT->dVal->value = value;
+		pT->dVal->factor = 1;
 		pT->dVal->offset = offset;
 	}
 }

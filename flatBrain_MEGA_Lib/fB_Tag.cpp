@@ -59,7 +59,7 @@ return action32 ;
 
 /*
 uint8_t fB_Tag::isDouble() {
-	if(getFormat() == FLOAT1  || getFormat() == FLOAT2 || getFormat() == D2STR) return (1);
+	if(getFormat() == _FLOAT1  || getFormat() == _FLOAT2 || getFormat() == _D2STR) return (1);
 	if(pin && getMode()== _ANALOG) return(1);
 	else return 0;
 }
@@ -67,9 +67,9 @@ uint8_t fB_Tag::isDouble() {
 uint32_t  fB_Tag::assignFormat(double value) {
 	double mod = 0;
 	mod = value-int(value);
-	if(mod==0) return INT5;
-	if(mod*10-int(mod*10) == 0) return FLOAT1;
-	return FLOAT2;
+	if(mod==0) return _INT5;
+	if(mod*10-int(mod*10) == 0) return _FLOAT1;
+	return _FLOAT2;
 }
 
 

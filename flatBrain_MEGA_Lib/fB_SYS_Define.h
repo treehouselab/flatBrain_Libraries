@@ -86,7 +86,7 @@ XCARDS		Ox20-27
 #define	MESSAGE_Y		295
 #define MAXCHARSLINE	15 
 #define MAXCHARSTEXT	8 
-#define MAXCHARSD2STR	6 
+#define MAXCHARS_D2STR	6 
 //#define MAXVDRDEX		6 
 #define	MAXTEMPTAG		500
 #define	MAXZEROADC		250 // max ADC reading that qualifies for binary zero
@@ -223,7 +223,7 @@ XCARDS		Ox20-27
 #define	MASK32A			0x003FF000L
 //#define				0x00000000L	
 //#define			0x00001000L	
-#define	INCR			0x00002000L	
+#define	_INCR			0x00002000L	
 #define	SHFTPULSE		0x00004000L	
 #define	PULSE			0x00008000L
 #define	UPDATE			0x00010000L
@@ -235,14 +235,14 @@ XCARDS		Ox20-27
 
 #define	MASK8F			0xF0	 
 #define	MASK32F			0xFFC00000L
-#define	BLANK			0x00000000L	
-#define	TEXT			0x00400000L	
-#define	INT5			0x00800000L	
-#define	FLOAT1			0x01000000L
-#define	FLOAT2			0x02000000L	
+#define	_BLANK			0x00000000L	
+#define	_TEXT			0x00400000L	
+#define	_INT5			0x00800000L	
+#define	_FLOAT1			0x01000000L
+#define	_FLOAT2			0x02000000L	
 #define	BLAMP			0x04000000L	
-#define	D2STR			0x08000000L	
-#define	PTEXT			0x10000000L	
+#define	_D2STR			0x08000000L	
+#define	_PTEXT			0x10000000L	
 //#define				0x20000000L
 //#define				0x40000000L
 //#define				0x80000000L

@@ -50,38 +50,51 @@ void defineUser() {
 		defineJump(RSTATUS);
 		defineJump(RPULSE);		
 		defineJump(SENSORS);
+		defineJump(VLIMITS);
 	//////////////////////////////////////////
 
    	definePage(RSTATUS,HOME);
-		defineRow(V1, FLOAT1 | _LOG);
-		defineRow(V2, FLOAT1 | _LOG);
-		defineRow(V3, FLOAT1 | _LOG);
-		//defineRow(V0, FLOAT1 | _LOG);
-		//defineRow(CZ,  FLOAT2 | _LOG);
-		defineRow(CX,  FLOAT2 | _LOG);
-		defineRow(CL,  FLOAT2 | _LOG);
+		defineRow(V1, _FLOAT1 | _LOG);
+		defineRow(V2, _FLOAT1 | _LOG);
+		defineRow(V3, _FLOAT1 | _LOG);
+		//defineRow(V0, _FLOAT1 | _LOG);
+		//defineRow(CZ,  _FLOAT2 | _LOG);
+		defineRow(CX,  _FLOAT2 | _LOG);
+		defineRow(CL,  _FLOAT2 | _LOG);
 		//defineRow(IGN,  BLAMP | LOG );
 		defineRow(ALT,  BLAMP | _LOG );
 		//defineTarget(IGN,VIGN);
 
    	definePage(RPULSE,HOME);
-		defineRow(Y1,BLANK | SHFTPULSE);
-		defineRow(Y2,BLANK | SHFTPULSE);
-		defineRow(Y3,BLANK | SHFTPULSE);
-		defineRow(Y4,BLANK | SHFTPULSE);
-		defineRow(Y5,BLANK | SHFTPULSE);
-		defineRow(Y6,BLANK | SHFTPULSE);
-		defineRow(YRST,BLANK | SHFTPULSE);
+		defineRow(Y1,_BLANK | SHFTPULSE);
+		defineRow(Y2,_BLANK | SHFTPULSE);
+		defineRow(Y3,_BLANK | SHFTPULSE);
+		defineRow(Y4,_BLANK | SHFTPULSE);
+		defineRow(Y5,_BLANK | SHFTPULSE);
+		defineRow(Y6,_BLANK | SHFTPULSE);
+		defineRow(YRST,_BLANK | SHFTPULSE);
 		defineAlias(YRST,RESET ALL);
 
    	definePage(SENSORS,HOME);
-		defineRow(V1, FLOAT1 | _LOG);
-		defineRow(V2, FLOAT1 | _LOG);
-		defineRow(V3, FLOAT1 | _LOG);
-		//defineRow(CZ, FLOAT1 | _LOG);
-		//defineRow(CC, FLOAT1 | _LOG);
-		//defineRow(CL, FLOAT1 | _LOG);
- 
+		defineRow(V1, _FLOAT1 | _LOG);
+		defineRow(V2, _FLOAT1 | _LOG);
+		defineRow(V3, _FLOAT1 | _LOG);
+		//defineRow(CZ, _FLOAT1 | _LOG);
+		//defineRow(CC, _FLOAT1 | _LOG);
+		//defineRow(CL, _FLOAT1 | _LOG);
+
+	definePage(VLIMITS,HOME);
+		defineRow(VEXS, _FLOAT1 | _INCR | _STOREE | _LOG);
+		defineRow(VALT, _FLOAT1 | _INCR | _STOREE | _LOG);
+		defineRow(CHLO, _FLOAT1 | _INCR | _STOREE | _LOG);
+		defineRow(CHHI, _FLOAT1 | _INCR | _STOREE | _LOG);
+		defineRow(DLO1, _FLOAT1 | _INCR | _STOREE | _LOG);
+		defineRow(DLO2, _FLOAT1 | _INCR | _STOREE | _LOG);
+		defineRow(DLO3, _FLOAT1 | _INCR | _STOREE | _LOG);
+		defineRow(DHI1, _FLOAT1 | _INCR | _STOREE | _LOG);
+		defineRow(DHI2, _FLOAT1 | _INCR | _STOREE | _LOG);
+		defineRow(DHI3, _FLOAT1 | _INCR | _STOREE | _LOG);
+
 
  	//////////// DEFINE RECORDS
 
@@ -92,11 +105,13 @@ void defineUser() {
 	defineRecord(CX,LOG1,NULL);
 	defineRecord(CL,LOG1,NULL);
 
+
 	defineAlias(RSTATUS,RELAY STATUS);
 	defineAlias(RPULSE,RELAY SWITCH);
 	defineAlias(V1,VOLTS B1);
 	defineAlias(V2,VOLTS B2);
 	defineAlias(V3,VOLTS B3);
+
 	//defineAlias(Y1S,RELAY 1);
 	//defineAlias(Y2S,RELAY 2);
 	//defineAlias(Y3S,RELAY 3);
@@ -111,7 +126,29 @@ void defineUser() {
 	defineCalibrate(CZ,sysAmps,.02744,-.31);
 	defineCalibrate(CX,posOnly,0.03789,-4.020);
 	defineCalibrate(CL,loadAmps,0.5167,0);
-	//defineCalibrate(IGN,posOnly,0.004883,0);
+
+	defineIncrement(VEXS,9.0,0.1);
+	defineIncrement(VALT,13.8,0.1);
+	defineIncrement(CHLO,12.5,0.1);
+	defineIncrement(CHHI,13.6,0.1);
+	defineIncrement(DLO1,12.5,0.1);
+	defineIncrement(DLO2,11.0,0.1);
+	defineIncrement(DLO3,10.0,0.1);
+	defineIncrement(DHI1,13.0,0.1);
+	defineIncrement(DHI2,12.0,0.1);
+	defineIncrement(DHI3,11.0,0.1);
+
+	defineAlias(VEXS,BATT EXST);
+	defineAlias(VALT,ALTN ON);
+	defineAlias(CHLO,CHG BEGIN);
+	defineAlias(CHHI,CHG STOP);
+	defineAlias(DLO1,LVDLO 1);
+	defineAlias(DLO2,LVDLO 2);
+	defineAlias(DLO3,LVDLO 3);
+	defineAlias(DHI1,LVDHI 1);
+	defineAlias(DHI2,LVDHI 2);
+	defineAlias(DHI3,LVDHI 3);
+
 
  }
 
