@@ -193,8 +193,11 @@ class fB_Vanduino {
 		V_Relay		relay1, relay2, relay3, relay4, relay5, relay6;
 		fB_Tag		*ptCL, *ptCX, *ptIGN, *ptALT, *ptV1, *ptV2, *ptV3, *ptVALT, *ptVEXS;
 		fB_Tag		*ptCHLO, *ptCHHI, *ptDLO1, *ptDLO2, *ptDLO3, *ptDHI1, *ptDHI2, *ptDHI3;
+		fB_Tag		*ptYSHFT;
 		uint16_t	pageTag;
 		uint8_t		refresh;
+		uint8_t 	manOver;	
+
 
 		void getState();
 		double getStateAnalogTag(uint16_t tag);
@@ -223,6 +226,8 @@ fB_Vanduino::fB_Vanduino() {
 void fB_Vanduino::init(uint8_t pTag) { 
 
 	pageTag  =  pTag; 
+	manOver = 0;
+
 	relay1.setTags(Y1,Y1S);
 	relay2.setTags(Y2,Y2S);
 	relay3.setTags(Y3,Y3S);
@@ -247,6 +252,7 @@ void fB_Vanduino::init(uint8_t pTag) {
 	ptDHI1 = Tag(DHI1);
 	ptDHI2 = Tag(DHI2);
 	ptDHI3 = Tag(DHI3);
+	ptYSHFT = Tag(YSHFT);
 
 	getStateRelays();
 	state.copyTo(&next); // save original relays
@@ -370,8 +376,18 @@ uint8_t fB_Vanduino::checkVolts(uint16_t relay) {
 }
 
 void fB_Vanduino::nextState() {
-
+	if(pageTag != curr.pageTag) return;
 	getState();
+	if(_fBiK1 == INTK1 and warn.action == _WD_WARN) warn.startWarnDelay();
+	else if(_fBiK1 == INTK1SHFT) {
+		warn.stop();
+		if(manOver) manOver = 0; 
+		else manOver = 1; 
+	}
+		//dbug(F("NS fBK1:%d , mO:%d"),_fBiK1, manOver);
+
+	_fBiK1 = 0;     // reset K1 interrupt
+	if(manOver) return;
 	state.copyTo(&next);
 	buildNextState();
 	next.copyTo(&state);
@@ -379,12 +395,11 @@ void fB_Vanduino::nextState() {
 }
 
 void fB_Vanduino::buildNextState() {
-	uint8_t warnAction;
 
 	next.setMsg(P_BLANK); 
 	if(!sB3) next.setBit(RT3, OFF);												// if no batt 3, turn off relay 3
 	if(sALT){																	// alternator on and charging voltage ( > VOLTSALT)
-		dbug(F("NS sSalt"));
+		dbug(F("bNS sSalt"));
 		//if(!sC3 && sV2 < CHGLOV2){ // alternator on and not charging batt 3 and batt 2 low
 		if(sV2 < CHGLOV2){ // alternator on and not charging batt 3 and batt 2 low
 			next.setBit(RT1, ON); 
@@ -587,6 +602,7 @@ void fB_Vanduino::setRelays() {
  void fB_Vanduino::showState() {
 	 if(curr.pageTag != pageTag) return;
 	 getState();
+	 if(prev.msgIndex != state.msgIndex || prev.msgText != state.msgText) menu.showMessage(state.msgIndex,state.msgText);
 // dbug(F("vSS flags:0x%x "),state.flags);
 	 /*
 	 if(fabs(state.sAL - prevState.sAL) > 0.1)  pAL->showRow(curr.row(AL));
@@ -606,7 +622,6 @@ void fB_Vanduino::setRelays() {
 	 if((state.flags & ALTN) != (prev.flags & ALTN )) {
 		 ptALT->showRow(curr.row(ALT));
 	 }
-	 if(prev.msgIndex != state.msgIndex || prev.msgText != state.msgText) menu.showMessage(state.msgIndex,state.msgText);
 	 
 	 state.copyTo(&prev);
  }

@@ -19,6 +19,7 @@ class fB_Record {
 		void		EEwriteTags();
 		void		EEinitTags();
 		fB_Tag*		EEgetTag(uint16_t tag);
+		void		EEdumpTags();
 		void		init();
 		bool		SDinit(uint8_t  SSpin, uint8_t  SPIspeed);
 

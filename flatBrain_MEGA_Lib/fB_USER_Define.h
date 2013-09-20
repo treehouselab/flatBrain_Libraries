@@ -34,10 +34,10 @@
 
 
 // Pin , Page, Row Tags, unique
-// User Page tag range: 50-255)
-// User Row tag range:	>= 500 )
+// User Page tag range: 100-255)
+// User Row tag range:	>= 600 )
 
-#define RPULSE	60
+#define RPULSE	120
 
 #define Y1			601 
 #define Y2			602 
@@ -48,7 +48,7 @@
 #define YRST		607
 #define YSHFT		608
 
-#define RSTATUS	62
+#define RSTATUS	121
 
 #define Y1S			621
 #define Y2S			622
@@ -59,19 +59,19 @@
 #define WARN		627
 #define WLED		628
 
-#define SENSORS		64
+#define SENSORS	122
 
-#define V0			640
-#define V1			641
-#define V2			642
-#define V3			643
-#define CZ			644
-#define CX			645
-#define CL			646 
-#define IGN			647 
-#define ALT			648 
+#define V0			641
+#define V1			642
+#define V2			643
+#define V3			644
+#define CZ			645
+#define CX			646
+#define CL			647 
+#define IGN			648 
+#define ALT			649 
 
-#define VLIMITS		70
+#define VLIMITS	123
 
 #define CHLO			701
 #define CHHI			702
@@ -83,5 +83,7 @@
 #define DHI3			708 
 #define VEXS			709 
 #define VALT			710 
+
+
 
 #endif

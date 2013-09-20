@@ -162,13 +162,13 @@ class fB_WarnDelay {
 		uint8_t warnSecs;
 		uint8_t alarmIntervalSecs;
 		uint8_t action;
-		fB_Tag *pT;  // LED tag
+		fB_Tag *ptLED;  // LED tag
 		uint8_t LEDonVal;
 
 		void init();
 		void stop();
 		void reset();
-
+		void startWarnDelay();
 		uint8_t warning(uint8_t id, uint8_t wdSecs,uint8_t wSecs, uint8_t aSecs, uint16_t tled = NULL) ;
 };	
 

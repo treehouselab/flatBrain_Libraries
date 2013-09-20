@@ -351,7 +351,7 @@ void fB_Tag::read() {
 				if(flag16 & _DUBL  ) calibrate(pT->readInt()); 
 				else iVal = pT->readInt();
 		//dbug(F("tr %P val:%d "),Ptitle,iVal);
-				if(getFormat() == BLAMP && iVal <= MAXZEROADC) iVal = 0;
+				if(getFormat() == _BLAMP && iVal <= MAXZEROADC) iVal = 0;
 		//dbug(F("tr2 %P val:%d \n"),Ptitle,iVal);
 		}
 		return;

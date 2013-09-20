@@ -51,6 +51,9 @@ void defineUser() {
 		defineJump(RPULSE);		
 		defineJump(SENSORS);
 		defineJump(VLIMITS);
+		defineRow(DRST,_BLANK);
+		defineTarget(DRST,YCRD);
+
 	//////////////////////////////////////////
 
    	definePage(RSTATUS,HOME);
@@ -61,8 +64,8 @@ void defineUser() {
 		//defineRow(CZ,  _FLOAT2 | _LOG);
 		defineRow(CX,  _FLOAT2 | _LOG);
 		defineRow(CL,  _FLOAT2 | _LOG);
-		//defineRow(IGN,  BLAMP | LOG );
-		defineRow(ALT,  BLAMP | _LOG );
+		//defineRow(IGN,  _BLAMP | LOG );
+		defineRow(ALT,  _BLAMP | _LOG );
 		//defineTarget(IGN,VIGN);
 
    	definePage(RPULSE,HOME);
@@ -149,8 +152,10 @@ void defineUser() {
 	defineAlias(DHI2,LVDHI 2);
 	defineAlias(DHI3,LVDHI 3);
 
+	_pTiK1shft = Tag(YSHFT); // interrupt K1 shift key
 
  }
+
 
 	double posOnly(fB_Tag* pT,uint16_t intVal) { return max(intVal * pT->dVal->factor + pT->dVal->offset,0); }
 

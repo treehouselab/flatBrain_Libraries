@@ -35,6 +35,9 @@
 #define K1_INT			1 //  interrupt number, corresp. to Mega pin 3
 #define K1_INTPIN		3
 
+#define	INTK1			1	// Interrupt K1 active
+#define	INTK1SHFT		2	// Interrupt K1 SHIFTED active
+
 /* CUSTOMARY I2C ADDRESSES:
 TFT-PCF		0x38
 TFT-PCF		0x39
@@ -197,15 +200,15 @@ XCARDS		Ox20-27
 //////////////////////////////////////////////////////////////////////////////
 // Tag->flags is 16 bits, top 4bits is used for row count buffer
 #define	_PAGE			0x0001	 
-#define	_TSYS			0x0002	// System Tag
+#define	_LOADEE			0x0002	// System Tag
 #define	_STOREE			0x0004	// EEPROM Store 
-#define	_LOG				0x0008	// Log to SD card
+#define	_LOG			0x0008	// Log to SD card
 #define	_MARK			0x0010	// Mark row
 #define	_HIDE			0x0020
 #define	_TTITLE			0x0040	// use char* ptitle for row title instead of Ptitle
 #define	_TTAG			0x0080  // has target tag stored in pin/tTag union
 #define	_UNDEF			0x0100
-#define	_LOCAL			0x0200 
+#define	_ARCH			0x0200 
 #define	_DUBL			0x0400
 //#define				0x0800
 #define	_MASKP			0xF000	// 4 bits reserved ROWCOUNT
@@ -213,7 +216,7 @@ XCARDS		Ox20-27
 
 ////////////////////////////////////////////////////////////////////////////////
 //Tag->format is 8 bits. The low 4bits of Tag->format contain one of 11 possible 
-// action codes (incl. zero) in decimal format. This code is converted to 32bit BLAMP
+// action codes (incl. zero) in decimal format. This code is converted to 32bit _BLAMP
 // for run-time comparisons (listed below). This allows for all the Tflag, format, and 
 // action flags to be entered on a single OR'd field at Tag definition arguments.
 
@@ -229,7 +232,7 @@ XCARDS		Ox20-27
 #define	UPDATE			0x00010000L
 //#define			0x00020000L
 #define	NOACT			0x00040000L
-#define	TOGGLE			0x00080000L
+#define	_TOGGLE			0x00080000L
 //#define		       	0x00100000L
 //#define				0x00200000L
 
@@ -240,12 +243,16 @@ XCARDS		Ox20-27
 #define	_INT5			0x00800000L	
 #define	_FLOAT1			0x01000000L
 #define	_FLOAT2			0x02000000L	
-#define	BLAMP			0x04000000L	
+#define	_BLAMP			0x04000000L	
 #define	_D2STR			0x08000000L	
 #define	_PTEXT			0x10000000L	
 //#define				0x20000000L
 //#define				0x40000000L
 //#define				0x80000000L
+
+
+#define	_MANOVR		1	// fB interrupt selectors used by fBinterruptHandler() called by pin K1
+#define	_WARNDELAY	2
 
 ////////////////////////////////////////////////////////////////////???
 ////////////////////////////////////////////////////////////////////
@@ -271,7 +278,8 @@ XCARDS		Ox20-27
 
 ///// TAG ARRAY tags, unique////////////////////////////////////////////
 ///////////////////////////////////////////////////////////
-// PAGE tags (SYSTEM Page tag range: 1-28)
+#define TAGZERO		0
+// PAGE tags (SYSTEM Page tag range: 1-99)
 #define	HOME		1   
 #define	SYSTEM		2
 #define FPANEL		3	
@@ -282,54 +290,60 @@ XCARDS		Ox20-27
 #define	DPINS		8
 #define	APINS		9
 #define	ARCHIVES	10
+#define	ELOAD		11
+#define	ESTOR		12
+#define	EDUMP		13
 
-#define LOGS		29   //   11 RESERVED FOR LOGS
+#define LOGS		29   // 29->40  11 RESERVED FOR LOGS
 
-#define TAGZERO		0
-#define _WARN_OVR	58  // used by warnDelay system, can be pins defined in fB_USR_defines.cpp or fB_SYS_Defines.cpp
-#define _ALARM_LED	59
-#define HEADER		60
-#define TBOOT		61	//SYSTEM TAGS
-#define TUTAGS		62
-#define TPINS		63
-#define TLOGS		64
-#define TPAGES		65
-#define TROWS		66
-#define FRAM		67
-#define TIAT		69
-#define TSAT		70
-#define _MSG			71
-#define VCC			72
+///////////////////////////////////////////////////////////
+// row & pin tags  (SYSTEM  range: 256-599)
+
+#define _WARN_OVR	258  // used by warnDelay system, can be pins defined in fB_USR_defines.cpp or fB_SYS_Defines.cpp
+#define _ALARM_LED	259
+#define HEADER		260
+#define TBOOT		261	//SYSTEM TAGS
+#define TUTAGS		262
+#define TPINS		263
+#define TLOGS		264
+#define TPAGES		265
+#define TROWS		266
+#define FRAM		267
+#define _MSG		271
+#define VCC			272
+#define DRST		273
 
 
-#define CLKYR			100		    
-#define CLKMO			101		    
-#define CLKDY			102		    
-#define CLKHH			103		    
-#define CLKMM			104		    
-#define CLKSET			105		    
-#define CLKGET			106		    
+#define CLKYR		301		    
+#define CLKMO		302		    
+#define CLKDY		303		    
+#define CLKHH		304		    
+#define CLKMM		305		    
+#define CLKSET		306		    
+#define CLKGET		307		    
 
-#define PNCUT 			120		    
-#define PNPIN 			121		    
-#define PNROW 			122		    
-#define PNCOL 			123		    
-#define PNCRD 			124	    
-#define PNTOG 			125		    
-#define PNGAT 			126		    
-#define PNADC 			127		    
-#define PNFAC 			128		    
-#define PNOFF 			129		    
-#define PNVAL 			130		    
+#define PNCUT 		320		    
+#define PNPIN 		321	    
+#define PNROW 		322		    
+#define PNCOL 		323		    
+#define PNCRD 		324	    
+#define PNTOG 		325		    
+#define PNGAT 		326		    
+#define PNADC 		327		    
+#define PNFAC 		328		    
+#define PNOFF 		329		    
+#define PNVAL 		330		    
 
-#define FSTAMP			137		    
-#define FARCH			138		    
-#define FSIZE			139	
-#define FDATE			140	
-#define FDEL			141	
-#define FDUMP			142	
-#define	FSTD			143  // tag for FPANEL row that can hgouse either FSTAMP or FDELETE subtype
-#define CLK				144		 
+#define FSTAMP		337		    
+#define FARCH		338		    
+#define FSIZE		339	
+#define FDATE		340	
+#define FDEL		341	
+#define FDUMP		342	
+#define	FSTD		343  // tag for FPANEL row that can house either FSTAMP or FDELETE subtype
+#define CLK			344		
+
+//////////////////////////////////////////////////////////////////
 
 #define P_LEFT			0
 #define P_RIGHT			1

@@ -15,6 +15,9 @@ void defineSystem()  {
 		defineJump(LOGS);
 		defineRow(ARCHIVES,NULL);
 		defineJump(CLOCK);
+		defineRow(ELOAD,_BLANK);
+		defineRow(ESTOR,_BLANK);
+		defineRow(EDUMP,_BLANK);
 		defineRow(FRAM,_INT5 | NOACT);
 		defineRow(VCC,_FLOAT2 | NOACT);
 
@@ -40,7 +43,7 @@ void defineSystem()  {
 		defineRow(PNCRD,_PTEXT | NOACT);
 		defineRow(PNROW,_INT5  | NOACT);
 		defineRow(PNCOL,_PTEXT | NOACT);
-		defineRow(PNTOG,BLAMP );
+		defineRow(PNTOG,_BLAMP );
 		if(secondPass){
 			Tag(PNCRD)->flag16 |= _MARK;
 			Tag(PNROW)->flag16 |= _MARK;
@@ -50,7 +53,7 @@ void defineSystem()  {
 		defineAlias(PNCRD,CARD);
 		defineAlias(PNROW,ROW);
 		defineAlias(PNCOL,COL);
-		defineAlias(PNTOG,TOGGLE);
+		defineAlias(PNTOG,_TOGGLE);
 
 
 	definePage(APINS,SYSTEM);
@@ -58,7 +61,7 @@ void defineSystem()  {
 		defineRow(PNCRD,_PTEXT | NOACT);
 		defineRow(PNROW,_INT5  | NOACT);
 		defineRow(PNCOL,_PTEXT | NOACT);
-		defineRow(PNGAT,BLAMP );
+		defineRow(PNGAT,_BLAMP );
 		defineRow(PNADC,_INT5  | UPDATE);
 		//defineRow(PNVAL,_FLOAT2 | NOACT);
 		defineRow(PNVAL,_D2STR | NOACT);
@@ -105,7 +108,7 @@ void defineSystem()  {
 		if(secondPass)	Tag(TLOG)->flag16 |= _MARK;
 		*/
 
-	defineRecord(TBOOT,SYSTAG,_TSYS);// Probably also need to define row in fB_Menu.cpp		
+	defineRecord(TBOOT,SYSTAG,_LOADEE);// Probably also need to define row in fB_Menu.cpp		
 	defineAlias(DPINS,DIGITAL PINS);
 	defineAlias(APINS,ANALOG PINS);
 	defineAlias(FRAM,FREE RAM);

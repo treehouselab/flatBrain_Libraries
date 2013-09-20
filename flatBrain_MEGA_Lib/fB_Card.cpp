@@ -71,6 +71,14 @@ void fB_Card::LED(uint8_t val) {
 
 }
 
+void fB_Card::digitalReset() {
+	if(type == _X76) {
+			MCP->digitalWrite(_X76RS, LOW);  
+			delay(50);
+			MCP->digitalWrite(_X76RS, HIGH); 
+	}
+}
+
 void fB_Card::AnalogGate(bool logic) {
 	uint8_t gatePin;
 	if(type == _X50) gatePin = _X50GT;
@@ -107,49 +115,6 @@ void fB_Card::openCDchan(uint8_t  chan) {
 			break;
 	}
 }
-/*
-void fB_Card::VDselectR(uint8_t  chan) {
-	// Opens CD4051 channel by writing 3 or 4-bit address to CD address pins.
-	//dbug(F("Card::selectVDR  chan %d"),chan);
-	if(!i2cAddr || chan > 7) return;
-	switch(type) {
-		case _X50:
-			if( chan & 1) MCP->digitalWrite(_X50BA,HIGH);
-			else MCP->digitalWrite(_X50BA,LOW);
-			if( chan & 2) MCP->digitalWrite(_X50BB,HIGH);
-			else MCP->digitalWrite(_X50BB,LOW);
-			if( chan & 4) MCP->digitalWrite(_X50BC,HIGH);
-			else MCP->digitalWrite(_X50BC,LOW);
-			//MCP->digitalWrite(_X50CUT,LOW); // SET INHIBIT LOW ( OFF)
-			break;
-		case _X76:
-			if( chan & 1) MCP->digitalWrite(_X76BA,HIGH);
-			else MCP->digitalWrite(_X76BA,LOW);
-			if( chan & 2) MCP->digitalWrite(_X76BB,HIGH);
-			else MCP->digitalWrite(_X76BB,LOW);
-			if( chan & 4) MCP->digitalWrite(_X76BC,HIGH);
-			else MCP->digitalWrite(_X76BC,LOW);
-			//MCP->digitalWrite(_X76CUT,LOW); // SET INHIBIT LOW ( OFF)
-			break;
-	}
-}
-
-void fB_Card::PCF_openCDchan(uint8_t  chan) {
-	// Opens CD4067 channel by writing 4-bit address to CD address pins.
-	if(!i2cAddr) return;
-	if( chan & 1) PCF->digitalWrite(CDA,HIGH);
-	else PCF->digitalWrite(CDA,LOW);
-	if( chan & 2) PCF->digitalWrite(CDB,HIGH);
-	else PCF->digitalWrite(CDB,LOW);
-	if( chan & 4) PCF->digitalWrite(CDC,HIGH);
-	else PCF->digitalWrite(CDC,LOW);
-	if( chan & 8) PCF->digitalWrite(CDD,HIGH);
-	else PCF->digitalWrite(CDD,LOW);
-
-	PCF->digitalWrite(CD16INH,LOW); // SET INHIBIT LOW ( OFF)
-
-}
-*/
 unsigned int fB_Card::CD_analogRead(uint8_t  chan) {
 	if(!i2cAddr) return fERR;
 	uint16_t data;
@@ -250,6 +215,49 @@ void fB_Card::MCPd_analogWrite(uint8_t  pin, unsigned int value) {
 //unsigned int fB_Card::PCF_digitalRead(uint8_t  pin) {
 //	return (PCF->digitalRead(pin));
 //}
+/*
+void fB_Card::VDselectR(uint8_t  chan) {
+	// Opens CD4051 channel by writing 3 or 4-bit address to CD address pins.
+	//dbug(F("Card::selectVDR  chan %d"),chan);
+	if(!i2cAddr || chan > 7) return;
+	switch(type) {
+		case _X50:
+			if( chan & 1) MCP->digitalWrite(_X50BA,HIGH);
+			else MCP->digitalWrite(_X50BA,LOW);
+			if( chan & 2) MCP->digitalWrite(_X50BB,HIGH);
+			else MCP->digitalWrite(_X50BB,LOW);
+			if( chan & 4) MCP->digitalWrite(_X50BC,HIGH);
+			else MCP->digitalWrite(_X50BC,LOW);
+			//MCP->digitalWrite(_X50CUT,LOW); // SET INHIBIT LOW ( OFF)
+			break;
+		case _X76:
+			if( chan & 1) MCP->digitalWrite(_X76BA,HIGH);
+			else MCP->digitalWrite(_X76BA,LOW);
+			if( chan & 2) MCP->digitalWrite(_X76BB,HIGH);
+			else MCP->digitalWrite(_X76BB,LOW);
+			if( chan & 4) MCP->digitalWrite(_X76BC,HIGH);
+			else MCP->digitalWrite(_X76BC,LOW);
+			//MCP->digitalWrite(_X76CUT,LOW); // SET INHIBIT LOW ( OFF)
+			break;
+	}
+}
+
+void fB_Card::PCF_openCDchan(uint8_t  chan) {
+	// Opens CD4067 channel by writing 4-bit address to CD address pins.
+	if(!i2cAddr) return;
+	if( chan & 1) PCF->digitalWrite(CDA,HIGH);
+	else PCF->digitalWrite(CDA,LOW);
+	if( chan & 2) PCF->digitalWrite(CDB,HIGH);
+	else PCF->digitalWrite(CDB,LOW);
+	if( chan & 4) PCF->digitalWrite(CDC,HIGH);
+	else PCF->digitalWrite(CDC,LOW);
+	if( chan & 8) PCF->digitalWrite(CDD,HIGH);
+	else PCF->digitalWrite(CDD,LOW);
+
+	PCF->digitalWrite(CD16INH,LOW); // SET INHIBIT LOW ( OFF)
+
+}
+*/
 
 
 

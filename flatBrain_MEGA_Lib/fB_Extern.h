@@ -16,6 +16,11 @@ extern uint8_t 		_i2cspeed;
 extern fB_WarnDelay	warn;
 extern fB_Timer		timer;
 
+extern	uint8_t 	_fBiSelectK1;	// interrupt fork selector, used in fBinterruptHandlerK1
+extern	uint8_t 	_fBiK1;			// global interrupt flag
+extern	fB_Tag		*_pTiK1shft;
+
+
 extern uint8_t  Xmap50[];
 extern uint8_t  Xmap76[];
 
@@ -81,7 +86,6 @@ void defineSpace();
 void initLog(uint16_t fTag,const __FlashStringHelper* Ptitle ) ;	
 void navigate();
 void playWarning();
-void startWarnDelay();
 void startWarning();
 void endWarning();
 uint16_t	getY(uint8_t rowIndex);

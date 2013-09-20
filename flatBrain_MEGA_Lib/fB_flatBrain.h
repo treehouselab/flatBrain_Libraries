@@ -17,7 +17,9 @@ fB_Curr		curr;
 fB_WarnDelay	warn;
 fB_Timer		timer;
 
-//fB_Seg		seg;
+uint8_t 	_fBiSelectK1 = 0;	// interrupt fork selector, used in fBinterruptHandlerK1
+uint8_t 	_fBiK1 = 0;			// global interrupt flag
+fB_Tag		*_pTiK1shft = NULL;
 
 double VccRef;  // adjusted Vcc
 //fB_WTV   audio;
@@ -145,9 +147,16 @@ double readVcc() {
 // free RAM check for debugging. SRAM for ATmega328p = 2048Kb.
 //  1024 with ATmega168
 
+void fBinterruptHandlerK1() {  // sets global flag, check and reset flag in user modules
+	if(_fBiK1) return;
+	if(_pTiK1shft && (_pTiK1shft->readInt()== _pTiK1shft->getOnVal())) _fBiK1 = INTK1SHFT;
+	else _fBiK1 = INTK1;
+	delayMicroseconds(10000);
+	//dbug(F("FB_INTERRUPT msecs:%d   manOvr:%d"),msecs, _manOver);
+
+}
 
 void navigate() {   menu.buttonCode = tft.readButtons(); }  // tft button interrupt handler 
-
 
 int freeRAM () {
   extern int __heap_start, *__brkval; 
@@ -442,11 +451,11 @@ void flatBrainInit(){
 														
 	dbug(F("INIT PASS 2"));
 
-	pT = rec.EEgetTag(TBOOT);
-	res = (uint8_t ) pT->iVal;
-	if(pT && res == HIGH) rec.EEinitTags();     //initialize from eeprom globals defined with GINIT flag
-	pT->iVal = res;
-	dbug(F("INIT EEPROM"));
+	//pT = rec.EEgetTag(TBOOT);
+	//res = (uint8_t ) pT->iVal;
+	//if(pT && res == HIGH) rec.EEinitTags();     //initialize from eeprom globals defined with GINIT flag
+	//pT->iVal = res;
+	//dbug(F("INIT EEPROM"));
 
 	//seg.setAddress(SEG_ADDR);  // set segmented display address if necessary;
 	//seg.test();  // set segmented display address if necessary;
@@ -462,7 +471,7 @@ void flatBrainInit(){
 	alarm.play(ALARM_INIT);
 
 	attachInterrupt(NAV_INT, navigate,FALLING);
-	attachInterrupt(WARN_INT, startWarnDelay ,FALLING);
+	attachInterrupt(WARN_INT, fBinterruptHandlerK1 ,FALLING);
 
 	VccRef = readVcc();
 

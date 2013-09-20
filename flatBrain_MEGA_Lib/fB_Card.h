@@ -40,6 +40,7 @@ public:
         unsigned int CD_analogRead(uint8_t  pin);
 		unsigned int CD_avgAnalogRead(uint8_t  chan,uint16_t size);
         unsigned int CD_digitalRead(uint8_t  pin);
+		void digitalReset();
  		//PCF8574 *PCF; 
 		//void PCF_openCDchan(uint8_t  chan);
        

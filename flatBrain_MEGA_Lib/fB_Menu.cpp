@@ -246,11 +246,11 @@ void fB_Menu:: showPage(uint16_t tag, uint8_t pageOption) {
 		switch(tag) {
 			case SYSTEM:
 				menu.fListStart = 0 ;
-				Tag(LOGS)->flag16 &= ~_LOCAL; // default to log file list ( LOCAL ==1 displays archives
+				Tag(LOGS)->flag16 &= ~_ARCH; // default to log file list ( LOCAL ==1 displays archives
 				Tag(LOGS)->Ptitle = PstrRay[P_LOGS];
 				break;
 			case LOGS:
-				if(Tag(LOGS)->flag16 & _LOCAL)  rec.buildFileRay(P("A"));
+				if(Tag(LOGS)->flag16 & _ARCH)  rec.buildFileRay(P("A"));
 				else  rec.buildFileRay(P("LOG"));
 				break;
 			case CLOCK:
@@ -375,7 +375,7 @@ dbug(F("SR %P t:%d , f16: 0x%x format:%L"),Ptitle, tag,flag16,format);
 	}
 	if( option != REFRESHPAGE || format == _TEXT || format == _PTEXT || flag16 & _TTITLE) tft.print(STARTX +ROWTEXTX,getY(rowIndex),pTitleText,MAXCHARSLINE);
 	if(getAction() == UPDATE && pin)	read();
-	if(format == BLAMP) {
+	if(format == _BLAMP) {
 			int x = STARTX +ROWSTATEX; int y = getY(rowIndex)+ROWSTATEY+2;
 			tft.drawCircle(x,y,8);
 			if(iVal) {
@@ -464,7 +464,7 @@ void fB_Menu::pinPageConstruct(uint8_t mode,uint8_t startDex, uint8_t hand ) {
 			if(pT->getDir() == _OUTPUT) {
 				if(pT->isLatched()) Tag(PNTOG)->iVal = HIGH;
 				else Tag(PNTOG)->iVal = LOW;
-				Tag(PNTOG)->putAction(TOGGLE);
+				Tag(PNTOG)->putAction(_TOGGLE);
 				Tag(PNTOG)->Ptitle = PstrRay[P_TOGGLE];
 			}
 			if(pT->getDir() == _INPUT){
@@ -510,7 +510,7 @@ void fB_Tag::action(uint8_t  hand) {
 		//dbug(F("ra DATIME %s"),rec.dateStr);
 				Tag(FDATE)->ptitle = rec.dateStr;
 				Tag(FSIZE)->ptext = rec.sizeStr;
-				if(curr.pP->flag16 & _LOCAL) {  // Archive file display
+				if(curr.pP->flag16 & _ARCH) {  // Archive file display
 					Tag(FSTD)->Ptitle = PstrRay[P_DELETE];  
 					Tag(FSTD)->iVal = FDEL;  
 					Tag(FARCH)->flag16 |= _HIDE;  
@@ -558,8 +558,11 @@ void fB_Tag::action(uint8_t  hand) {
 			// then check tag
 			uint16_t aVal;
 			switch(tag) {
+				case DRST:
+					Card(tTag)->digitalReset();
+					return;
 				case ARCHIVES:
-					Tag(LOGS)->flag16 |= _LOCAL; // set Files Page local tag to display archives
+					Tag(LOGS)->flag16 |= _ARCH; // set Files Page local tag to display archives
 					Tag(LOGS)->Ptitle = Ptitle;
 					menu.jumpPage(LOGS);
 					return;
@@ -662,8 +665,9 @@ void fB_Tag::action(uint8_t  hand) {
 					return;
 
 				//case TLAS:	createGdefLog() ; pPage->selectHeader();break;
-				case TIAT:	rec.EEinitTags(); menu.selectHeader();return;
-				case TSAT:	rec.EEwriteTags(); menu.selectHeader();return;
+				case ELOAD:	rec.EEinitTags(); menu.selectHeader();return;
+				case ESTOR:	rec.EEwriteTags(); menu.selectHeader();return;
+				case EDUMP:	rec.EEdumpTags(); menu.selectHeader();return;
 				//case TLAU:	
 				//			for(int i = 0;i<logFileCount;i++) logRay[i].pLog->writeData();
 				//			menu.selectHeader();
