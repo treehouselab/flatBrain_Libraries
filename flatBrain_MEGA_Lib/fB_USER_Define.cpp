@@ -87,21 +87,21 @@ void defineUser() {
 		//defineRow(CL, _FLOAT1 | _LOG);
 
 	definePage(VLIMITS,HOME);
-		defineRow(VEXS, _FLOAT1 | _INCR | _STOREE | _LOG);
-		defineRow(VALT, _FLOAT1 | _INCR | _STOREE | _LOG);
-		defineRow(CHLO, _FLOAT1 | _INCR | _STOREE | _LOG);
-		defineRow(CHHI, _FLOAT1 | _INCR | _STOREE | _LOG);
-		defineRow(DLO1, _FLOAT1 | _INCR | _STOREE | _LOG);
-		defineRow(DLO2, _FLOAT1 | _INCR | _STOREE | _LOG);
-		defineRow(DLO3, _FLOAT1 | _INCR | _STOREE | _LOG);
-		defineRow(DHI1, _FLOAT1 | _INCR | _STOREE | _LOG);
-		defineRow(DHI2, _FLOAT1 | _INCR | _STOREE | _LOG);
-		defineRow(DHI3, _FLOAT1 | _INCR | _STOREE | _LOG);
+		defineRow(VEXS, _FLOAT1 | _INCR | _LOADEE| _LOG);
+		defineRow(VALT, _FLOAT1 | _INCR | _LOADEE| _LOG);
+		defineRow(CHLO, _FLOAT1 | _INCR | _LOADEE| _LOG);
+		defineRow(CHHI, _FLOAT1 | _INCR | _LOADEE| _LOG);
+		defineRow(DLO1, _FLOAT1 | _INCR | _LOADEE| _LOG);
+		defineRow(DLO2, _FLOAT1 | _INCR | _LOADEE| _LOG);
+		defineRow(DLO3, _FLOAT1 | _INCR | _LOADEE| _LOG);
+		defineRow(DHI1, _FLOAT1 | _INCR | _LOADEE| _LOG);
+		defineRow(DHI2, _FLOAT1 | _INCR | _LOADEE| _LOG);
+		defineRow(DHI3, _FLOAT1 | _INCR | _LOADEE| _LOG);
 
 
  	//////////// DEFINE RECORDS
 
-	defineRecord(V1,LOG2,NULL); // flags: [format] | _STOREE ( for eeprom )
+	defineRecord(V1,LOG2,NULL); // flags: [format] | _LOADEE( for eeprom )
 	defineRecord(V2,LOG2,NULL);
 	defineRecord(V3,LOG3,NULL);
 	defineRecord(CZ,LOG1,NULL);

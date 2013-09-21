@@ -80,7 +80,7 @@ XCARDS		Ox20-27
 #define I2CTIMEOUT		100  //ms	  
 #define SERIALSPEED		9600  
 #define ROUNDOFF		.0005  // added to calcs to round off displayed values
-#define BASEGLOBAL		0 // allows 25 gSys objects
+#define BASEE			0    // base address EEPROM
 #define	PULSEMSECS		200
 
 #define MAXEETAGS		25  // for eeprom runaway only
@@ -200,8 +200,8 @@ XCARDS		Ox20-27
 //////////////////////////////////////////////////////////////////////////////
 // Tag->flags is 16 bits, top 4bits is used for row count buffer
 #define	_PAGE			0x0001	 
-#define	_LOADEE			0x0002	// System Tag
-#define	_STOREE			0x0004	// EEPROM Store 
+#define	_LOADEE			0x0002	// load values from EEPROM on Boot
+//#define				0x0004	
 #define	_LOG			0x0008	// Log to SD card
 #define	_MARK			0x0010	// Mark row
 #define	_HIDE			0x0020
@@ -290,9 +290,7 @@ XCARDS		Ox20-27
 #define	DPINS		8
 #define	APINS		9
 #define	ARCHIVES	10
-#define	ELOAD		11
-#define	ESTOR		12
-#define	EDUMP		13
+#define	EEPROM		11
 
 #define LOGS		29   // 29->40  11 RESERVED FOR LOGS
 
@@ -302,16 +300,11 @@ XCARDS		Ox20-27
 #define _WARN_OVR	258  // used by warnDelay system, can be pins defined in fB_USR_defines.cpp or fB_SYS_Defines.cpp
 #define _ALARM_LED	259
 #define HEADER		260
-#define TBOOT		261	//SYSTEM TAGS
-#define TUTAGS		262
-#define TPINS		263
-#define TLOGS		264
-#define TPAGES		265
-#define TROWS		266
 #define FRAM		267
 #define _MSG		271
 #define VCC			272
 #define DRST		273
+#define	EAUTO		274  // required
 
 
 #define CLKYR		301		    
@@ -342,6 +335,12 @@ XCARDS		Ox20-27
 #define FDUMP		342	
 #define	FSTD		343  // tag for FPANEL row that can house either FSTAMP or FDELETE subtype
 #define CLK			344		
+
+#define	ELOAD		350
+#define	ESTOR		351
+#define	EDUMP		352
+#define	ECLR		353
+
 
 //////////////////////////////////////////////////////////////////
 

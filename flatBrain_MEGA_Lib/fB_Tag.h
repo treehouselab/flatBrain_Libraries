@@ -44,9 +44,10 @@ class fB_Val {
 
 class fB_Tag {
 	public:
-		uint16_t tag;
+		uint16_t	tag;
 		uint16_t	flag16;
 		uint8_t 	flag8;
+		const __FlashStringHelper	*Palias;
 		union {	
 			const __FlashStringHelper	*Ptitle;
 			char						*ptitle;

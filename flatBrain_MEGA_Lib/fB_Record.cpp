@@ -38,7 +38,7 @@ void fB_Record::createTagDefLog() {
 	if(!(bootStatus & SD) || !rec.logCreate(P("TAGDEF"))) return;	
 	if(fat.openFile(filename,FILEMODE_TEXT_WRITE)==NO_ERROR) { 
 		//sprintf(buffer,P("GLOBAL,GTAG,LOG, VALUE,FACTOR, GPIN, GSYS, GINIT,GINP, GBIAS"));
-		fat.writeLn(P("NAME,TAG,LOG, VALUE,FACTOR, OFFSET, TPIN, _LOADEE, _STOREE"));
+		fat.writeLn(P("NAME,TAG,LOG, VALUE,FACTOR, OFFSET, TPIN, _LOADEE"));
 		for(int i=0;i<tagCount;i++){
 			pT = &tagRay[i];
 			if(!pT || !(pT->flag16 & (_LOADEE | _LOG) && !pT->pin)) continue;
@@ -55,9 +55,8 @@ void fB_Record::createTagDefLog() {
 				case _BLANK:		datastr[0] = '\0' ;break;
 			}
 
-			sprintf(buffer,P("%s,%d,%s, %s,%s, %d,%d,%d,%d,%d"),title,pT->tag ,base,datastr	,menu.doubleToStr(pT->dVal->factor,3,datastr),menu.doubleToStr(pT->dVal->offset,3,datastr),
+			sprintf(buffer,P("%s,%d,%s, %s,%s, %d,%d,%d,%d"),title,pT->tag ,base,datastr	,menu.doubleToStr(pT->dVal->factor,3,datastr),menu.doubleToStr(pT->dVal->offset,3,datastr),
 				1 && pT->flag16 & _LOADEE
-				,1 && pT->flag16 & _STOREE
 //					,1 && pT->flag16 & 0x04
 //					,1 && pT->flag16 & 0x08
 //					,1 && pT->flag16 & 0x10
@@ -247,6 +246,26 @@ void fB_Record::logDump() {
 }
 /////////////////////////////// EEPROM METHODS /////////////////////////////////////////
 
+void fB_Record::EEclear() {
+		ee.setBlock(BASEE+16,'\0',256); 
+}
+
+
+void fB_Record::EEwriteEAUTO() {
+	fB_Tag * pT;
+	pT = Tag(EAUTO);
+	uint16_t addr;
+	uint8_t  * data;
+	char title[MAXCHARSLINE+1];
+	int j=0;
+	getPtext(pT->Ptitle,title);
+	title[10]= '\0';
+	addr = BASEE;
+	ee.writeBlock(addr,(uint8_t *)title,strlen(title));
+	data = (uint8_t *)&(pT->iVal);
+	ee.writeBlock(addr+10,data,2);
+}
+
 void fB_Record::EEwriteTags() {
 	if(!tagCount) return;
 	fB_Tag * pT;
@@ -256,16 +275,12 @@ void fB_Record::EEwriteTags() {
 	int j=0;
 	for(int i=0;i<tagCount;i++){
 		pT = &tagRay[i];
-		if(!pT) continue;
-		if(!(pT->flag16 & (_LOADEE | _STOREE))) continue;
+		if(!pT || !(pT->flag16 & _LOADEE) || pT->tag == EAUTO) continue;
 		getPtext(pT->Ptitle,title);
-		title[9]= '\0';
-		dbug(F("EEWRITE %s  value: %f flags:0x%x"),title,pT->dVal->value,pT->flag16);
-		addr = j*32 + BASEGLOBAL;
-		ee.setBlock(addr,'\0',48); // leaves a zeroed 8 bits at end of glist to mark end
+		title[10]= '\0';
+		addr = j*16 + (BASEE+16);
+		ee.setBlock(addr,'\0',32); // leaves a zeroed 8 bits at end of glist to mark end
 		ee.writeBlock(addr,(uint8_t *)title,strlen(title));
-		data = (uint8_t *)&(pT->flag16);
-		ee.writeBlock(addr+8,data,2);
 		if(!(pT->flag16 & _DUBL)){	
 			data = (uint8_t *)&(pT->iVal);
 			ee.writeBlock(addr+10,data,2);
@@ -276,58 +291,57 @@ void fB_Record::EEwriteTags() {
 		}
 		j++;
 	}	
-
-	ee.dump(0,128);
+	//ee.dump(0,128);
 }
-void fB_Record::EEinitTags() {
+
+fB_Tag* fB_Record::EEgetEAUTO() {
+	fB_Tag * pT;
+	pT = Tag(EAUTO);
+	if(!pT ) return NULL;
+	uint8_t  buffer[11];
+	uint16_t addr;
+	double  *data;
+	addr = BASEE;
+	ee.readBlock(addr+10,buffer,2);
+	pT->iVal = *(int*)buffer;
+	return pT;
+}
+
+fB_Tag* fB_Record::EEgetTag(uint16_t tag) {
+	fB_Tag * pT;
+	pT = Tag(tag);
+	if(!pT || !(pT->flag16 & _LOADEE) ) return NULL;
+	uint8_t  buffer[11];
+	char title[MAXCHARSLINE+1];
+	uint16_t addr;
+	double  *data;
+	getPtext(pT->Ptitle,title);
+	for(int i=0;i<tagCount;i++){
+		addr = i*16 + (BASEE+16);
+		ee.readBlock(addr,buffer,10);
+		if(buffer[0]=='\0') break;
+		buffer[10] = '\0';
+		if(!strcmp(title,(char *) buffer)) {
+			if(pT->flag16 & _DUBL) {
+				ee.readBlock(addr+12,buffer,4);
+				pT->dVal->value = *(double*)buffer;
+			}
+			else {
+				ee.readBlock(addr+10,buffer,2);
+				pT->iVal = *(int*)buffer;
+			}
+			return pT;
+		}
+	}		
+}
+
+void fB_Record::EEloadTags() {
 	fB_Tag * pT;
 	for(int k = 0;k<tagCount;k++) {	
 		pT = &tagRay[k];
 		if(!pT) continue;
-		if(!(pT->flag16 & _STOREE)) continue;
-		EEgetTag(pT->tag);
+		if(pT->flag16 & _LOADEE) EEgetTag(pT->tag);
 	}
-}
-
-fB_Tag* fB_Record::EEgetTag( uint16_t tag) {
-	uint8_t  tBuffer[9];
-	uint8_t  vBuffer[4];
-	uint8_t  fBuffer[4];
-	uint8_t  gBuffer;
-	char title[MAXCHARSLINE+1];
-	uint16_t tAddr,vAddr,fAddr,gAddr;
-	double *data;
-	char *tStr;
-	fB_Tag * pT;
-	pT = Tag(tag);
-	if(!pT) return NULL;
-
-	getPtext(pT->Ptitle,title);
-	int j=0;
-	for(int i=0;i<MAXEETAGS;i++){
-		tAddr = j++ *32 + BASEGLOBAL;
-		vAddr = tAddr+8;
-		fAddr = tAddr+12;
-		gAddr = tAddr+16;
-		ee.readBlock(tAddr,tBuffer,8);
-		if(tBuffer[0]=='\0') break;
-		tBuffer[8] = '\0';
-		tStr = (char *) tBuffer;
-
-		if(!strcmp(title,tStr)) {
-			ee.readBlock(vAddr,vBuffer,4);
-			data = (double*)vBuffer ;
-			pT->dVal->value = *data + ROUNDOFF;
-			ee.readBlock(fAddr,fBuffer,4);
-			data = (double*)fBuffer;
-			pT->dVal->factor = *data;
-			pT->flag16 = ee.readByte(gAddr);
-			dbug(F("EEREAD tag: %s  value: %f  fact: %f  flag: 0x%h"),tBuffer,pT->dVal->value,pT->dVal->factor,pT->flag16);
-			return pT;
-		}
-		
-	}
-	return NULL;
 }
 
 void fB_Record::EEdumpTags(){
@@ -337,33 +351,25 @@ void fB_Record::EEdumpTags(){
    uint16_t *pFlag;
    int *pInt;
    double *pDub;
-   uint8_t buffer[9];
+   uint8_t buffer[11];
+   Serial.println();		
+
    for(int i=0;i< count;i++) {
-		addr = BASEGLOBAL + i*32;
-		if (addr % 32 == 0)	Serial.print(i);
+		addr = BASEE + i*16;
+		if (addr % 16 == 0)	Serial.print(i);
 		Serial.print(":\t");
-	    ee.readBlock(addr, buffer, 8) ;  
-		buffer[8] = '\0';
+	    ee.readBlock(addr, buffer, 10) ;  
+		buffer[10] = '\0';
 		title = (char *) buffer;
 		Serial.print(title);
 		Serial.print("\t");
-	    ee.readBlock(addr+8, buffer, 2) ;  
-		pFlag = (uint16_t *) buffer;
-		Serial.print("[");
-		Serial.print(*pFlag,HEX);
-		Serial.print("]");
+		ee.readBlock(addr+10, buffer, 2) ;  
+		pInt = (int *) buffer;
+		Serial.print(*pInt,DEC);
 		Serial.print("\t");
-		if(!(*pFlag & _DUBL)) {
-			ee.readBlock(addr+10, buffer, 2) ;  
-			pInt = (int *) buffer;
-			Serial.print(*pInt,DEC);
-		}
-		else {
-			Serial.print("\t");
-			ee.readBlock(addr+12, buffer, 4) ;  
-			pDub = (double *) buffer;
-			Serial.print(*pDub);
-		}
+		ee.readBlock(addr+12, buffer, 4) ;  
+		pDub = (double *) buffer;
+		Serial.print(*pDub);
 		Serial.println();		
    }
 }

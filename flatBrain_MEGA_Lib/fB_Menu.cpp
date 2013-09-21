@@ -353,11 +353,14 @@ void fB_Tag::showRow(uint8_t  rowIndex, uint8_t  option) {  //when option == REF
 	if( (flag16 & _HIDE)) 	tft.setAll2Bcolor();
 	else if(flag16 & _MARK)	tft.setColor(FCOLOR,HCOLOR);
 	format = getFormat();
-dbug(F("SR %P t:%d , f16: 0x%x format:%L"),Ptitle, tag,flag16,format);
+//dbug(F("SR %P t:%d , f16: 0x%x format:%L"),Ptitle, tag,flag16,format);
 	
 
 	if(option != REFRESHPAGE) {
-		if(!(flag16 & _TTITLE)) pTitleText = getPtext(Ptitle,Pbuffer); // title points to Ptitle (usual case)
+		if(!(flag16 & _TTITLE)) {
+			if(Palias) getPtext(Palias,Pbuffer);
+			pTitleText = getPtext(Ptitle,Pbuffer); // title points to Ptitle (usual case)
+		}
 		else {
 			if(curr.pageTag == LOGS && rowIndex) {
 					strcpy(Pbuffer,rec.fileFind(buf8)); 
@@ -664,10 +667,17 @@ void fB_Tag::action(uint8_t  hand) {
 					menu.refreshRow();
 					return;
 
-				//case TLAS:	createGdefLog() ; pPage->selectHeader();break;
-				case ELOAD:	rec.EEinitTags(); menu.selectHeader();return;
+				case ELOAD:	rec.EEloadTags(); menu.selectHeader();return;
 				case ESTOR:	rec.EEwriteTags(); menu.selectHeader();return;
 				case EDUMP:	rec.EEdumpTags(); menu.selectHeader();return;
+				case ECLR:	rec.EEclear(); menu.selectHeader();return;
+				case EAUTO:	if(iVal == HIGH) iVal = LOW;
+							else iVal = HIGH;
+							menu.refreshRow();
+							rec.EEwriteEAUTO();
+							menu.selectHeader();return;
+
+				//case TLAS:	createGdefLog() ; pPage->selectHeader();break;
 				//case TLAU:	
 				//			for(int i = 0;i<logFileCount;i++) logRay[i].pLog->writeData();
 				//			menu.selectHeader();

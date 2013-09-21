@@ -17,8 +17,11 @@ class fB_Record {
 		uint8_t		fileCount;
 		
 		void		EEwriteTags();
-		void		EEinitTags();
+		void		EEloadTags();
 		fB_Tag*		EEgetTag(uint16_t tag);
+		void		EEclear();
+		void		EEwriteEAUTO();
+		fB_Tag*		EEgetEAUTO();
 		void		EEdumpTags();
 		void		init();
 		bool		SDinit(uint8_t  SSpin, uint8_t  SPIspeed);

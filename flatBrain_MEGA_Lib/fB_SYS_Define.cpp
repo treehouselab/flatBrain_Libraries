@@ -14,12 +14,22 @@ void defineSystem()  {
 		defineJump(DPINS);
 		defineJump(LOGS);
 		defineRow(ARCHIVES,NULL);
+		defineJump(EEPROM);
 		defineJump(CLOCK);
-		defineRow(ELOAD,_BLANK);
-		defineRow(ESTOR,_BLANK);
-		defineRow(EDUMP,_BLANK);
 		defineRow(FRAM,_INT5 | NOACT);
 		defineRow(VCC,_FLOAT2 | NOACT);
+
+	definePage(EEPROM,SYSTEM);
+		defineRow(ESTOR,_BLANK);
+		defineRow(ELOAD,_BLANK);
+		defineRow(EDUMP,_BLANK);
+		defineRow(ECLR,_BLANK);
+		defineRow(EAUTO,_BLAMP | _LOADEE); // required tag
+		defineAlias(ESTOR,WRITE ALL);
+		defineAlias(ELOAD,LOAD ALL);
+		defineAlias(ECLR,CLEAR ALL);
+		defineAlias(EDUMP,SER DUMP);
+
 
 	definePage(CLOCK,SYSTEM);
 		defineRow(CLKYR, _INCR | _INT5);
@@ -108,7 +118,6 @@ void defineSystem()  {
 		if(secondPass)	Tag(TLOG)->flag16 |= _MARK;
 		*/
 
-	defineRecord(TBOOT,SYSTAG,_LOADEE);// Probably also need to define row in fB_Menu.cpp		
 	defineAlias(DPINS,DIGITAL PINS);
 	defineAlias(APINS,ANALOG PINS);
 	defineAlias(FRAM,FREE RAM);

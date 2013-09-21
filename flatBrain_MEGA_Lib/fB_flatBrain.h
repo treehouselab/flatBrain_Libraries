@@ -229,6 +229,8 @@ fB_Tag* initTag(uint16_t tag,const __FlashStringHelper* Ptitle,uint32_t flags,ui
 			pT->Ptitle = Ptitle;
 			pT->fTag = fTag;  // 8bit 
 			pT->pin = NULL;
+			pT->Palias = NULL;
+
 		}
 		if(!(pT->flag16 & _DUBL) && (flags & (_FLOAT1 | _FLOAT2 | _D2STR)))	{
 			pT->dVal = new fB_Val;
@@ -352,7 +354,7 @@ void initAlias(uint16_t tag, const __FlashStringHelper* Palias) {
 	if(secondPass) {
 		fB_Tag *pT;
 		pT = Tag(tag);
-		if(pT) pT->Ptitle = Palias;
+		if(pT) pT->Palias = Palias;
 	}
 }
 
@@ -451,11 +453,10 @@ void flatBrainInit(){
 														
 	dbug(F("INIT PASS 2"));
 
-	//pT = rec.EEgetTag(TBOOT);
-	//res = (uint8_t ) pT->iVal;
-	//if(pT && res == HIGH) rec.EEinitTags();     //initialize from eeprom globals defined with GINIT flag
-	//pT->iVal = res;
-	//dbug(F("INIT EEPROM"));
+	pT = rec.EEgetEAUTO();
+	if(pT && pT->iVal == HIGH) rec.EEloadTags();     
+
+	dbug(F("INIT EEPROM"));
 
 	//seg.setAddress(SEG_ADDR);  // set segmented display address if necessary;
 	//seg.test();  // set segmented display address if necessary;
