@@ -43,17 +43,18 @@ class fB_Event
 
 public:
   fB_Event(void);
-  void update(void);
   uint8_t eventType;
+  void update(void);
   unsigned long period;
+  unsigned long lastEventTime;
   int repeatCount;
-  fB_Tag *pT;;
+  uint16_t count;
+  fB_Tag *pT;
+  uint16_t arg16;
   uint8_t pin;
   uint8_t currState;
   uint8_t startState;
-  void (*callback)(void);
-  unsigned long lastEventTime;
-  uint16_t count;
+  void (*callback)(uint16_t);
 };
 
 class fB_Timer
@@ -62,12 +63,12 @@ class fB_Timer
 public:
   fB_Timer(void);
 
-  int every(uint8_t index,unsigned long period, void (*callback)(void));
-  int every(unsigned long period, void (*callback)(void));
-  int every(uint8_t index,unsigned long period, void (*callback)(void), int repeatCount);
-  int every(unsigned long period, void (*callback)(void), int repeatCount);
-  int after(uint8_t index,unsigned long duration, void (*callback)(void));
-  int after(unsigned long duration, void (*callback)(void));
+  int perpetual(uint8_t index,unsigned long period, void (*callback)(uint16_t), uint16_t arg16=NULL);
+  int perpetual(unsigned long period, void (*callback)(uint16_t), uint16_t arg16=NULL);
+  int repeat(uint8_t index,unsigned long period, int repeatCount, void (*callback)(uint16_t), uint16_t arg16=NULL);
+  int repeat(unsigned long period, int repeatCount, void (*callback)(uint16_t), uint16_t arg16=NULL);
+  int after(uint8_t index,unsigned long duration, void (*callback)(uint16_t), uint16_t arg16=NULL);
+  int after(unsigned long duration, void (*callback)(uint16_t), uint16_t arg16=NULL);
   int oscillate(uint8_t pin, unsigned long period, uint16_t startingValue);
   int oscillate(uint8_t pin, unsigned long period,uint16_t startingValue, int  repeatCount);
   int oscillateTag(uint8_t index,uint16_t tag, unsigned long period, uint16_t startingValue, int repeatCount);
@@ -88,10 +89,16 @@ public:
   void update(void);
   void update(uint8_t index);
   void updateWarn();
+  void setPeriod(uint8_t index, unsigned long period);
+  uint8_t writeLog(uint8_t logTag,uint8_t mode);
+  uint8_t scheduleLog(uint8_t logTag,uint8_t mode,double minutes = NULL);
+
 
 protected:
-  fB_Event _events[_TIMER_MAX_EVENTS];
-  int findFreeEventIndex(void);
+  int every(uint8_t index,unsigned long period, int repeatCount, void (*callback)(uint16_t), uint16_t arg16=NULL);
+  int every(unsigned long period, int repeatCount, void (*callback)(uint16_t), uint16_t arg16=NULL);
+ fB_Event _events[_TIMER_MAX_EVENTS];
+ int findFreeEventIndex(void);
 
 };
 

@@ -124,12 +124,13 @@
 #define OCTAVE_OFFSET 0
 #define isdigit(n) (n >= '0' && n <= '9')
 
-#define ALARM_INIT	0
+#define ALARM_INIT 0
+//#define ALARM_INIT	
 #define ALARM_WARN	4
 #define ALARM_FAIL	2
 #define ALARM_ACT	3
 
-#define _WD_OFF			0  // FOR WARNDELAY CODE
+#define _WD_OFF			0  // FOR WARNDELAY ACTION CODE
 #define _WD_SKIP		1  
 #define _WD_WARN		2
 #define _WD_DELAY		3

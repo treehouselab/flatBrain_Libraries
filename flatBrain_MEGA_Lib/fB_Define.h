@@ -12,7 +12,7 @@ Treehouselab.com - Mike Price */
 #define defineLog(fTag)								initLog(fTag,F(#fTag));
 #define defineTag(tag,flags)						initTag(tag,F(#tag),flags)
 #define defineAlias(tag,alias)						initAlias(tag,F(#alias))
-#define defineRecord(tag,fTag,flags)				initTag(tag,F(#tag),flags,fTag,F(#fTag))
+#define defineLog(tag,fTag)						initLog(tag,fTag,F(#fTag))
 #define defineHome(tag)							initPage(HOME,F(#tag),NULL)
 #define definePage(tag,parentTag)				initPage(tag,F(#tag),parentTag)
 #define defineRow(tag,flags)					initRow(tag,F(#tag),flags)

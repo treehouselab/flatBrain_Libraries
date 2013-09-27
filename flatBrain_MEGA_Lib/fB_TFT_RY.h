@@ -117,7 +117,7 @@ class fB_TFT
 
 		fB_TFT();
 		void init(uint8_t orient);
-		void clear(int ht=0);
+		void clear(uint16_t ht=0);
 		void drawPixel(int x, int y);
 		void drawLine(int x1, int y1, int x2, int y2);
 		void fillScr(uint8_t c);

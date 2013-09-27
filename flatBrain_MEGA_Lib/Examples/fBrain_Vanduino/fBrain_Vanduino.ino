@@ -1,5 +1,5 @@
 #include <Timer.h>
-#include <fB_flatBrain.h>
+#include <fB_FlatBrain.h>
 #include <fB_Vanduino.h>
 
 
@@ -8,24 +8,23 @@ fB_Vanduino vduino;
 void setup(){
 
    Serial.begin(9600);
-  
-    pinMode(13,OUTPUT);
-    digitalWrite(13,LOW);
+   //pinMode(13,OUTPUT);
+   //digitalWrite(13,LOW);
 
 
 	//alarm.disable();
-	alarm.bootBeepDisable();
+	//alarm.bootBeepDisable();
 
 	flatBrainInit();
 
-	vduino.init(RSTATUS);
+	vduino.init(VSTATUS);
+ 
+	menu.showPage(VSTATUS);
 
-	menu.showPage(HOME);
-
-    vduinoUpdate();
+        vduinoUpdate(NULL);
 	//i2c.scan();
 	//Card(YCRD)->LED(HIGH);
-	timer.every(_TIMER_UPDATE,5000,vduinoUpdate);
+	timer.perpetual(_TIMER_UPDATE,4000,vduinoUpdate);
 	//initState();
 
 }
@@ -33,13 +32,15 @@ void setup(){
 
 
 void loop() {
-	menu.checkButtonCode();
-	
-        timer.update();
+    menu.checkButtonCode();
+    timer.update(_TIMER_UPDATE);
+    if(warn.action != _WD_OFF) timer.updateWarn();
+    if(vduino.logTimerFlag) timer.update(vduino.logTimerIndex);
 }
 
 
-void vduinoUpdate() {
+void vduinoUpdate(uint16_t arg16) {
+	vduino.getState();
 	vduino.nextState();
 	vduino.showState();
 }

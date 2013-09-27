@@ -6,19 +6,6 @@
   http://www.roguerobotics.com/
   bhagman@roguerobotics.com
 
-    This library is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 *************************************************/
 #include "fB_Include.h"
 
@@ -27,13 +14,52 @@ uint16_t bootBeepNote;
 uint8_t bootBeepEnabled = 1;   
 uint8_t alarmEnabled = 1;   
 
-prog_char alarm_0[] PROGMEM = ":d=16,o=5,b=140:g,f,c6";
-prog_char alarm_1[] PROGMEM = ":d=16,o=5,b=120:c,p,g";
+prog_char alarm_0[] PROGMEM = ":d=16,o=5,b=120:c,p,g";
+prog_char alarm_1[] PROGMEM = ":d=16,o=5,b=140:g,f,c6";
 prog_char alarm_2[] PROGMEM = ":d=16,o=5,b=120:d,p,a,p,a";
-prog_char alarm_3[] PROGMEM = ":d=16,o=5,b=120:g,p,c6,p,c6,p,c6";
-prog_char alarm_4[] PROGMEM = ":d=16,o=5,b=140:2e6,4p";
-prog_char alarm_5[] PROGMEM = ":d=16,o=5,b=140:2e6,4p,2e6,4p,2e6";
+prog_char alarm_3[] PROGMEM = ":d=16,o=5,b=120:g,p,c6";
+prog_char alarm_4[] PROGMEM = ":d=16,o=5,b=120:g,p,c6,p,c6";
+prog_char alarm_5[] PROGMEM = ":d=16,o=5,b=120:g,p,c6,p,c6,p,c6";
+//prog_char alarm_8[] PROGMEM = "";
 
+/*
+To be recognized by ringtone programs, an RTTTL/Nokring format ringtone must contain three specific elements: name, settings, and notes.
+
+For example, here is the RTTTL ringtone for Haunted House:
+
+HauntHouse: d=4,o=5,b=108: 2a4, 2e, 2d#, 2b4, 2a4, 2c, 2d, 2a#4, 2e., e, 1f4, 1a4, 1d#, 2e., d, 2c., b4, 1a4, 1p, 2a4, 2e, 2d#, 2b4, 2a4, 2c, 2d, 2a#4, 2e., e, 1f4, 1a4, 1d#, 2e., d, 2c., b4, 1a4
+
+The three parts are separated by a colon.
+Part 1: Deleted
+Part 2: settings (here: d=4,o=5,b=108), where "d=" is the default duration of a note. 
+In this case, the "4" means that each note with no duration specifier (see below) is by default considered a quarter note. 
+"8" would mean an eighth note, and so on. Accordingly, "o=" is the default octave. There are four octaves in the Nokring/RTTTL format. 
+And "b=" is the tempo, in "beats per minute".
+
+Part 3: the notes. Each note is separated by a comma and includes, in sequence: a duration specifier, a standard music note, 
+either a, b, c, d, e, f or g, and an octave specifier. If no duration or octave specifier are present, the default applies.
+
+Standard musical durations are denoted by the following notations:
+1 - whole note
+2 - half note
+4 - quarter note
+8 - eighth note
+16 - sixteenth note
+32 - thirty-second note
+
+Dotted rhythm patterns can be formed by appending a period (".") character to the end of a duration/beat/octave element.
+P - rest or pause
+
+The RTTTL format allows octaves starting from the A below middle C and going up four octaves. This corresponds with the inability of cellphones to reproduce certain tones audibly. These octaves are numbered from lowest pitch to highest pitch from 4 to 7.
+The octave should be left out of the notation in the case of a rest or pause in the pattern.
+
+An example of the RTTTL format would be
+fifth:d=4,o=5,b=63:8P,8G5,8G5,8G5,2D#5
+
+Dave Brubeck - Take 5:d=32,o=6,b=180:8a#5, p, 16d#, p, 8f#, p, 16g#, p, 8a, p, 16a#, p, 8a, p, 16g#, p, 8f#, p, 8a#5, p, 16a#5, p, 8c#, p, 2d#, 16p,
+16f#, p, 16f, p, 16d#, p, 8c#, p, 2d#, 16p, 16c#, p, 16c, p, 16a#5, p, 8g#5
+
+*/
  const char *alarmTable[] PROGMEM= {   
   alarm_0,
   alarm_1,
@@ -86,7 +112,7 @@ ISR(TIMER3_COMPA_vect)
 
 
 fB_Alarm::fB_Alarm() {
-    pin = ALARM_PIN;
+    pin = _ALARMPIN;
 	alarmEnabled = 1;
     bootBeepEnabled = 1;
     bootBeepToggle = 0;
@@ -384,12 +410,14 @@ void fB_WarnDelay::init() {
 
 
 void fB_WarnDelay::reset() {
+	//dbug(F("warn RESET"));
 	stop();
 	currID = 0;
+	action = _WD_OFF;
 }
 
 void fB_WarnDelay::stop() {
-	//dbug(F("STOP"));
+	//dbug(F("warn STOP"));
 	timer.stop(_TIMER_ALARM);
 	timer.stop(_TIMER_WARN);
 	timer.stop(_TIMER_WARNDELAY);
@@ -400,18 +428,18 @@ void fB_WarnDelay::stop() {
 }
 
 uint8_t fB_WarnDelay::warning(uint8_t id, uint8_t wdSecs,uint8_t wSecs, uint8_t aSecs, uint16_t tled) {
-	//dbug(F("warndelay ENTRY"));
+	dbug(F("warn ENTRY"));
 	if(currID && id != currID) return _WD_SKIP;
 	if(!currID) {
 		currID = id;
 		warnDelaySecs = wdSecs;
 		warnSecs = wSecs;
 		alarmIntervalSecs = aSecs;
-		startWarning();	
+		startWarning(NULL);	
 		action = _WD_WARN;
 
 	}
-	//dbug(F("warndelay ACTION %d"), action);
+	dbug(F("warn ACTION %d"), action);
 	if(action == _WD_ACT) warn.currID = NULL;
 	return action;
 }
@@ -419,33 +447,38 @@ void fB_WarnDelay::startWarnDelay() {  // alarm delay interrupt handler
 	//dbug(F("STRTwarndelay INT ENTRY"));
 	if(!currID) return;
 	stop();
-	timer.after(_TIMER_WARNDELAY,(unsigned long)warnDelaySecs * 1000, startWarning);
+	//timer.after(_TIMER_WARNDELAY,(unsigned long)warnDelaySecs * 1000, startWarning,NULL);
+	timer.after(_TIMER_WARNDELAY,(unsigned long)warnDelaySecs * 1000, endWarnDelay,NULL);
 	action = _WD_DELAY;
 	//menu.showMessage(warn.msgIndex,warn.msgText);
 	if(ptLED) warn.ptLED->write(LEDonVal);
 }
 
 //////////////////// these methods are not in class because they need to be argument callable functions ////////////
-void playWarning() { 
+void playWarning(uint16_t arg16) { 
 	if(warn.ptLED) warn.ptLED->write(warn.LEDonVal);
 	alarm.play(ALARM_WARN); 
 	if(warn.ptLED) warn.ptLED->write(~warn.LEDonVal);
 }
 
-void endWarning() {
-	//dbug(F("ENDWARN wid:%d"),_TIMER_WARN);
+void endWarning(uint16_t arg16) {
 	warn.stop();
 	warn.action = _WD_ACT;
 	alarm.play(ALARM_ACT);
 	//warn.setMsg(P_BLANK);
 
 }
-void startWarning() {
+void startWarning(uint16_t arg16) {
 	//dbug(F("startWARN"));
 	if(warn.ptLED) warn.ptLED->write(~warn.LEDonVal);
-	timer.after(_TIMER_WARN,(unsigned long)warn.warnSecs * 1000, endWarning);
-	timer.every(_TIMER_ALARM,(unsigned long)warn.alarmIntervalSecs * 1000,playWarning, 25);
+	timer.after(_TIMER_WARN,(unsigned long)warn.warnSecs * 1000, endWarning,NULL);
+	timer.repeat(_TIMER_ALARM,(unsigned long)warn.alarmIntervalSecs * 1000, 25,playWarning,NULL);
 	//menu.showMessage(warn.msgIndex,warn.msgText);
-	playWarning();
+	playWarning(NULL);
 	//dbug(F("end startWARN"));
+}
+void endWarnDelay(uint16_t arg16) {
+	//dbug(F("startWARN"));
+	warn.reset();
+	if(warn.ptLED) warn.ptLED->write(~warn.LEDonVal);
 }

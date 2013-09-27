@@ -5,40 +5,6 @@ fB_TFT::fB_TFT() { }
 
 void fB_TFT::init(uint8_t orientation=PORTRAIT)
 { 
-	/*
-   //initTpin(uint8_t  tDex, uint8_t   cAddr, uint8_t  cPin, uint8_t  iodir);
-	initTpin(0, TL,  TLADDR,  0, _OUTPUT); 
-	initTpin(1, TL,  TLADDR, 1, _OUTPUT);
-	initTpin(2, TL,  TLADDR, 2, _OUTPUT);
-	initTpin(3, TL,  TLADDR, 3, _OUTPUT);
-	initTpin(4, TL,  TLADDR, 4, _OUTPUT);
-	initTpin(5, TL,  TLADDR, 5, _OUTPUT);
-	initTpin(6, TL,  TLADDR, 6, _OUTPUT);
-	initTpin(7, TL,  TLADDR, 7, _OUTPUT);
-
-	initTpin(8,  TH, THADDR, 0, _OUTPUT);
-	initTpin(9,  TH, THADDR,1, _OUTPUT);
-	initTpin(10, TH, THADDR,2, _OUTPUT);
-	initTpin(11, TH, THADDR,3, _OUTPUT);
-	initTpin(12, TH, THADDR,4, _OUTPUT);
-	initTpin(13, TH, THADDR,5, _OUTPUT);
-	initTpin(14, TH, THADDR,6, _OUTPUT);
-	initTpin(15, TH, THADDR,7, _OUTPUT);
-
-    // new
-	initTpin(L_CS,  TC, TCADDR,0, _OUTPUT);
-	initTpin(L_RST, TC, TCADDR,1, _OUTPUT);
-	initTpin(T_CLK, TC, TCADDR,4, _OUTPUT);
-	initTpin(T_CS,  TC, TCADDR,5, _OUTPUT);
-	initTpin(T_DIN, TC, TCADDR,6, _OUTPUT);
-	initTpin(T_OUT, TC, TCADDR,7, INPUT);
-	
-	initTpin(TSW_RT,  TS,  TSADDR,0, INPUT);
-	initTpin(TSW_LF,  TS,  TSADDR,1, INPUT);
-	initTpin(TSW_UP,  TS,  TSADDR,2, INPUT);
-	initTpin(TSW_DN,  TS,  TSADDR,3, INPUT);
-
-	*/
 	   //initTpin( index, uint8_t   cAddr, uint8_t  cPin);
 	initTpin(0, TLADDR,  0);  
 	initTpin(1,  TLADDR, 1); 	
@@ -360,8 +326,11 @@ void fB_TFT::LCD_Write_COM_DATA(char com1,int dat1)
      LCD_Write_DATA(dat1>>8,dat1);
 }
 
-void fB_TFT::clear(int ht)
+void fB_TFT::clear(uint16_t ht)
 {
+	
+	//dbug(F("TFT clr ht:%d"),ht);
+	
 	long i,m;
 	int y;
 	
@@ -576,44 +545,6 @@ void fB_TFT::printFloat(int x, int y, float num, int dec,int just)
   print(x,y,st);
 }
 
-/*
-void fB_TFT::printChar( int x, int y,uint8_t c)
-{
-	uint8_t i,ch;
-	word j;
-	word temp; 
-
-	bangTFTbit(L_CS, LOW);
-
-	if(cfont.font == SegFont) {
-		if(c>57) c = '-';
-		switch(c) {
-			case '.': printSpecChar( x, y,PERIOD); return;
-			case '-': printSpecChar( x, y,DASH);return;
-			case ' ': return;
-			case '+': return;
-		}
-	}
-	if(cfont.font == BigFont) if(c>96) c-=32; // force all caps
-    
-	setXY(x,y,x+cfont.x_size-1,y+cfont.y_size-1);
-  
-	temp=((c-cfont.offset)*((cfont.x_size/8)*cfont.y_size))+4;
-	for(j=0;j<((cfont.x_size/8)*cfont.y_size);j++)
-	{
-		ch=pgm_read_byte(&cfont.font[temp]);
-		for(i=0;i<8;i++)
-		{   
-			if((ch&(1<<(7-i)))!=0)  LCD_Write_HDATA(fColor);
-			else LCD_Write_HDATA(bColor);
-		}
-		temp++;
-	}
-	clrXY();	
-	bangTFTbit(L_CS, HIGH);
-
-}
-*/
 void fB_TFT::print( int x, int y, char *st,int n){
 	uint8_t  stl,xsize,i,j,k,ch;
 	uint8_t  dx=0,blen = 0;

@@ -16,8 +16,18 @@ void defineSystem()  {
 		defineRow(ARCHIVES,NULL);
 		defineJump(EEPROM);
 		defineJump(CLOCK);
-		defineRow(FRAM,_INT5 | NOACT);
-		defineRow(VCC,_FLOAT2 | NOACT);
+		defineJump(ALARM);
+		defineRow(FRAM,_INT5 | _NOACT);
+		defineRow(VCC,_FLOAT2 | _NOACT);
+
+	definePage(ALARM,SYSTEM);
+		defineRow(ALRMON,_BLAMP);
+		defineRow(ALARM0,_BLANK);
+		defineRow(ALARM1,_BLANK);
+		defineRow(ALARM2,_BLANK);
+		defineRow(ALARM3,_BLANK);
+		defineRow(ALARM4,_BLANK);
+		defineRow(ALARM5,_BLANK);
 
 	definePage(EEPROM,SYSTEM);
 		defineRow(ESTOR,_BLANK);
@@ -28,7 +38,7 @@ void defineSystem()  {
 		defineAlias(ESTOR,WRITE ALL);
 		defineAlias(ELOAD,LOAD ALL);
 		defineAlias(ECLR,CLEAR ALL);
-		defineAlias(EDUMP,SER DUMP);
+		defineAlias(EDUMP,SERIAL DUMP);
 
 
 	definePage(CLOCK,SYSTEM);
@@ -50,9 +60,9 @@ void defineSystem()  {
 
 	definePage(DPINS,SYSTEM);
 		defineRow(PNPIN,_PTEXT );
-		defineRow(PNCRD,_PTEXT | NOACT);
-		defineRow(PNROW,_INT5  | NOACT);
-		defineRow(PNCOL,_PTEXT | NOACT);
+		defineRow(PNCRD,_PTEXT | _NOACT);
+		defineRow(PNROW,_INT5  | _NOACT);
+		defineRow(PNCOL,_PTEXT | _NOACT);
 		defineRow(PNTOG,_BLAMP );
 		if(secondPass){
 			Tag(PNCRD)->flag16 |= _MARK;
@@ -63,20 +73,20 @@ void defineSystem()  {
 		defineAlias(PNCRD,CARD);
 		defineAlias(PNROW,ROW);
 		defineAlias(PNCOL,COL);
-		defineAlias(PNTOG,_TOGGLE);
+		defineAlias(PNTOG,TOGGLE);
 
 
 	definePage(APINS,SYSTEM);
 		defineRow(PNPIN,_PTEXT );
-		defineRow(PNCRD,_PTEXT | NOACT);
-		defineRow(PNROW,_INT5  | NOACT);
-		defineRow(PNCOL,_PTEXT | NOACT);
+		defineRow(PNCRD,_PTEXT | _NOACT);
+		defineRow(PNROW,_INT5  | _NOACT);
+		defineRow(PNCOL,_PTEXT | _NOACT);
 		defineRow(PNGAT,_BLAMP );
 		defineRow(PNADC,_INT5  | UPDATE);
-		//defineRow(PNVAL,_FLOAT2 | NOACT);
-		defineRow(PNVAL,_D2STR | NOACT);
-		//defineRow(PNFAC,_D2STR | NOACT);
-		//defineRow(PNOFF,_D2STR | NOACT);
+		//defineRow(PNVAL,_FLOAT2 | _NOACT);
+		defineRow(PNVAL,_D2STR | _NOACT);
+		//defineRow(PNFAC,_D2STR | _NOACT);
+		//defineRow(PNOFF,_D2STR | _NOACT);
 		if(secondPass){
 			Tag(PNVAL)->flag16 |= _MARK;
 		//	Tag(PNFAC)->flag16 |= _MARK;
@@ -94,8 +104,8 @@ void defineSystem()  {
 	defineRowList(LOGS,SYSTEM,_TTITLE);
 
 	definePage(FPANEL,LOGS);
-		defineRow(FDATE, NOACT | _TTITLE);
-		defineRow(FSIZE, NOACT | _TEXT);
+		defineRow(FDATE, _NOACT | _TTITLE);
+		defineRow(FSIZE, _NOACT | _TEXT);
 		defineRow(FSTD,NULL);
 		defineRow(FDUMP,_BLANK);
 		defineRow(FARCH,_BLANK);
@@ -110,8 +120,8 @@ void defineSystem()  {
 	
 /*
 	definePage(TPANEL,HOME);
-		defineRow(TLOG,NOACT);
-		defineRow(TINP,NOACT);
+		defineRow(TLOG,_NOACT);
+		defineRow(TINP,_NOACT);
 		defineRow(TVAL,_FLOAT2);
 		defineRow(TOPR,_TEXT); 
 		defineRow(TFAC,_FLOAT2);

@@ -19,7 +19,9 @@ fB_Timer		timer;
 
 uint8_t 	_fBiSelectK1 = 0;	// interrupt fork selector, used in fBinterruptHandlerK1
 uint8_t 	_fBiK1 = 0;			// global interrupt flag
-fB_Tag		*_pTiK1shft = NULL;
+uint8_t 	_fBiTFT = 0;		// global interrupt flag from TFT switches
+fB_Tag		*_pTiK1shft = NULL; // ptr to pin that shifts _fBiK1
+uint8_t		logInitFlag = 0;	// set  at first log entry after reboot, helps synchro logs
 
 double VccRef;  // adjusted Vcc
 //fB_WTV   audio;
@@ -33,31 +35,37 @@ typedef union  PandT {			// array of tags, preserves menu structure
 	uint16_t	t;              // the tags on one pass, then to convert to pointers
 };	
 
-typedef struct logTag {
-	uint8_t						tag;
+
+typedef struct logFile {
+	uint8_t						fTag;
 	const __FlashStringHelper*	Pbase;
 };
 
-// on the next pass
+typedef struct logTag {
+	uint8_t						fTag;
+	uint16_t					tag;
+};
+
 uint8_t 	bootStatus;
 uint8_t		secondPass;
 fB_Tag		*Tag(uint16_t tag);
 //uint16_t	farY =	0;
 
 uint16_t	tagCount	= 0;
+uint16_t	rowCount		= 0;
+uint16_t	logTagCount		= 0;
+
 uint8_t		pinCount		= 0;
 uint8_t		cardCount		= 0;
 uint8_t		pageCount		= 0;
-uint16_t	rowCount		= 0;
-uint16_t	logTagCount		= 0;
-uint8_t		logFileCount	= 0;
-uint8_t		archiveCount	= 0;
-
+uint8_t		logFileCount		= 0;
 
 
 PandT*			rTP;	
-uint16_t*		tempTagRay;		// temp array for packed tag list
+uint8_t*		logTempRay;		
+uint16_t*		tagTempRay;		// temp array for packed tag list
 logTag*			logTagRay;		// array of structs containing log tag and basename pointer
+logFile*		logFileRay;		// array of structs containing log tag and basename pointer
 fB_Tag*			tagRay;			// array of Tag objects
 fB_Tag*			rowTagRay;		// array of tags, preserves menu structure
 fB_Card**		pCardRay;			// sparse array of pointers to Card objects
@@ -69,33 +77,35 @@ void dbug(const __FlashStringHelper* Ptitle, ... );
 void defineUser();
 void defineSystem();
 
-void playWarning();
-void startWarnDelay();
-void startWarning();
-void endWarning();
+void playWarning(uint16_t arg16);
+void startWarnDelay(uint16_t arg16);
+void startWarning(uint16_t arg16);
+void endWarning(uint16_t arg16);
 
 
 
 ///////////////////// GLOBAL to main.c FUNCTIONS ////////////////////////////////////////////////////////////////
-void buildPstrRay() {
-	createPstr(P_LEFT,"L");
-	createPstr(P_RIGHT , "R");
-	createPstr(P_STAMP , "STAMP");
-	createPstr(P_DELETE , "DELETE");
-	createPstr(P_NOLOG , "NO LOG");
-	createPstr(P_INPUT , "INPUT");
-	createPstr(P_AMP , "AMP");
-	createPstr(P_STRIKE, "----");
-	createPstr(P_TOGGLE , "TOGGLE");
-	createPstr(P_GATE , "GATE");
-	createPstr(P_LOGS , "LOGS");
+void buildPstrRay() {  // constants in fB_SYS_Define.h
+	createPstr(P_LEFT,		"L");
+	createPstr(P_RIGHT ,	"R");
+	createPstr(P_STAMP ,	"STAMP");
+	createPstr(P_DELETE ,	"DELETE");
+	createPstr(P_NOLOG ,	"NO LOG");
+	createPstr(P_INPUT ,	"INPUT");
+	createPstr(P_AMP ,		"AMP");
+	createPstr(P_STRIKE,	"----");
+	createPstr(P_TOGGLE ,	"TOGGLE");
+	createPstr(P_GATE ,		"GATE");
+	createPstr(P_LOGS ,		"LOGS");
 	createPstr(P_SHUTDOWN , "SHUTDOWN");
-	createPstr(P_DELAYSHUT , "DELAY SHUT");
-	createPstr(P_DELAYSW2 , "DELAY SW2");
-	createPstr(P_CHGALT , "ALT CHARGE");
-	createPstr(P_CHGEXT, "EXT CHARGE");
-	createPstr(P_SWITCHTO, "SWITCHING TO");
-	createPstr(P_BLANK , "");
+	createPstr(P_DELAYSHUT, "DELAY SHUTDN");
+	createPstr(P_DELAYSW2 , "DELAY SWITCH");
+	createPstr(P_CHGALT ,	"ALT CHARGE");
+	createPstr(P_CHGEXT,	"EXT CHARGE");
+	createPstr(P_SWITCHTO,	"SWITCHING TO");
+	createPstr(P_MANUAL,	"MANUAL OVERRIDE");
+	createPstr(P_FAIL,	    "FAILURE");
+	createPstr(P_BLANK ,	"");
 }
 
 double readVcc() {
@@ -147,16 +157,24 @@ double readVcc() {
 // free RAM check for debugging. SRAM for ATmega328p = 2048Kb.
 //  1024 with ATmega168
 
+void logData(uint16_t arg16) {
+		//dbug(F("LOGDATA entry a16:%d"), arg16);
+	rec.logWriteData((uint8_t) arg16);
+		//dbug(F("LOGDATA exit"));
+}
+
 void fBinterruptHandlerK1() {  // sets global flag, check and reset flag in user modules
 	if(_fBiK1) return;
 	if(_pTiK1shft && (_pTiK1shft->readInt()== _pTiK1shft->getOnVal())) _fBiK1 = INTK1SHFT;
 	else _fBiK1 = INTK1;
 	delayMicroseconds(10000);
 	//dbug(F("FB_INTERRUPT msecs:%d   manOvr:%d"),msecs, _manOver);
-
 }
 
-void navigate() {   menu.buttonCode = tft.readButtons(); }  // tft button interrupt handler 
+void navigate() {   
+	menu.buttonCode = tft.readButtons(); 
+	_fBiTFT = 1;
+}  
 
 int freeRAM () {
   extern int __heap_start, *__brkval; 
@@ -189,20 +207,25 @@ void getPtextU(const __FlashStringHelper* Ptext,char *buffer){
    buffer[cursor] = '\0';
 }
 
-void packTempTagRay(uint16_t tag) {
+void packtagTempRay(uint16_t tag) {
 	int i;
 	for( i=0; i < tagCount; i++ ) {
-		if(tag == tempTagRay[i]) return;
-		if(!tempTagRay[i]) break;
+		if(tag == tagTempRay[i]) return;
+		if(!tagTempRay[i]) break;
 	}
 	if(i<MAXTEMPTAG) {
-		tempTagRay[i] = tag;
+		tagTempRay[i] = tag;
 		tagCount++;
 	}
 }
 
-logTag* Log(uint8_t tag) {
-	if(tag != NULL) for(int i=0;i < logTagCount;i++) if(logTagRay[i].tag == tag) return &logTagRay[i];
+logFile* LogFile(uint8_t fTag) {
+	if(fTag != NULL) for(int i=0;i < logFileCount;i++) if(logFileRay[i].fTag == fTag) return &logFileRay[i];
+	return NULL;
+}
+
+logTag* LogTag(uint8_t fTag) {
+	if(fTag != NULL) for(int i=0;i < logTagCount;i++) if(logTagRay[i].fTag == fTag) return &logTagRay[i];
 	return NULL;
 }
 
@@ -210,27 +233,51 @@ fB_Tag* Tag(uint16_t tag) {
 	if(tag != NULL) for(int i=1;i < tagCount;i++) if(tagRay[i].tag == tag) return &tagRay[i];
 	return NULL;
 }
+
 fB_Card* Card(uint16_t tag) {	
 	if(tag != NULL)for(int i=0;i < cardCount;i++) if(pCardRay[i]->tag == tag) return pCardRay[i];
 	return NULL;
 }
 
-fB_Tag* initTag(uint16_t tag,const __FlashStringHelper* Ptitle,uint32_t flags,uint8_t fTag=NULL,const __FlashStringHelper* Pbase  = NULL) {
+void initLog(uint16_t tag, uint8_t fTag, const __FlashStringHelper* Pbase) {
 	fB_Tag *pT = NULL;
 	if(!secondPass) {
-		packTempTagRay(tag); // add to tempTagRay if unique;
-		if(fTag && !(flags & _PAGE)) logTagCount++;
+		int i;
+		logTagCount++;
+		for(i=0;i < logFileCount;i++) if(logTempRay[i] == fTag) break;
+		if(i == logFileCount) logTempRay[logFileCount++] = fTag;
+	}
+	else {
+		pT = Tag(tag);
+		if(pT) {
+			logTagRay[logTagCount].fTag = fTag;
+			logTagRay[logTagCount].tag = tag;
+			logTagCount++;
+			if(!LogFile(fTag)) {
+				logFileRay[logFileCount].fTag = fTag;
+				logFileRay[logFileCount].Pbase = Pbase;
+				logFileCount++;
+			}
+		}
+//dbug(F("IT2  %P FT:%x"),pT->Ptitle, pT->flag16);
+	}
+}
+
+fB_Tag* initTag(uint16_t tag,const __FlashStringHelper* Ptitle,uint32_t flags,uint16_t tTag =NULL) {
+	fB_Tag *pT = NULL;
+	if(!secondPass) {
+		packtagTempRay(tag); // add to tagTempRay if unique;
+		//if(fTag && !(flags & _PAGE)) logTagCount++;
 	}
 	else {
 		pT = Tag(tag);
 		if(!pT)	{
 			pT =  &tagRay[tagCount++]; 
-			pT->tag = tag;
-			pT->Ptitle = Ptitle;
-			pT->fTag = fTag;  // 8bit 
 			pT->pin = NULL;
 			pT->Palias = NULL;
-
+			pT->tag = tag;
+			pT->Ptitle = Ptitle;
+			pT->tTag = tTag;  // 16bit 
 		}
 		if(!(pT->flag16 & _DUBL) && (flags & (_FLOAT1 | _FLOAT2 | _D2STR)))	{
 			pT->dVal = new fB_Val;
@@ -240,28 +287,20 @@ fB_Tag* initTag(uint16_t tag,const __FlashStringHelper* Ptitle,uint32_t flags,ui
 		pT->putFormat(flags);
 		pT->putAction(flags);
 
-		if(fTag && !(flags & _PAGE)) {
-			pT->fTag = fTag;
-			pT->flag16 |= _LOG;
-			if(!Log(fTag)) {
-				logTagRay[logTagCount].tag = fTag;
-				logTagRay[logTagCount].Pbase = Pbase;
-				logTagCount++;
-			}
-		}
-//dbug(F("IT2  %P FT:%x"),pT->Ptitle, pT->flag16);
+//dbug(F("fBIT  %P ptag:%d, f:0X%x, flag:0x%x"),pT->Ptitle, pT->tTag,flags,pT->flag16);
 	}
 	return pT;
 }
 
 void initPage( uint16_t tag,const __FlashStringHelper* Ptitle, uint16_t parentTag){  
 	fB_Tag * pT;
-	pT = initTag(tag,Ptitle,_PAGE,parentTag,NULL);  // for _PAGE, fTag holds parentTag (8bits)
+	pT = initTag(tag,Ptitle,_PAGE,parentTag);  // for _PAGE, fTag holds parentTag 
 	if(secondPass) { 
 		rTP[rowCount].t = tag;
 		pT->iVal = rowCount;		// index in tagRay of first row of Page
 		curr.setCurrPage(tag);      // fTag = parentTag
 		curr.rowCount = 1;
+//dbug(F("fBIP  %P ptag:%d, flag:0x%x"),pT->Ptitle, pT->tTag,pT->flag16);
 	}
 	rowCount++;
 	pageCount++;
@@ -278,7 +317,7 @@ void initJump(uint16_t tag) {
 }
 
 void initRow(uint16_t tag, const __FlashStringHelper* Ptitle,uint32_t  flags){
-	initTag(tag,Ptitle,flags,NULL,NULL);
+	initTag(tag,Ptitle,flags,NULL);
 	if(secondPass) 	{
 		rTP[rowCount].t = tag;
 		curr.incrRowCount(); // increment rowCount for this page, store in page flags
@@ -302,10 +341,10 @@ void defineSpace() { 	// does not work!!!
 
 void initPin( uint16_t tag,const __FlashStringHelper* Ptitle, uint16_t ctag,uint8_t   row,uint8_t   side,   uint8_t  dir, uint8_t  onval) {
 	fB_Tag *pT;
-	pT = initTag(tag,Ptitle,NULL,NULL,NULL);
+	pT = initTag(tag,Ptitle,NULL,NULL);
 	if(secondPass)	{
 		pT->createPin(ctag,row,side,dir,onval) ;
-		pT->flag16 |= _UNDEF;
+		pT->flag16 |= ( _PIN | _UNDEF);
 		if(!(pT->flag16 & _DUBL) && pT->getMode()== _ANALOG) {
 			pT->dVal = new fB_Val;
 			pT->flag16 |= _DUBL;
@@ -337,10 +376,14 @@ void defineIncrement( uint16_t tag, double value,double offset) {
 	if(secondPass) {
 		fB_Tag *pT;
 		pT = Tag(tag);
-		pT->dVal->vFunc = NULL;
-		pT->dVal->value = value;
-		pT->dVal->factor = 1;
-		pT->dVal->offset = offset;
+		if(pT->flag16 & _DUBL) {
+			pT->dVal->value = value;
+			pT->dVal->offset = offset;
+		}
+		else {
+			pT->iVal = value;
+			pT->buf16 = offset;
+		}
 	}
 }
 
@@ -411,19 +454,23 @@ void flatBrainInit(){
 
 	secondPass = 0;  // 1st pass , determine array sizes
 
-	tempTagRay = (uint16_t*) calloc( MAXTEMPTAG,2); // temp array for packed tag list
+	logTempRay = (uint8_t*) calloc( MAXTEMPLOG,1); // temp array for log list
+	tagTempRay = (uint16_t*) calloc( MAXTEMPTAG,2); // temp array for packed tag list
 	defineSystem();
 	defineUser();
-	free(tempTagRay);
+	free(tagTempRay);
+	free(logTempRay);
 
 	dbug(F("free RAM3 %d"),freeRAM());
 	tagRay =	(fB_Tag *) calloc(tagCount,sizeof(fB_Tag));			// array of Tag objects
 	rTP    =	(PandT *) calloc(rowCount,sizeof(PandT));			// array of tags or pointers, for menu operations
-	logTagRay = (logTag *) calloc(logTagCount,sizeof(logTag));
+	logTagRay =	(logTag *) calloc(logTagCount,sizeof(logTag));
+	logFileRay =(logFile *) calloc(logFileCount,sizeof(logFile));
 	pCardRay  =	(fB_Card **) calloc(cardCount,sizeof(fB_Card*));
 
 	dbug(F("INIT PASS 1"));
 	dbug(F("tagCount %d"),tagCount);
+	dbug(F("logFileCount %d"),logFileCount);
 	dbug(F("logTagCount %d"),logTagCount);
 	dbug(F("pageCount %d"),pageCount);
 	dbug(F("rowCount %d"),rowCount);
@@ -440,21 +487,26 @@ void flatBrainInit(){
 	rowCount  = 0;	// all rows tags, incl spaces, jumps, and pin duplicates
 	pinCount  = 0;	// all pin tags, possible duplicates of row tags
 	cardCount = 0;
+	logFileCount  = 0;
 	logTagCount  = 0;
 
 	secondPass = 1;  // 2nd pass , execute
 	defineSystem();
 	defineUser();
+	dbug(F("INIT PASS 2"));
 
 	for(int i=0; i< rowCount; i++) rTP[i].p = Tag(rTP[i].t); // might be obscure. ( see note at top of file ).
 															//  takes array of uint16_t tags and converts them to fB_Tag*
 
-	if(bootStatus & SD) for(int i=0;i<logTagCount;i++) 	rec.logCreate(getPtext(logTagRay[i].Pbase,Pbuffer));
+	if(bootStatus & SD) for(int i=0;i<logFileCount;i++) 	{
+	dbug(F("Fb T:%d , b:%P"),logFileRay[i].fTag,logFileRay[i].Pbase);
+		rec.logCreate(logFileRay[i].fTag);
+	}
+	dbug(F("INIT LOGS"));
 														
-	dbug(F("INIT PASS 2"));
 
-	pT = rec.EEgetEAUTO();
-	if(pT && pT->iVal == HIGH) rec.EEloadTags();     
+	pT = rec.EEgetEAUTO(BASEETAG);
+	if(pT && pT->iVal == HIGH) rec.EEloadTags(BASEETAG);     
 
 	dbug(F("INIT EEPROM"));
 

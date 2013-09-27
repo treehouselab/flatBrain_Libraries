@@ -47,28 +47,31 @@ void defineUser() {
    	defineHome(FLATBRAIN);			// MUST HAVE A HOME
 		defineJump(SYSTEM);			// SYSTEM Page created in fB_SYS_Defines.cpp
 		// OPTIONAL User-Defined Rows start here
-		defineJump(RSTATUS);
-		defineJump(RPULSE);		
-		defineJump(SENSORS);
-		defineJump(VLIMITS);
+		defineJump(VSTATUS);
+		defineJump(VGLOBALS);
+		defineJump(LOGS);
+		//defineJump(RPULSE);		
+		//defineJump(SENSORS);
 		defineRow(DRST,_BLANK);
 		defineTarget(DRST,YCRD);
 
 	//////////////////////////////////////////
 
-   	definePage(RSTATUS,HOME);
-		defineRow(V1, _FLOAT1 | _LOG);
-		defineRow(V2, _FLOAT1 | _LOG);
-		defineRow(V3, _FLOAT1 | _LOG);
-		//defineRow(V0, _FLOAT1 | _LOG);
-		//defineRow(CZ,  _FLOAT2 | _LOG);
-		defineRow(CX,  _FLOAT2 | _LOG);
-		defineRow(CL,  _FLOAT2 | _LOG);
+   	definePage(VSTATUS,HOME);
+		defineRow(V1, _FLOAT1 | _NOACT );
+		defineRow(V2, _FLOAT1 | _NOACT );
+		defineRow(V3, _FLOAT1 | _NOACT );
+		//defineRow(V0, _FLOAT1 );
+		//defineRow(CZ,  _FLOAT2 );
+		defineRow(CX,  _FLOAT1 | _NOACT );
+		defineRow(CL,  _FLOAT1 | _NOACT );
 		//defineRow(IGN,  _BLAMP | LOG );
-		defineRow(ALT,  _BLAMP | _LOG );
+		defineRow(ALT,  _BLAMP  | _NOACT );
+		defineJump(VGLOBALS);
+		defineJump(LOGS);
 		//defineTarget(IGN,VIGN);
 
-   	definePage(RPULSE,HOME);
+ /*  	definePage(RPULSE,HOME);
 		defineRow(Y1,_BLANK | SHFTPULSE);
 		defineRow(Y2,_BLANK | SHFTPULSE);
 		defineRow(Y3,_BLANK | SHFTPULSE);
@@ -79,41 +82,77 @@ void defineUser() {
 		defineAlias(YRST,RESET ALL);
 
    	definePage(SENSORS,HOME);
-		defineRow(V1, _FLOAT1 | _LOG);
-		defineRow(V2, _FLOAT1 | _LOG);
-		defineRow(V3, _FLOAT1 | _LOG);
-		//defineRow(CZ, _FLOAT1 | _LOG);
-		//defineRow(CC, _FLOAT1 | _LOG);
-		//defineRow(CL, _FLOAT1 | _LOG);
+		defineRow(V1, _FLOAT1 );
+		defineRow(V2, _FLOAT1 );
+		defineRow(V3, _FLOAT1 );
+		//defineRow(CZ, _FLOAT1 );
+		//defineRow(CC, _FLOAT1 );
+		//defineRow(CL, _FLOAT1 );
+*/
+	definePage(VGLOBALS,HOME);
+		defineJump(LVDLIMITS);
+		defineRow(VEXS, _FLOAT1 | _INCR | _LOADEE);
+		defineRow(VALT, _FLOAT1 | _INCR | _LOADEE);
+		defineRow(CHLO, _FLOAT1 | _INCR | _LOADEE);
+		defineRow(CHHI, _FLOAT1 | _INCR | _LOADEE);
+		defineRow(CPSEC,_FLOAT1 | _INCR | _LOADEE);
+		defineRow(BKSEC,_FLOAT1 | _INCR | _LOADEE);
+		defineRow(LGMIN,_FLOAT2 | _INCR | _LOADEE);
+		defineRow(ESTOR,_BLANK);
 
-	definePage(VLIMITS,HOME);
-		defineRow(VEXS, _FLOAT1 | _INCR | _LOADEE| _LOG);
-		defineRow(VALT, _FLOAT1 | _INCR | _LOADEE| _LOG);
-		defineRow(CHLO, _FLOAT1 | _INCR | _LOADEE| _LOG);
-		defineRow(CHHI, _FLOAT1 | _INCR | _LOADEE| _LOG);
-		defineRow(DLO1, _FLOAT1 | _INCR | _LOADEE| _LOG);
-		defineRow(DLO2, _FLOAT1 | _INCR | _LOADEE| _LOG);
-		defineRow(DLO3, _FLOAT1 | _INCR | _LOADEE| _LOG);
-		defineRow(DHI1, _FLOAT1 | _INCR | _LOADEE| _LOG);
-		defineRow(DHI2, _FLOAT1 | _INCR | _LOADEE| _LOG);
-		defineRow(DHI3, _FLOAT1 | _INCR | _LOADEE| _LOG);
+	definePage(LVDLIMITS,VGLOBALS);
+		defineRow(DLO1, _FLOAT1 | _INCR | _LOADEE);
+		defineRow(DLO2, _FLOAT1 | _INCR | _LOADEE);
+		defineRow(DLO3, _FLOAT1 | _INCR | _LOADEE);
+		defineRow(DHI1, _FLOAT1 | _INCR | _LOADEE);
+		defineRow(DHI2, _FLOAT1 | _INCR | _LOADEE);
+		defineRow(DHI3, _FLOAT1 | _INCR | _LOADEE);
+		defineRow(ESTOR,_BLANK);
 
 
  	//////////// DEFINE RECORDS
 
-	defineRecord(V1,LOG2,NULL); // flags: [format] | _LOADEE( for eeprom )
-	defineRecord(V2,LOG2,NULL);
-	defineRecord(V3,LOG3,NULL);
-	defineRecord(CZ,LOG1,NULL);
-	defineRecord(CX,LOG1,NULL);
-	defineRecord(CL,LOG1,NULL);
+	defineLog(CPSEC,LOG1);
+	defineLog(BKSEC,LOG1);
+	defineLog(LGMIN,LOG1);
+	defineLog(VEXS,LOG1);
+	defineLog(VALT,LOG1);
+	defineLog(CHLO,LOG1);
+	defineLog(CHHI,LOG1);
+	defineLog(DLO1,LOG1);
+	defineLog(DLO2,LOG1);
+	defineLog(DLO3,LOG1);
+	defineLog(DHI1,LOG1);
+	defineLog(DHI2,LOG1);
+	defineLog(DHI3,LOG1);
 
+	defineTag(LBOOT, _BLAMP);
+	defineLog(LBOOT,LOG2);
+	defineLog(Y1S,LOG2);
+	defineLog(Y2S,LOG2);
+	defineLog(Y3S,LOG2);
+	defineLog(Y4S,LOG2);
+	defineLog(Y5S,LOG2);
+	defineLog(Y6S,LOG2);
+	defineLog(ALT,LOG2); 
+	defineLog(V1,LOG2);
+	defineLog(V2,LOG2);
+	defineLog(V3,LOG2);
+	defineLog(CL,LOG2);
+	defineLog(CX,LOG2);
+	//defineLog(CZ,LOG2);
 
-	defineAlias(RSTATUS,RELAY STATUS);
-	defineAlias(RPULSE,RELAY SWITCH);
+	defineAlias(VSTATUS,VAN STATUS);
+	defineAlias(VGLOBALS,VAN GLOBALS);
+	//defineAlias(RPULSE,RELAY SWITCH);
 	defineAlias(V1,VOLTS B1);
 	defineAlias(V2,VOLTS B2);
 	defineAlias(V3,VOLTS B3);
+	defineAlias(CX,AMPS EXT);
+	defineAlias(CL,AMPS LOAD);
+	defineAlias(LGMIN,LOG MINS);
+	defineAlias(BKSEC,BKGR SECS);
+	defineAlias(CPSEC,DISP SECS);
 
 	//defineAlias(Y1S,RELAY 1);
 	//defineAlias(Y2S,RELAY 2);
@@ -128,7 +167,7 @@ void defineUser() {
 
 	defineCalibrate(CZ,sysAmps,.02744,-.31);
 	defineCalibrate(CX,posOnly,0.03789,-4.020);
-	defineCalibrate(CL,loadAmps,0.5167,0);
+	defineCalibrate(CL,loadAmps,0.35,-179.35);
 
 	defineIncrement(VEXS,9.0,0.1);
 	defineIncrement(VALT,13.8,0.1);
@@ -140,6 +179,9 @@ void defineUser() {
 	defineIncrement(DHI1,13.0,0.1);
 	defineIncrement(DHI2,12.0,0.1);
 	defineIncrement(DHI3,11.0,0.1);
+	defineIncrement(CPSEC,4.0,0.5);
+	defineIncrement(BKSEC,10.0,0.5);
+	defineIncrement(LGMIN,5,0.25);
 
 	defineAlias(VEXS,BATT EXST);
 	defineAlias(VALT,ALTN ON);
@@ -163,8 +205,8 @@ void defineUser() {
 
 	double loadAmps(fB_Tag* pT,uint16_t intVal) {
 		//int sign;
-		if(intVal > 513 && intVal < 516) return 0;
-		return ((double)intVal - 515 )* pT->dVal->factor + pT->dVal->offset;
+		if(intVal == 511) return 0;
+		return ((double)intVal * pT->dVal->factor + pT->dVal->offset);
 		//return  sign * ( fabs((intVal - 534 )* pT->dVal->factor) + pT->dVal->offset);
 	}
 

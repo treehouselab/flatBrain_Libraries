@@ -8,7 +8,9 @@ class fB_Menu {
 		//fB_Curr		curr;
 
 		int			fListStart ;	// can go negative !	
-		int			sListStart ;		
+		int			sListStart ;
+		
+		fB_Tag		*ptHEADER;
 
 		uint8_t 	buttonCode;  // set by tft.readButtons in interrupt
 
@@ -25,7 +27,7 @@ class fB_Menu {
 		void		pinPageConstruct(uint8_t mode,uint8_t startDex, uint8_t hand=RIGHT);
 		void		refreshRow(uint16_t tag = NULL);
 		void		showMessage(uint8_t Pindex, char *text = ""); 
-		void		clearRow(uint8_t rowIndex);
+		void		clearRow(int rowIndex);
 
 
 		void		init();

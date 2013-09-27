@@ -87,11 +87,12 @@ void fB_Curr::setCurrPage(uint16_t _tag) {
 	if(_tag) {
 		pageTag = _tag;
 		pP = Tag(_tag);
-		parentTag = pP->fTag;
+		//parentTag = pP->fTag;
+		parentTag =  pP->tTag;
 		rowCount = getRowCount();
 	}
 	farY = STARTY + (ROWHT * (1+rowCount));
-	//dbug(F("scp %P, rc:%d, f: %d"),pP->Ptitle,rowCount,farY);
+dbug(F("Tscp  tag:%d , rc:%d, fy:%d"),_tag,rowCount,farY);
 
 }	
 
@@ -122,7 +123,7 @@ void fB_Curr::incrRowCount() {
 	putRowCount(++count);
 }
 
-void fB_Curr::selectRow(uint8_t rowIndex) {
+void fB_Curr::selectRow(int rowIndex) {
 	if(!rowIndex) rowIndex = rowDex;
 	tft.setColor(FCOLOR,GCOLOR);
 	tft.drawHLine(STARTX,getY(rowIndex)+ROWHT-8,MAXPIXELWID);
@@ -131,7 +132,7 @@ void fB_Curr::selectRow(uint8_t rowIndex) {
 	
 }
 
-void fB_Curr::deselectRow(uint8_t rowIndex) {
+void fB_Curr::deselectRow(int rowIndex) {
 	if(!rSelected) return;
 	if(!rowIndex) rowIndex = rowDex;
 	tft.setAll2Bcolor();
@@ -402,6 +403,6 @@ unsigned int fB_Tag::aRead() {
 uint16_t fB_Tag::avgAnalogIn() {
 	uint16_t  ival,sum = 0;
 	if(getOnVal() != _PGATE) return 0;
-	return Card(getCtag())->CD_avgAnalogRead(getCpin(),ANALOGSAMPLESIZE);
+	return Card(getCtag())->CD_avgAnalogRead(getCpin(),_ANALOGSAMPLESIZE);
 }
 

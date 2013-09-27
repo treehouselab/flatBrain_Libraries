@@ -136,7 +136,7 @@ unsigned int fB_Card::CD_avgAnalogRead(uint8_t  chan,uint16_t size) {
 	for(int i = 0; i < size; i++) {
 		ival = analogRead(aChan);
         sum += ival;
-		delay(10);
+		delay(_ANALOGSAMPLEDELAY);
     }
 	//AnalogGate(OFF); //************************* COMMENT OUT FOR TESTING 
 	return( (uint16_t) (sum/size));

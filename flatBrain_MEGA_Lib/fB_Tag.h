@@ -27,8 +27,8 @@ class fB_Curr {
 		void		setCurrPage(uint16_t _tag);
 		void        nextSwitch();
 		void        prevSwitch();
-		void		selectRow(uint8_t rowIndex = NULL);
-		void		deselectRow(uint8_t rowIndex = NULL);
+		void		selectRow(int rowIndex = NULL);
+		void		deselectRow(int rowIndex = NULL);
 		fB_Curr();
 };
 
@@ -60,19 +60,16 @@ class fB_Tag {
 		} ;
 
 		union {
-			uint8_t		fTag;
-			uint8_t		buf8;
-		};
-		union {
 			uint16_t	pin; 
 			uint16_t	tTag;
+			uint16_t	buf16;
 		};
 
 
 		//uint16_t	tTag;	  // pointer to target Tag 
 
 		void		action(uint8_t hand);
-		void		showRow(uint8_t rowIndex, uint8_t  pageOption=NULL);
+		void		showRow(int rowIndex, uint8_t  pageOption=NULL);
 
 		//void		frame();
 		//void		unframe();
@@ -116,6 +113,11 @@ class fB_Tag {
 		unsigned int dRead();
 		bool isLatched();
 		uint16_t avgAnalogIn();
+		void frame(int rowIndex);
+		void unframe(int rowIndex);
+		void invertColors();
+
+
 
 
 };

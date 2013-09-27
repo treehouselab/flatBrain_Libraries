@@ -24,7 +24,7 @@
 #define SD_SSDDR 		    DDRJ 
 #define SPISPEED			0x01 //(0-VERY HIGH....3-VERY SLOW)
 
-#define ALARM_PIN		11 // option: pin 45
+#define _ALARMPIN		11 // option: pin 45
 
 #define NAV_INT			5 // Display Navigation button interrupt number, corresp. to Mega pin 18
 #define NAV_INTPIN		18
@@ -71,27 +71,35 @@ XCARDS		Ox20-27
 #define	_TIMER_ALARM			3 
 #define	_TIMER_FREEINDEXSTART	4 
 
+#define	_APPENDLOG		0
+#define	_APPENDDIF		1
+#define	_NEWLOG			2
+#define	_MINLOGMIN		1  // minimum log interval in minutes
+
 #define fERR  -1
 
-#define ATAG		60000     // reserved for Archive Tag
 #define I2CFAST			1	  
 #define I2CSLOW			0	  
 #define I2CSPEED		1
 #define I2CTIMEOUT		100  //ms	  
 #define SERIALSPEED		9600  
 #define ROUNDOFF		.0005  // added to calcs to round off displayed values
-#define BASEE			0    // base address EEPROM
+#define BASEETAG		0       // base address EEPROM, load values
+#define BASEELOG		1024    // base address EEPROM, last log values
 #define	PULSEMSECS		200
+#define	_CPSECLIM		10
+#define	_BKSECLIM		30
 
 #define MAXEETAGS		25  // for eeprom runaway only
 #define MAXCHARSDUMP	256  // reduce this if logfile dump collides with heap 
 #define MAXLISTROWS		9 
-#define	MESSAGE_Y		295
+#define	MESSAGE_Y		285
 #define MAXCHARSLINE	15 
 #define MAXCHARSTEXT	8 
 #define MAXCHARS_D2STR	6 
 //#define MAXVDRDEX		6 
-#define	MAXTEMPTAG		500
+#define	MAXTEMPTAG		256
+#define	MAXTEMPLOG		24
 #define	MAXZEROADC		250 // max ADC reading that qualifies for binary zero
 
 
@@ -200,9 +208,9 @@ XCARDS		Ox20-27
 //////////////////////////////////////////////////////////////////////////////
 // Tag->flags is 16 bits, top 4bits is used for row count buffer
 #define	_PAGE			0x0001	 
-#define	_LOADEE			0x0002	// load values from EEPROM on Boot
-//#define				0x0004	
-#define	_LOG			0x0008	// Log to SD card
+#define	_PIN			0x0002	
+#define	_LOADEE			0x0004	// load values from EEPROM on Boot
+//#define	_LOG			0x0008	// Log to SD card
 #define	_MARK			0x0010	// Mark row
 #define	_HIDE			0x0020
 #define	_TTITLE			0x0040	// use char* ptitle for row title instead of Ptitle
@@ -212,15 +220,16 @@ XCARDS		Ox20-27
 #define	_DUBL			0x0400
 //#define				0x0800
 #define	_MASKP			0xF000	// 4 bits reserved ROWCOUNT
-#define	_RCOFFSET		12	    // Offset of rowCount in Tag flag
+#define	_RCOFFSET		12	    // Offset of rowCount 
 
 ////////////////////////////////////////////////////////////////////////////////
-//Tag->format is 8 bits. The low 4bits of Tag->format contain one of 11 possible 
-// action codes (incl. zero) in decimal format. This code is converted to 32bit _BLAMP
-// for run-time comparisons (listed below). This allows for all the Tflag, format, and 
+//Tag->flag8 is 8 bits. The low 4bits of Tag->flag8 contain one of 11 possible 
+// action codes (incl. zero) in decimal format. 
+// The high 4bits of  Tag->format contains one of 11 possible format codes in similar scheme.
+// This code is converted to 32bit for run-time comparisons (listed below). 
+// This allows for all the flag16, format, and 
 // action flags to be entered on a single OR'd field at Tag definition arguments.
 
-// The high 4bits of  Tag->format contains one of 11 possible format codes in similar scheme.
 
 #define	MASK8A			0x0F	 
 #define	MASK32A			0x003FF000L
@@ -231,7 +240,7 @@ XCARDS		Ox20-27
 #define	PULSE			0x00008000L
 #define	UPDATE			0x00010000L
 //#define			0x00020000L
-#define	NOACT			0x00040000L
+#define	_NOACT			0x00040000L
 #define	_TOGGLE			0x00080000L
 //#define		       	0x00100000L
 //#define				0x00200000L
@@ -256,8 +265,7 @@ XCARDS		Ox20-27
 
 ////////////////////////////////////////////////////////////////////???
 ////////////////////////////////////////////////////////////////////
-
-#define	ATAG	60000
+/*
 #define	ADATE	60002
 #define	ASIZE	60004
 #define	ADEL	60006
@@ -268,7 +276,7 @@ XCARDS		Ox20-27
 #define	LSIZE	60024
 #define	LSTAMP	60026
 #define	LARCH	60028
-
+*/
 ////////////////////////////////////////////////////////////////////////
 ////////////// ALL SYSTEM TAGS < 500 ///////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
@@ -341,6 +349,14 @@ XCARDS		Ox20-27
 #define	EDUMP		352
 #define	ECLR		353
 
+#define	ALARM0		360
+#define	ALARM1		361
+#define	ALARM2		362
+#define	ALARM3		363
+#define	ALARM4		364
+#define	ALARM5		365
+#define	ALRMON		366
+
 
 //////////////////////////////////////////////////////////////////
 
@@ -362,8 +378,10 @@ XCARDS		Ox20-27
 #define P_CHGALT		15
 #define P_CHGEXT		16
 #define P_BLANK			17
+#define P_MANUAL		18
+#define P_FAIL			19
 
-#define	MAXPSTRCOUNT	18
+#define	MAXPSTRCOUNT	20
 
 
 	

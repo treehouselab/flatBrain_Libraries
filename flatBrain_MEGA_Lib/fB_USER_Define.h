@@ -9,8 +9,9 @@
 //#define MAXCARDS	    2	// XIO 
 //#define MAXLOGS			5  // MAX LOGFILES
 #define MAXAFILES		    10  
-#define ANALOGSAMPLESIZE	50
-#define ANALOGSAMPLEDELAY	10
+#define _ANALOGSAMPLESIZE	25
+#define _ANALOGSAMPLEDELAY	10
+#define _LOGDECIMALS		2
 
 #define VREFADJ	0.9901
 
@@ -48,7 +49,7 @@
 #define YRST		607
 #define YSHFT		608
 
-#define RSTATUS	121
+#define VSTATUS	121
 
 #define Y1S			621
 #define Y2S			622
@@ -58,6 +59,7 @@
 #define Y6S			626
 #define WARN		627
 #define WLED		628
+#define LBOOT		629
 
 #define SENSORS	122
 
@@ -71,19 +73,23 @@
 #define IGN			648 
 #define ALT			649 
 
-#define VLIMITS	123
+#define VGLOBALS	123
 
 #define CHLO			701
 #define CHHI			702
-#define DLO1			703
-#define DLO2			704
-#define DLO3			705
-#define DHI1			706
-#define DHI2			707 
-#define DHI3			708 
-#define VEXS			709 
-#define VALT			710 
+#define VEXS			703 
+#define VALT			704 
+#define CPSEC			705  // VANDUINO CURRENT PAGE INTERVAL
+#define BKSEC			706  // VANDUINO BACKGROUND INTERVAL
+#define LGMIN			707  // VANDUINO LOG INTERVAL
 
+#define LVDLIMITS	124
 
+#define DLO1			710
+#define DLO2			711
+#define DLO3			712
+#define DHI1			713
+#define DHI2			714 
+#define DHI3			715 
 
 #endif

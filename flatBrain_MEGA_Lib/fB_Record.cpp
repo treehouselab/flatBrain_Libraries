@@ -27,7 +27,7 @@ void fB_Record::buildFileRay(char *ext) {
 	
 }
 
-
+/*
 void fB_Record::createTagDefLog() {
 	fB_Tag* pT;
 	uint8_t  res;
@@ -41,7 +41,7 @@ void fB_Record::createTagDefLog() {
 		fat.writeLn(P("NAME,TAG,LOG, VALUE,FACTOR, OFFSET, TPIN, _LOADEE"));
 		for(int i=0;i<tagCount;i++){
 			pT = &tagRay[i];
-			if(!pT || !(pT->flag16 & (_LOADEE | _LOG) && !pT->pin)) continue;
+			if(!pT || !(pT->flag16 & (_LOADEE | _PIN))) continue;
 			getPtext(pT->Ptitle,title);
 			char datastr[16];
 			if(pT->flag16 & _UNDEF) 	sprintf(datastr,P("----"));
@@ -67,10 +67,10 @@ void fB_Record::createTagDefLog() {
 		logSetDate();
 	}
 }
+*/
 
-
-void fB_Record::logStamp() {
-	logWriteData();
+void fB_Record::logStamp(uint16_t fTag) {
+	logWriteData(fTag);
 	logGetAttributes();
 }
 
@@ -93,6 +93,10 @@ bool fB_Record::fileFind(char *fname){
 	}
 	return false;
 }
+bool fB_Record::fileFind(){
+	if(fat.getFile(filename) == NO_ERROR) return true;
+	return false;
+}
 
 bool fB_Record::fileCreate(char *fname) {
 	uint8_t  res;
@@ -107,13 +111,21 @@ bool fB_Record::fileCreate(char *fname) {
 
 	return false;
 }
-bool fB_Record::logCreate(char *base) {
-	char buffer[MAXCHARSLINE+1];
-	//dbug(F("R lc  entry  base:%s"),base);
-	if(!base) return false; 
-	sprintf(buffer,"%s.LOG",base);
-	if(fileCreate(buffer)) {
-		logWriteHeader();  
+char* fB_Record::logGetFilename(uint16_t fTag) {
+	//dbug(F("R LGF entry  ftag:%d"),fTag);
+	logFile *pLog = LogFile(fTag);
+	if(!pLog) return NULL;
+	getPtext(pLog->Pbase,filename);
+	strcat(filename,".LOG");
+	//dbug(F("R LGF entry  fname:%s"),filename);
+	return filename;
+}
+
+bool fB_Record::logCreate(uint16_t fTag) {
+	//dbug(F("R LC entry  ftag:%d"),fTag);
+	if(!logGetFilename(fTag)) return false;
+	if(fileCreate(filename)) {
+		logWriteHeader(fTag);  
 		logGetAttributes();
 		return true;
 	}
@@ -125,69 +137,87 @@ void fB_Record::logSetDate() {
 	fat.stampFile(filename,rtc.yOff+2000,rtc.m,rtc.d,rtc.hh,rtc.mm);
 }
 
-void fB_Record::logWriteHeader() {
-	dbug(F("R LWh entry  "));
+void fB_Record::logWriteHeader(uint16_t fTag) {
+	//dbug(F("R LWh entry  "));
 	if(!logTagCount) return;
-	
-	fB_Tag * pT;
-	char title[MAXCHARSLINE+1];
-	char Pbuffer[15];
+	logGetFilename(fTag);
 	uint8_t res =fat.openFile(filename,FILEMODE_TEXT_WRITE);
 	if(res!=NO_ERROR) return;
-	char buffer[(logTagCount+2) * MAXCHARSLINE];
+	logTag	*pL;
+	fB_Tag * pT;
+	char Pbuffer[15];
+	char title[MAXCHARSLINE+1];
+	int i,j = 0;
+	for(i=0;i<logTagCount; i++) {
+		if(logTagRay[i].fTag != fTag) continue;
+		j++;
+	}
+	if(!j) return;
+	char buffer[j * MAXCHARSLINE];
 	buffer[0] = '\0';
 	strcpy(buffer,P("DATE,TIME"));
-	for(int k = 0;k<tagCount;k++) {	
-		pT = &tagRay[k];
+	for(i=0;i<logTagCount; i++) {
+		pL = &logTagRay[i];
+		if(pL->fTag != fTag) continue;
+		pT = Tag(pL->tag);
 		if(!pT) continue;
-		if(!(pT->flag16 & _LOG)) continue;
-		if(strcmp(base,getPtext(Log(pT->fTag)->Pbase,Pbuffer)))continue;
+		//if(strcmp(base,getPtext(LogFile(pT->fTag)->Pbase,Pbuffer)))continue;
 		getPtext(pT->Ptitle,title);
 		strcat(buffer,",");
 		strcat(buffer,title);
-
 	}
-
 	fat.writeLn(buffer);
 	fat.closeFile();
 	logSetDate();
 }
-void fB_Record::logWriteData() {
+
+void fB_Record::logWriteData(uint16_t fTag) {
 	if(!logTagCount) return;
-	fB_Tag * pT;
-	char Pbuffer[6];
-	char buffer[100];
-	char datastr[MAXCHARSLINE+1];
-	buffer[0] = '\0';
+	logGetFilename(fTag);
+	//dbug(F("R LWD ENTRY"));
+
 	uint8_t res =fat.openFile(filename,FILEMODE_TEXT_WRITE);
-
 	if(res!=NO_ERROR) return;
+	logTag *pL;
+	fB_Tag *pT;
+	int i,j = 0;
+	char Pbuffer[15];
+	char title[MAXCHARSLINE+1];
+	char datastr[MAXCHARSLINE+1];
+	for(i=0;i<logTagCount; i++) {
+		if(logTagRay[i].fTag != fTag) continue;
+		j++;
+	}
+	if(!j) return;
+	char buffer[j* MAXCHARSLINE];
+	buffer[0] = '\0';
 	rtc.stamp(buffer);
-
-	for(int k = 0;k<tagCount;k++) {	
-		pT = &tagRay[k];
+	//dbug(F("R LWD j:%d  ltc:%d  ft:%d"),j,logTagCount,fTag);
+	for( i=0;i<logTagCount; i++) {
+		pL = &logTagRay[i];
+		if(pL->fTag != fTag) continue;
+		pT = Tag(pL->tag);
 		if(!pT) continue;
-		if(!(pT->flag16 & _LOG)) continue;
-		if(strcmp( base, getPtext(Log(pT->fTag)->Pbase,Pbuffer) ) )continue;
-dbug(F("R LWD  %P f:%d"),pT->Ptitle,pT->flag16);
-
 		if(pT->flag16 & _UNDEF) 	strcpy(datastr,P("----"));
 		else switch(pT->getFormat()){
 			case _BLAMP:
-			case _INT5:		sprintf(datastr,"%d",pT->iVal);break;
+			case _INT5:		sprintf(datastr,"%d",pT->iVal);	break;
 			case _D2STR:		
 			case _FLOAT1:	
-			case _FLOAT2:	menu.doubleToStr(pT->dVal->value,3,datastr); break;	
+			case _FLOAT2:	menu.doubleToStr(pT->dVal->value,_LOGDECIMALS,datastr); break;	
 			case _TEXT:		sprintf(datastr,"%s",pT->ptext);break;
-			case _PTEXT:		getPtext(pT->Ptext, datastr);break;
-			case _BLANK:		datastr[0] = '\0' ;break;
+			case _PTEXT:	getPtext(pT->Ptext, datastr);break;
+			case _BLANK:	datastr[0] = '\0' ;break;
 		}
-		sprintf(buffer,P("%s,%s"),buffer,datastr);
+		strcat(buffer,",");
+		strcat(buffer,datastr);
 	}
 	fat.writeLn(buffer);
 	fat.closeFile();
 	logSetDate();
+
 }
+
 bool fB_Record::logArchive() {
 
 	//if(strcmp(fat.DE.fileext,"LOG")) return false;
@@ -246,12 +276,15 @@ void fB_Record::logDump() {
 }
 /////////////////////////////// EEPROM METHODS /////////////////////////////////////////
 
-void fB_Record::EEclear() {
-		ee.setBlock(BASEE+16,'\0',256); 
+void fB_Record::EEclearTags(uint16_t offTags, uint16_t base) {
+	// offTags is the number of tags in the front of the section NOT to clear
+
+		uint16_t count;
+		for(int i=0;i<tagCount;i++)	if(tagRay[i].flag16 & _LOADEE) count++;
+		ee.setBlock(base+(offTags*16),'\0',16 * (count +2));  // leave blank of 32 bytes for EOF
 }
 
-
-void fB_Record::EEwriteEAUTO() {
+void fB_Record::EEwriteEAUTO(uint16_t base) {
 	fB_Tag * pT;
 	pT = Tag(EAUTO);
 	uint16_t addr;
@@ -260,14 +293,14 @@ void fB_Record::EEwriteEAUTO() {
 	int j=0;
 	getPtext(pT->Ptitle,title);
 	title[10]= '\0';
-	addr = BASEE;
-	ee.writeBlock(addr,(uint8_t *)title,strlen(title));
+	ee.writeBlock(base,(uint8_t *)title,strlen(title));
 	data = (uint8_t *)&(pT->iVal);
-	ee.writeBlock(addr+10,data,2);
+	ee.writeBlock(base+10,data,2);
 }
 
-void fB_Record::EEwriteTags() {
+void fB_Record::EEwriteTags(uint16_t base) {
 	if(!tagCount) return;
+	dbug(F("******R EEwTags"));
 	fB_Tag * pT;
 	uint16_t addr;
 	uint8_t  * data;
@@ -278,7 +311,7 @@ void fB_Record::EEwriteTags() {
 		if(!pT || !(pT->flag16 & _LOADEE) || pT->tag == EAUTO) continue;
 		getPtext(pT->Ptitle,title);
 		title[10]= '\0';
-		addr = j*16 + (BASEE+16);
+		addr = j*16 + (base+16);
 		ee.setBlock(addr,'\0',32); // leaves a zeroed 8 bits at end of glist to mark end
 		ee.writeBlock(addr,(uint8_t *)title,strlen(title));
 		if(!(pT->flag16 & _DUBL)){	
@@ -294,20 +327,19 @@ void fB_Record::EEwriteTags() {
 	//ee.dump(0,128);
 }
 
-fB_Tag* fB_Record::EEgetEAUTO() {
+fB_Tag* fB_Record::EEgetEAUTO(uint16_t base) {
 	fB_Tag * pT;
 	pT = Tag(EAUTO);
 	if(!pT ) return NULL;
 	uint8_t  buffer[11];
 	uint16_t addr;
 	double  *data;
-	addr = BASEE;
-	ee.readBlock(addr+10,buffer,2);
+	ee.readBlock(base+10,buffer,2);
 	pT->iVal = *(int*)buffer;
 	return pT;
 }
 
-fB_Tag* fB_Record::EEgetTag(uint16_t tag) {
+fB_Tag* fB_Record::EEgetTag(fB_Tag &bufTag, uint16_t tag,uint16_t base) {
 	fB_Tag * pT;
 	pT = Tag(tag);
 	if(!pT || !(pT->flag16 & _LOADEE) ) return NULL;
@@ -317,7 +349,39 @@ fB_Tag* fB_Record::EEgetTag(uint16_t tag) {
 	double  *data;
 	getPtext(pT->Ptitle,title);
 	for(int i=0;i<tagCount;i++){
-		addr = i*16 + (BASEE+16);
+		addr = i*16 + (base+16);
+		ee.readBlock(addr,buffer,10);
+		if(buffer[0]=='\0') break;
+		buffer[10] = '\0';
+		if(!strcmp(title,(char *) buffer)) {
+			bufTag.Ptitle = pT->Ptitle;
+			if(pT->flag16 & _DUBL) {
+				ee.readBlock(addr+12,buffer,4);
+				bufTag.dVal->value = *(double*)buffer;
+					//dbug(F("R EEgT %P v:%f"),bufTag.Ptitle, bufTag.dVal->value);
+	}
+			else {
+				ee.readBlock(addr+10,buffer,2);
+					//dbug(F("#########R EEgT %P i:%f"),bufTag.Ptitle, bufTag.iVal);
+				bufTag.iVal = *(int*)buffer;
+			}
+			return pT;
+		}	
+
+	}		
+	return NULL;
+}
+fB_Tag* fB_Record::EEloadTag(uint16_t tag,uint16_t base) {
+	fB_Tag * pT;
+	pT = Tag(tag);
+	if(!pT || !(pT->flag16 & _LOADEE) ) return NULL;
+	uint8_t  buffer[11];
+	char title[MAXCHARSLINE+1];
+	uint16_t addr;
+	double  *data;
+	getPtext(pT->Ptitle,title);
+	for(int i=0;i<tagCount;i++){
+		addr = i*16 + (base+16);
 		ee.readBlock(addr,buffer,10);
 		if(buffer[0]=='\0') break;
 		buffer[10] = '\0';
@@ -331,20 +395,22 @@ fB_Tag* fB_Record::EEgetTag(uint16_t tag) {
 				pT->iVal = *(int*)buffer;
 			}
 			return pT;
-		}
+		}	
+
 	}		
+	return NULL;
 }
 
-void fB_Record::EEloadTags() {
+void fB_Record::EEloadTags(uint16_t base) {
 	fB_Tag * pT;
 	for(int k = 0;k<tagCount;k++) {	
 		pT = &tagRay[k];
 		if(!pT) continue;
-		if(pT->flag16 & _LOADEE) EEgetTag(pT->tag);
+		if(pT->flag16 & _LOADEE) EEloadTag(pT->tag,base);
 	}
 }
 
-void fB_Record::EEdumpTags(){
+void fB_Record::EEdumpTags(uint16_t base){
    uint16_t addr,count;
    count = 11;
    char *title;
@@ -355,7 +421,7 @@ void fB_Record::EEdumpTags(){
    Serial.println();		
 
    for(int i=0;i< count;i++) {
-		addr = BASEE + i*16;
+		addr = base + i*16;
 		if (addr % 16 == 0)	Serial.print(i);
 		Serial.print(":\t");
 	    ee.readBlock(addr, buffer, 10) ;  
