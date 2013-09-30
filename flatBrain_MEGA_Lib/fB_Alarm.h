@@ -124,19 +124,6 @@
 #define OCTAVE_OFFSET 0
 #define isdigit(n) (n >= '0' && n <= '9')
 
-#define ALARM_INIT 0
-//#define ALARM_INIT	
-#define ALARM_WARN	4
-#define ALARM_FAIL	2
-#define ALARM_ACT	3
-
-#define _WD_OFF			0  // FOR WARNDELAY ACTION CODE
-#define _WD_SKIP		1  
-#define _WD_WARN		2
-#define _WD_DELAY		3
-#define _WD_ACT			4
-
-
 class fB_Alarm
 {
   public:
@@ -147,7 +134,8 @@ class fB_Alarm
     void bootBeepDisable();
     bool isPlaying();
     void playTone(uint16_t frequency, uint32_t duration = 0);
-	void play(uint8_t  alarmTag);
+	void play(uint8_t  alarmIndex);
+	void playTag(uint16_t  tag);
     void stop();
 	fB_Alarm();
 

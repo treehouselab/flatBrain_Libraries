@@ -64,13 +64,6 @@ XCARDS		Ox20-27
 #define	_C6		0x26	// _X50 OR _X76
 #define _C7		0x27	// _X50 IF C6 !_X76   
 
-#define _TIMER_MAX_EVENTS		10     
-#define	_TIMER_UPDATE			0 
-#define	_TIMER_WARNDELAY		1 
-#define	_TIMER_WARN				2
-#define	_TIMER_ALARM			3 
-#define	_TIMER_FREEINDEXSTART	4 
-
 #define	_APPENDLOG		0
 #define	_APPENDDIF		1
 #define	_NEWLOG			2
@@ -101,7 +94,6 @@ XCARDS		Ox20-27
 #define	MAXTEMPTAG		256
 #define	MAXTEMPLOG		24
 #define	MAXZEROADC		250 // max ADC reading that qualifies for binary zero
-
 
 // Bus to Arduino Mega pin mapping
 #define	_B0		A8
@@ -196,8 +188,8 @@ XCARDS		Ox20-27
 #define GMAXCHARSTITLE	4
 
 
-#define	RTC			0x01   // brain status flags, unique uint8_t bits 
-#define	SD			0x02   
+#define	_RTC			0x01   // brain status flags, unique uint8_t bits 
+#define	_SD				0x02   
 
 
 #define	_PGATE			2
@@ -294,11 +286,12 @@ XCARDS		Ox20-27
 #define TPANEL		4	
 #define	DIAGNOSTICS	5
 #define	CLOCK		6
-#define	ALARM		7
-#define	DPINS		8
-#define	APINS		9
-#define	ARCHIVES	10
-#define	EEPROM		11
+#define	ALARMP		7
+#define	SOUNDS		8
+#define	DPINS		9
+#define	APINS		10
+#define	ARCHIVES	11
+#define	EEPROM		12
 
 #define LOGS		29   // 29->40  11 RESERVED FOR LOGS
 
@@ -306,7 +299,7 @@ XCARDS		Ox20-27
 // row & pin tags  (SYSTEM  range: 256-599)
 
 #define _WARN_OVR	258  // used by warnDelay system, can be pins defined in fB_USR_defines.cpp or fB_SYS_Defines.cpp
-#define _ALARM_LED	259
+#define _TALRMLED	259
 #define HEADER		260
 #define FRAM		267
 #define _MSG		271
@@ -349,16 +342,28 @@ XCARDS		Ox20-27
 #define	EDUMP		352
 #define	ECLR		353
 
-#define	ALARM0		360
-#define	ALARM1		361
-#define	ALARM2		362
-#define	ALARM3		363
-#define	ALARM4		364
-#define	ALARM5		365
-#define	ALRMON		366
+#define	_SECWD		368		// waning delay duration
+#define	_SECWN		369		// warning duration
+#define	_SECAL		370		// alarm period
 
+#define	_TALRMBT		360
+#define	_TALRMIN		361
+#define	_TALRMFL		362
+#define	_TALRMWN		363
+#define	_TALRMAC		364
+#define	_TALRMQS		365
+#define	_TALRMEG		366
+#define	_TALRMON		367
 
-//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////WARN CONSTANTS
+
+#define	_ALRMBT		0
+#define	_ALRMIN		1
+#define	_ALRMFL		2
+#define	_ALRMWN		3
+#define	_ALRMAC		4
+#define	_ALRMQS		5
+#define	_ALRMEG		6
 
 #define P_LEFT			0
 #define P_RIGHT			1
@@ -380,8 +385,27 @@ XCARDS		Ox20-27
 #define P_BLANK			17
 #define P_MANUAL		18
 #define P_FAIL			19
+#define P_FAIL_RTC		20
+#define P_FAIL_SD		21
+#define P_ALARM			22
+#define P_INVERTER		23
 
-#define	MAXPSTRCOUNT	20
+#define	MAXPSTRCOUNT	24
+
+#define _TIMER_MAX_EVENTS		10     
+#define	_TIMER_UPDATE			0 
+#define	_TIMER_WARNDELAY		1 
+#define	_TIMER_WARN				2
+#define	_TIMER_ALARM			3 
+#define	_TIMER_FREEINDEXSTART	4 
+
+#define _WD_OFF			0  // FOR WARNDELAY ACTION CODE
+#define _WD_SKIP		1  
+#define _WD_WARN		2
+#define _WD_DELAY		3
+#define _WD_ACT			4
+
+
 
 
 	

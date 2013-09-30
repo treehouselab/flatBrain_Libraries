@@ -15,14 +15,23 @@ uint8_t bootBeepEnabled = 1;
 uint8_t alarmEnabled = 1;   
 
 prog_char alarm_0[] PROGMEM = ":d=16,o=5,b=120:c,p,g";
-prog_char alarm_1[] PROGMEM = ":d=16,o=5,b=140:g,f,c6";
-prog_char alarm_2[] PROGMEM = ":d=16,o=5,b=120:d,p,a,p,a";
-prog_char alarm_3[] PROGMEM = ":d=16,o=5,b=120:g,p,c6";
-prog_char alarm_4[] PROGMEM = ":d=16,o=5,b=120:g,p,c6,p,c6";
-prog_char alarm_5[] PROGMEM = ":d=16,o=5,b=120:g,p,c6,p,c6,p,c6";
+prog_char alarm_1[] PROGMEM = ":d=16,o=5,b=120:c,f,c6";
+prog_char alarm_2[] PROGMEM = ":d=16,o=5,b=120:c,p,a,p,a,p,a";
+prog_char alarm_3[] PROGMEM = ":d=16,o=5,b=120:c,d6";
+prog_char alarm_4[] PROGMEM = ":d=16,o=4,b=120:f,g,p,g";
+prog_char alarm_5[] PROGMEM = ":d=16,o=5,b=120:d,c,f6";
+prog_char alarm_6[] PROGMEM = ":d=16,o=5,b=120:g,p,d6,p,d6,p,d6,p,g,p,d6,p,d6,p,d6";
 //prog_char alarm_8[] PROGMEM = "";
 
 /*
+		defineAlias(_TALRMBT,ALARM BOOT);
+		defineAlias(_TALRMIN,ALARM INIT);
+		defineAlias(_TALRMFL,ALARM FAIL);
+		defineAlias(_TALRMWN,ALARM WARN);
+		defineAlias(_TALRMAC,ALARM ACTION);
+		defineAlias(_TALRMQ,ALARM Q);
+		defineAlias(_TALRMEG,ALARM EMERG);
+
 To be recognized by ringtone programs, an RTTTL/Nokring format ringtone must contain three specific elements: name, settings, and notes.
 
 For example, here is the RTTTL ringtone for Haunted House:
@@ -50,14 +59,13 @@ Standard musical durations are denoted by the following notations:
 Dotted rhythm patterns can be formed by appending a period (".") character to the end of a duration/beat/octave element.
 P - rest or pause
 
-The RTTTL format allows octaves starting from the A below middle C and going up four octaves. This corresponds with the inability of cellphones to reproduce certain tones audibly. These octaves are numbered from lowest pitch to highest pitch from 4 to 7.
+The RTTTL format allows octaves starting from the A below middle C and going up four octaves. 
+This corresponds with the inability of cellphones to reproduce certain tones audibly. 
+These octaves are numbered from lowest pitch to highest pitch from 4 to 7.
 The octave should be left out of the notation in the case of a rest or pause in the pattern.
 
 An example of the RTTTL format would be
 fifth:d=4,o=5,b=63:8P,8G5,8G5,8G5,2D#5
-
-Dave Brubeck - Take 5:d=32,o=6,b=180:8a#5, p, 16d#, p, 8f#, p, 16g#, p, 8a, p, 16a#, p, 8a, p, 16g#, p, 8f#, p, 8a#5, p, 16a#5, p, 8c#, p, 2d#, 16p,
-16f#, p, 16f, p, 16d#, p, 8c#, p, 2d#, 16p, 16c#, p, 16c, p, 16a#5, p, 8g#5
 
 */
  const char *alarmTable[] PROGMEM= {   
@@ -67,6 +75,7 @@ Dave Brubeck - Take 5:d=32,o=6,b=180:8a#5, p, 16d#, p, 8f#, p, 16g#, p, 8a, p, 1
   alarm_3,
   alarm_4,
   alarm_5,
+  alarm_6,
  };
 
 
@@ -152,6 +161,7 @@ void fB_Alarm::enable()
 		init();	
 		TCCR4B = 0x00;        //Disbale Timer4 
 	}
+	alarmEnabled = 1;
 
 }
 void fB_Alarm::disable()
@@ -224,8 +234,15 @@ bool fB_Alarm::isPlaying(void)
 }
 
 
-void fB_Alarm::play(uint8_t  alarmTag )
+void fB_Alarm::playTag(uint16_t  tag )
 {
+		if(!alarmEnabled) return;
+		play(Tag(tag)->iVal);
+}
+
+void fB_Alarm::play(uint8_t  alarmIndex )
+{
+	if(!alarmEnabled) return;
   // Absolutely no error checking in here
 
   uint8_t default_dur = 4;
@@ -238,12 +255,8 @@ void fB_Alarm::play(uint8_t  alarmTag )
   uint8_t scale;
   char *p;
 
-  strcpy_P(alarmBuffer, (char*)pgm_read_word(&(alarmTable[alarmTag])));
-  // format: d=N,o=N,b=NNN:
-  // find the start (skip name, etc)
-  //Serial.print("buffer: "); 
-  //Serial.println(alarmBuffer);
-
+  strcpy_P(alarmBuffer, (char*)pgm_read_word(&(alarmTable[alarmIndex])));
+  //dbug(F("ALARM p:%s"),p);
   p = &alarmBuffer[0];
 
   while(*p != ':') p++;    // ignore name
@@ -262,8 +275,6 @@ void fB_Alarm::play(uint8_t  alarmTag )
     p++;                   // skip comma
   }
 
-  //Serial.print("ddur: "); Serial.println(default_dur, 10);
-
   // get default octave
   if(*p == 'o')
   {
@@ -272,8 +283,6 @@ void fB_Alarm::play(uint8_t  alarmTag )
     if(num >= 3 && num <=7) default_oct = num;
     p++;                   // skip comma
   }
-
-  //Serial.print("doct: "); Serial.println(default_oct, 10);
 
   // get BPM
   if(*p == 'b')
@@ -288,15 +297,10 @@ void fB_Alarm::play(uint8_t  alarmTag )
     p++;                   // skip colon
   }
 
-  //Serial.print("bpm: "); Serial.println(bpm, 10);
-
   // BPM usually expresses the number of quarter notes per minute
   wholenote = (60 * 1000L / bpm) * 4;  // this is the time for whole note (in milliseconds)
 
-  //Serial.print("wn: "); Serial.println(wholenote, 10);
-
-
-  // now begin note loop
+  //  begin note loop
   while(*p)
   {
     // first, get note duration, if available
@@ -371,25 +375,14 @@ void fB_Alarm::play(uint8_t  alarmTag )
     if(*p == ',')
       p++;       // skip comma for next note (or we may be at the end)
 
-    // now play the note
-
     if(note)
     {
-      //Serial.print("Playing: ");
-      //Serial.print(scale, 10); Serial.print(' ');
-      //Serial.print(note, 10); Serial.print(" (");
-      //Serial.print(notes[(scale - 4) * 12 + note], 10);
-      //Serial.print(") ");
-     // Serial.println(duration, 10);
       playTone(pgm_read_word_near(notes + (scale - 4) * 12 + note));
-      //playTone(notes[(scale - 4) * 12 + note]);
       delay(duration);
       stop();
     }
     else
     {
-      //Serial.print("Pausing: ");
-      //Serial.println(duration, 10);
       delay(duration);
     }
   }
@@ -401,7 +394,7 @@ void fB_Alarm::play(uint8_t  alarmTag )
 void fB_WarnDelay::init() {
 	currID = NULL;
 	action = _WD_OFF;
-	ptLED = Tag(_ALARM_LED);
+	ptLED = Tag(_TALRMLED);
 	if(ptLED) {
 		LEDonVal = ptLED->getOnVal();
 		ptLED->write(~LEDonVal);
@@ -457,19 +450,20 @@ void fB_WarnDelay::startWarnDelay() {  // alarm delay interrupt handler
 //////////////////// these methods are not in class because they need to be argument callable functions ////////////
 void playWarning(uint16_t arg16) { 
 	if(warn.ptLED) warn.ptLED->write(warn.LEDonVal);
-	alarm.play(ALARM_WARN); 
+	alarm.playTag(_TALRMWN);
 	if(warn.ptLED) warn.ptLED->write(~warn.LEDonVal);
 }
 
 void endWarning(uint16_t arg16) {
 	warn.stop();
 	warn.action = _WD_ACT;
-	alarm.play(ALARM_ACT);
+	alarm.playTag(_TALRMAC);
 	//warn.setMsg(P_BLANK);
 
 }
 void startWarning(uint16_t arg16) {
 	//dbug(F("startWARN"));
+	_fBiK1 = 0;   // reset Warn Delay interrupt flag
 	if(warn.ptLED) warn.ptLED->write(~warn.LEDonVal);
 	timer.after(_TIMER_WARN,(unsigned long)warn.warnSecs * 1000, endWarning,NULL);
 	timer.repeat(_TIMER_ALARM,(unsigned long)warn.alarmIntervalSecs * 1000, 25,playWarning,NULL);

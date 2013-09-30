@@ -114,7 +114,8 @@ class V_State {
 		uint16_t msgIndex;
 		char	*msgText;
 		void copyAllTo(V_State* pState);
-;		void copyMsgTo(V_State* pState);
+		void copyMsgTo(V_State* pState);
+		void copyRelaysTo(V_State* pState);
 		void setMsg(uint16_t msgIndex,char *msgText);
 		void setBit(uint16_t bitVal, uint16_t ival);
 		V_State();
@@ -133,6 +134,9 @@ void V_State::copyAllTo(V_State* pState) {
 	pState->dV3 = dV3;
 	pState->flags = flags;
 	copyMsgTo(pState); 
+} 
+void V_State::copyRelaysTo(V_State* pState) { 
+	pState->flags |= flags & RMASK;
 } 
 
 void V_State::copyMsgTo(V_State* pState) { 
@@ -190,7 +194,7 @@ void V_Relay::turn(uint8_t newState) {
 	//dbug(F("vRelay %P Rstate:%d, newstate:%d"),pT->Ptitle,getRstate(),newState);
 
 	 if(getRstate()!= newState)  pT->YshiftPulse(PULSEMSECS);
-	 //if(getRstate() != newState)  alarm.play(ALARM_2);
+	 if(getRstate() != newState)  alarm.playTag(_TALRMFL);
  }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -216,7 +220,7 @@ class fB_Vanduino {
 		uint8_t getStateRelayIndex(uint8_t index) ;
 		void getStateRelays() { for(int i=1;i<7;i++) getStateRelayIndex(i); }
 		void getStateAnalog() ;
-		void setStateRelays() ;
+		void setRelaysNext() ;
 		void showState();
 		void nextState() ;
 		void buildNextState();
@@ -237,6 +241,7 @@ fB_Vanduino::fB_Vanduino() {
 }
 
 void fB_Vanduino::init(uint16_t pTag) { 
+
 
 	pageTag  =  pTag; 
 	manOver = 0;
@@ -269,9 +274,8 @@ void fB_Vanduino::init(uint16_t pTag) {
 	ptDHI2 = Tag(DHI2);
 	ptDHI3 = Tag(DHI3);
 	ptYSHFT = Tag(YSHFT);
-	ptLED =   Tag(_ALARM_LED);
+	ptLED =   Tag(_TALRMLED);
 	LEDonVal = ptLED->getOnVal(); 	
-
 	getStateRelays();
 	state.copyAllTo(&next); // save original relays
 	//dbug(F("V INIT0 sB2:%d, sB3:%d, "),sB2,sB3);
@@ -283,21 +287,22 @@ void fB_Vanduino::init(uint16_t pTag) {
 		if(sR3) R3_OFF;
 		if(sR1) R1_OFF;
 		getStateAnalogTag(V2);
-		next.setBit(BT2,sV2 > VOLTSEXIST);
+		state.setBit(BT2,sV2 > VOLTSEXIST);
 	}
 	getStateRelayIndex(3); 
-	//(F("V INIT1 sB2:%d, sB3:%d, "),sB2,sB3);
+	//dbug(F("V INIT1 sB2:%d, sB3:%d, "),sB2,sB3);
 	getStateAnalogTag(V3);
 	if(!sR3) next.setBit(BT3,sV3 > VOLTSEXIST);
 	else {
 		if(sR1) R1_OFF;
 		getStateAnalogTag(V3);
-		next.setBit(BT2,sV3 > VOLTSEXIST);
+		state.setBit(BT2,sV3 > VOLTSEXIST);
 	}
 	// reset original relays
-	next.copyAllTo(&state);
-	setStateRelays();
-	if(bootStatus & SD){
+	
+	setRelaysNext();
+	next.copyRelaysTo(&state);
+	if(_bootStatus & _SD){
 		timer.writeLog(LOG1,_APPENDDIF);
 		if(bootFlag) {
 			Tag(LBOOT)->iVal = HIGH;;
@@ -308,12 +313,9 @@ void fB_Vanduino::init(uint16_t pTag) {
 		logTimerIndex = timer.scheduleLog(LOG2,_APPENDLOG, ptLGMIN->dVal->value);
 	}
 
-	if(!(bootStatus & RTC)) state.setMsg(P_FAIL,"RTC");
-	if(!(bootStatus & SD))  state.setMsg(P_FAIL,"SD");
+	if(_bootMsgIndex) state.setMsg(_bootMsgIndex);
 	//dbug(F("V INIT2 sB2:%d, sB3:%d, "),sB2,sB3);
 	//dbug(F("V INIT3 cl:%P val:%f"),ptCL->Ptitle,ptCL->dVal->value);
-
-
 }
 
 void fB_Vanduino::setBit(uint16_t bitVal, uint16_t ival) { 
@@ -326,7 +328,7 @@ void fB_Vanduino::setNext(uint16_t bitVal, uint16_t ival) {
 }
 
 void fB_Vanduino::getStateAnalog() {
-	dbug(F("V GSA entry"));
+	//dbug(F("V GSA entry"));
 	getStateAnalogTag(CL);
 	getStateAnalogTag(CX);
 	getStateAnalogTag(V1);
@@ -337,7 +339,8 @@ void fB_Vanduino::getStateAnalog() {
 void fB_Vanduino::getState() {
 	uint8_t  ign;
 	double seconds;
-	dbug(F("V GetState entry"));
+	//dbug(F("V GetState entry"));
+
 	if(warn.action == _WD_DELAY && ptLED){
 		ptLED->write(~LEDonVal);	
 		delay(50);
@@ -373,6 +376,10 @@ void fB_Vanduino::getState() {
 	state.setBit(AT3, sR1 && sR3 && sALT);		// Alternator charging Batt 3
 	state.setBit(XT1, sR1 && sR2 && sEXT);		// External charging Batt 1
 	state.setBit(XT3, sR3 && sR2 && sEXT);		// External charging Batt 3
+	//dbug(F("*** V GSX sf:0x%x"),state.flags);
+	//dbug(F("*** V GSX nf:0x%x"),next.flags);
+
+
 }
 
 double fB_Vanduino::getStateAnalogTag(uint16_t tag) {
@@ -416,10 +423,26 @@ uint8_t fB_Vanduino::getStateRelayIndex(uint8_t index) {
 
 
 void fB_Vanduino::nextState() {
-	dbug(F("V NextState entry"));
+	//dbug(F("V NextState entry"));
+	//dbug(F("*** V NS sf:0x%x"),state.flags);
+	//dbug(F("*** V NS nf:0x%x"),next.flags);
 
 	//if(pageTag != curr.pageTag) return; // for dbug
-	if(_fBiK1 == INTK1SHFT  ) {
+	uint16_t preBuildRelayFlags = sRELAYS;
+	//dbug(F("_____V_NS	copyS->N"));
+	state.copyAllTo(&next);
+
+	if(_fBiK1 == INTK1) {
+		if(warn.action == _WD_WARN) warn.startWarnDelay();
+		else if(warn.action == _WD_DELAY) warn.stop();
+		else if( !sR1 && !sR2 && !sR3) {
+			next.setBit(RT2, ON); // turn on R2
+			alarm.playTag(_TALRMAC);
+		}
+		_fBiK1 = 0;     // reset K1 interrupt flag
+	}
+
+	else if(_fBiK1 == INTK1SHFT) {
 		//dbug(F("V_NS	INTR manual"));
 		warn.stop();
 		if(manOver) {
@@ -435,39 +458,43 @@ void fB_Vanduino::nextState() {
 		next.copyMsgTo(&state);
 		_fBiK1 = 0;     // reset K1 interrupt flag
 	}
-	else if(_fBiK1 == INTK1 && warn.action == _WD_WARN){ 
-		dbug(F("_____V_NS	INTR wdelay"));
-		warn.startWarnDelay();
-		_fBiK1 = 0;     // reset K1 interrupt flag
-	}
 	if(_fBiTFT || manOver) return;  // skip if TFT button pressed;
 		//dbug(F("NS2"));
 
-	uint16_t preBuildRelayFlags = sRELAYS;
-	dbug(F("_____V_NS	copyS->N"));
-	state.copyAllTo(&next);
-	dbug(F("_____V_NS	buildNS"));
+	//dbug(F("_____V_NS	buildNS"));
 	buildNextState();
-	dbug(F("_____V_NS	getStateRelays"));
+	//dbug(F("_____V_NS	getStateRelays"));
 	getStateRelays();
 	uint16_t postBuildRelayFlags = sRELAYS;
 	if(postBuildRelayFlags == preBuildRelayFlags) { // if relays have not changed manually during build
-		dbug(F("_____V_NS	copyN->S"));
+		//dbug(F("_____V_NS	copyN->S"));
+		//dbug(F("_____V_NS	setRelays"));
+		setRelaysNext();
 		state.flags = next.flags;
-		dbug(F("_____V_NS	setRelays"));
-		setStateRelays();
-		dbug(F("_____V_NS	getStateAnalog"));
+		//dbug(F("_____V_NS	getStateAnalog"));
 		getStateAnalog();
-		dbug(F("_____V_NS	copyN->S"));
+		//dbug(F("_____V_NS	copyN->S"));
 		next.copyMsgTo(&state);
 	}
+
 }
 
 void fB_Vanduino::buildNextState() {
+	//dbug(F("*** V BNS sf:0x%x"),state.flags);
+	//dbug(F("*** V BNS nf:0x%x"),next.flags);
+
 
 	next.setMsg(P_BLANK); 
-	if(!sB3) next.setBit(RT3, OFF);												// if no batt 3, turn off relay 3
-	if(sALT){																	// alternator on and charging voltage ( > VOLTSALT)
+	if(!sB3) next.setBit(RT3, OFF);						// if no batt 3, turn off relay 3
+	if(!sR1 && !sR2 && !sR1) {							// if no batt relays on, turn off load relays
+		next.setBit(RT4, OFF);												
+		next.setBit(RT5, OFF);												
+		next.setBit(RT6, OFF);	
+	}
+	else if(sR4) next.setMsg(P_INVERTER); 
+	if(!sR4 && next.msgIndex == P_INVERTER) next.setMsg(P_BLANK); 
+
+	if(sALT){											// alternator on and charging voltage ( > VOLTSALT)
 		//if(!sC3 && sV2 < CHGLOV2){ // alternator on and not charging batt 3 and batt 2 low
 		if(sV2 < CHGLOV2){ // alternator on and not charging batt 3 and batt 2 low
 			next.setBit(RT1, ON); 
@@ -504,11 +531,11 @@ void fB_Vanduino::buildNextState() {
 		//if(sA2 || sA3)  next.setBit(RT1, OFF);  
 		//next.setBit(RT1, OFF);  
 		if(sEXT) {								// external charge active
-			dbug(F("	VbNS EXT"));
+			//dbug(F("	VbNS EXT"));
 			if(sV2 > CHGHIV2) {					// batt2 charged
-				dbug(F("	VbNS EXT V2>CHI2"));
+				//dbug(F("	VbNS EXT V2>CHI2"));
 				if(sV1 < CHGHIV1 )	{			// charge batt 1 by external source
-					dbug(F("	VbNS EXT V1<CHI1"));
+					//dbug(F("	VbNS EXT V1<CHI1"));
 					next.setBit(RT2, ON);   
 					next.setBit(RT1, ON);   
 					next.setBit(RT3, OFF);   
@@ -516,7 +543,7 @@ void fB_Vanduino::buildNextState() {
 					return; 
 				}	
 				if(sB3 && sV3 < CHGHIV3 )	{	// charge batt 3 by external source
-					dbug(F("	VbNS EXT V3<CHI3"));
+					//dbug(F("	VbNS EXT V3<CHI3"));
 					next.setBit(RT2, ON);   
 					next.setBit(RT3, ON);   
 					next.setBit(RT1, OFF);   
@@ -525,14 +552,14 @@ void fB_Vanduino::buildNextState() {
 				}
 			}
 			else if(sR2 && sV2 < CHGLOV2) {
-				dbug(F("	VbNS EXT V2<CHI2"));
+				//dbug(F("	VbNS EXT V2<CHI2"));
 				if(sX1) next.setBit(RT1, OFF);   
 				if(sX3) next.setBit(RT3, OFF);
 			}
 			next.setMsg(P_CHGEXT,"B2");
 		}
 		// not EXT charging	
-		dbug(F("    VbNS !EXT "));
+		//dbug(F("    VbNS !EXT "));
 
 		if(sX1) next.setBit(RT1, OFF);   
 		if(sX3) next.setBit(RT3, OFF);
@@ -599,15 +626,16 @@ uint8_t fB_Vanduino::switchShutdown(uint8_t index,uint16_t relaySrc, uint16_t re
 	//dbug(F("Vssd i:%d, bx:%d, vsrc:%f , lovsrc:%f"), index,battX,vDst,LowDst);
 
 	if(relayX && vSrc < LowSrc) {	
-		dbug(F("          Vssd 1"));
+		//dbug(F("          Vssd 1"));
 // Batt Src selected AND Batt Src below Vdiscon		
 		if(battX && vDst > LowDst )  {						// Batt Src selected AND Batt Src below Vdiscon AND Batt 2 above Vdiscon
-			dbug(F("          Vssd 2"));
+			//dbug(F("          Vssd 2"));
 		// SYNTAX: warning(uint8_t id, uint8_t wdSecs,uint8_t wSecs, uint8_t aSecs) 
-			switch ( warn.warning(index*2, 20,20, 4, WLED)) { 
+			//switch ( warn.warning(index*2, 20,20, 4, WLED)) { 
+			switch ( warn.warning(index*2, Tag(_SECWD)->iVal,Tag(_SECWN)->iVal,Tag(_SECAL)->iVal, WLED)) { 
 				case _WD_WARN:
 					next.setMsg(P_SWITCHTO,textDst);
-			dbug(F("          Vssd _WD_WARN"));
+			//dbug(F("          Vssd _WD_WARN"));
 					return 1;
 				case _WD_DELAY:
 					next.setMsg(P_DELAYSW2,textDst);
@@ -621,19 +649,19 @@ uint8_t fB_Vanduino::switchShutdown(uint8_t index,uint16_t relaySrc, uint16_t re
 	
 		}
 		else {												// Batt Src selected AND Batt Src below Vdiscon  AND !exist Batt Dest or Batt Dest below Vdiscon
-		dbug(F("          Vssd 3"));
+		//dbug(F("          Vssd 3"));
 		 if(warn.currID == index*2) {					// If Batt Dest voltage drops below Vdiscon while above warn active, clear warning
 				warn.reset();
 				next.setMsg(P_BLANK);
 			}
-			dbug(F("          Vssd  psL "));
+			//dbug(F("          Vssd  psL "));
 			if(priorityShutdownLoad(relaySrc)) {			// Start priority shutdown of Load to see if we can bring Batt Src above Vdiscon
 				next.setMsg(P_BLANK);
 				return 1;
 			}
-		dbug(F("          Vssd 4"));
+		//dbug(F("          Vssd 4"));
 			switch ( warn.warning(index*2 +1, 20,20, 4, WLED)) { // Start shutdown of Relay Source
-		dbug(F("          Vssd 5"));
+		//dbug(F("          Vssd 5"));
 				case _WD_WARN:
 					next.setMsg(P_SHUTDOWN,textSrc);
 					return 1;
@@ -695,21 +723,58 @@ uint8_t fB_Vanduino::checkVolts(uint16_t relay) {
 	return 0;
 }
 
-void fB_Vanduino::setStateRelays() {
+void fB_Vanduino::setRelaysNext() {
+	//dbug(F("*** V SRN sf:0x%x"),state.flags);
+	//dbug(F("*** V SRN nf:0x%x"),next.flags);
 
-		relay1.turn(sR1);
-		relay2.turn(sR2);
-		relay3.turn(sR3);
-		relay4.turn(sR4);
-		relay5.turn(sR5);
-		relay6.turn(sR6);
+	if(nR1 && nR2 && nR3) {  // failsafe
+		alarm.playTag(_TALRMEG);
+		next.setMsg(P_ALARM,"123");
+	}
+	/*
+	else if(!sB3 &&  nR3) {  // failsafe
+		alarm.playTag(_TALRMEG);
+		next.setMsg(P_ALARM,"R3");
+	}
+	else if(!sB2 &&  nR2) {  // failsafe
+		alarm.playTag(_TALRMEG);
+		next.setMsg(P_ALARM,"R2");
+	}
+	*/
+	else {	
+		if(sR2) { // if R2 on, switch R2 last, else switch first
+			relay1.turn(nR1);
+			delay(100);
+			relay3.turn(nR3);
+			delay(100);
+			relay4.turn(nR4);
+			delay(100);
+			relay5.turn(nR5);
+			delay(100);
+			relay6.turn(nR6);
+			delay(100);
+			relay2.turn(nR2);
+		}
+		else  { 
+			relay2.turn(nR2);
+			delay(100);
+			relay1.turn(nR1);
+			delay(100);
+			relay3.turn(nR3);
+			relay4.turn(nR4);
+			delay(100);
+			relay5.turn(nR5);
+			delay(100);
+			relay6.turn(nR6);
+		}
+	}
 }
 
  void fB_Vanduino::showState() {
 	 uint8_t show = 0;
 	 logTimerFlag= 0;
 
- 	dbug(F("V ShowState"));
+ 	//dbug(F("V ShowState"));
 
 	 if(curr.pageTag == pageTag) show = 1;
  	//dbug(F("V SState pMsgi:%d, sMsgi:%d"),prevShow.msgIndex,state.msgIndex);

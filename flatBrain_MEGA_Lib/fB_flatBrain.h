@@ -46,7 +46,8 @@ typedef struct logTag {
 	uint16_t					tag;
 };
 
-uint8_t 	bootStatus;
+uint8_t 	_bootStatus = 0;
+uint8_t 	_bootMsgIndex = 0;
 uint8_t		secondPass;
 fB_Tag		*Tag(uint16_t tag);
 //uint16_t	farY =	0;
@@ -105,6 +106,10 @@ void buildPstrRay() {  // constants in fB_SYS_Define.h
 	createPstr(P_SWITCHTO,	"SWITCHING TO");
 	createPstr(P_MANUAL,	"MANUAL OVERRIDE");
 	createPstr(P_FAIL,	    "FAILURE");
+	createPstr(P_FAIL_RTC,	"FAIL BOOT RTC");
+	createPstr(P_FAIL_SD,	"FAIL BOOT SD");
+	createPstr(P_ALARM,	    "ALARM");
+	createPstr(P_INVERTER,	"INVERTER ON");
 	createPstr(P_BLANK ,	"");
 }
 
@@ -372,7 +377,7 @@ void defineCalibrate( uint16_t tag, pFunc _vFunc, double factor=1,double offset=
 		pT->dVal->offset = offset;
 	}
 }
-void defineIncrement( uint16_t tag, double value,double offset) {
+void defineValue( uint16_t tag, double value,double offset = NULL) {
 	if(secondPass) {
 		fB_Tag *pT;
 		pT = Tag(tag);
@@ -381,16 +386,18 @@ void defineIncrement( uint16_t tag, double value,double offset) {
 			pT->dVal->offset = offset;
 		}
 		else {
-			pT->iVal = value;
-			pT->buf16 = offset;
+			if(value > 0.99 && value < 1.0) value = 1.0;			
+			pT->iVal = (int) value;
+			if(pT->flag16 & _INCR) 	pT->buf16 = (uint16_t) offset;
 		}
 	}
 }
 
 void defineTarget(uint16_t tag,uint16_t tTag){
+	if(secondPass) {
 		fB_Tag *pT = Tag(tag);
 		if(pT) pT->tTag = tTag;
-
+	}
 }
 
 void initAlias(uint16_t tag, const __FlashStringHelper* Palias) {
@@ -404,51 +411,52 @@ void initAlias(uint16_t tag, const __FlashStringHelper* Palias) {
 
 void flatBrainInit(){
 	char Pbuffer[MAXCHARSLINE+1];	
+	fB_Tag	bufTag;
+	uint8_t res;
 
+	buildPstrRay();
+
+	alarm.enable();
+	alarm.play(_ALRMBT);
 
 	dbug(F(" "));
 	dbug(F("---------"));
 	dbug(F("FB INIT ENTRY"));
-
-	dbug(F("free RAM %d"),freeRAM());
+	dbug(F("FREE RAM %d"),freeRAM());
 
 	i2c.begin();
 	i2c.setSpeed(I2CSPEED);
 	i2c.timeOut(I2CTIMEOUT);
 
-	buildPstrRay();
+	tft.init(PORTRAIT);
+	tft.clear();
+	dbug(F("INIT TFT"));
 
-	uint8_t  res=0;
-	fB_Tag* pT;
+	menu.init();
+	dbug(F("INIT MENU"));
+
+	//alarm.play(_ALRMWN);
 
 	// turn off legacy SPI SS pin ( Mega D53) so it does not conflict w/ SD card or other SPI	
 	// enable explicitly when you want to use (eg. ATTINY SPI uses legacy SS)
 	pinMode(AT_SPISS,_OUTPUT);  
     digitalWrite(AT_SPISS,LOW);
 
-	bootStatus = 0;
-
-	alarm.enable();
-	alarm.play(ALARM_INIT);
-
-
-	res = rtc.init();
-	if(res) {
-		alarm.play(ALARM_FAIL);
+	if(res = rtc.init()) {
 		dbug(F("RTC FAILED"));
+		alarm.play(_ALRMFL);
 	}
 	else {
-		bootStatus |= RTC;
+		_bootStatus |= _RTC;
 		dbug(F("INIT RTC"));
 	}
 
-	res = fat.initFAT(SPISPEED);
-	if(res) {
+	if(res = fat.initFAT(SPISPEED)) {
 		dbug(F("SD ERROR 0X%h"),res);
-		alarm.play(ALARM_FAIL);
+		alarm.play(_ALRMFL);
 	}
 	else {
-		bootStatus |= SD;
+		_bootStatus |= _SD;
 		dbug(F("INIT SD"));
 	}
 
@@ -481,6 +489,7 @@ void flatBrainInit(){
 	dbug(F("INIT MALLOC"));
 	dbug(F("free RAM %d"),freeRAM());
 
+
 	// reset counters
 	tagCount    = 0;	// unique tags
 	pageCount = 0;	// unique pages ( incl in tagCount)
@@ -495,37 +504,26 @@ void flatBrainInit(){
 	defineUser();
 	dbug(F("INIT PASS 2"));
 
-	for(int i=0; i< rowCount; i++) rTP[i].p = Tag(rTP[i].t); // might be obscure. ( see note at top of file ).
-															//  takes array of uint16_t tags and converts them to fB_Tag*
+	for(int i=0; i< rowCount; i++) 	rTP[i].p = Tag(rTP[i].t); // might be obscure. ( see note at top of file ).
 
-	if(bootStatus & SD) for(int i=0;i<logFileCount;i++) 	{
-	dbug(F("Fb T:%d , b:%P"),logFileRay[i].fTag,logFileRay[i].Pbase);
-		rec.logCreate(logFileRay[i].fTag);
+	if(rec.EEgetEAUTO()) {
+		rec.EEloadTags(BASEETAG);   
+		dbug(F("INIT LOAD EEPROM"));
 	}
-	dbug(F("INIT LOGS"));
-														
-
-	pT = rec.EEgetEAUTO(BASEETAG);
-	if(pT && pT->iVal == HIGH) rec.EEloadTags(BASEETAG);     
-
-	dbug(F("INIT EEPROM"));
-
-	//seg.setAddress(SEG_ADDR);  // set segmented display address if necessary;
-	//seg.test();  // set segmented display address if necessary;
-	//seg.displayDec(1434,2);
-	menu.init();
-	tft.init(PORTRAIT);
-	//alarm.bootBeepEnable();
-	tft.clear();
-	dbug(F("INIT TFT"));
-	//dbug(F("FBf  %P , flags:%x"),Tag(HOME)->Ptitle,Tag(HOME)->flags);
-
-
-	alarm.play(ALARM_INIT);
-
+	
+	if(Tag(_TALRMON)->iVal == LOW) {
+		alarm.disable();
+		dbug(F("ALARM DISABLE"));
+	}
+	
+	if(!(_bootStatus & _RTC)) _bootMsgIndex = P_FAIL_RTC;		
+	if(!(_bootStatus & _SD))  _bootMsgIndex = P_FAIL_SD;		
+	else {
+		for(int i=0;i<logFileCount;i++) rec.logCreate(logFileRay[i].fTag);
+		dbug(F("INIT LOGS"));
+	}
 	attachInterrupt(NAV_INT, navigate,FALLING);
 	attachInterrupt(WARN_INT, fBinterruptHandlerK1 ,FALLING);
-
 	VccRef = readVcc();
 
 	//set interrupt pins to high
@@ -534,12 +532,12 @@ void flatBrainInit(){
 	pinMode(K0_INTPIN,INPUT_PULLUP);
 	pinMode(K1_INTPIN,INPUT_PULLUP);
 
-	dbug(F("INIT COMPLETE"));
-	//alarm.bootBeepDisable();
 	dbug(F("free RAM %d"),freeRAM());
 	Tag(FRAM)->iVal = freeRAM();
 	Tag(VCC)->dVal->value = VccRef;
 	warn.init();
+	alarm.playTag(_TALRMIN);
+	dbug(F("INIT COMPLETE"));	
 }
 
 

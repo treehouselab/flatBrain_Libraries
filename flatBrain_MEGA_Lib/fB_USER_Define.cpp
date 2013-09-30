@@ -31,7 +31,7 @@ void defineUser() {
 		definePin(Y5S,YCRD,20,_L,_INPUT,HIGH);
 		definePin(Y6S,YCRD,18,_R,_INPUT,HIGH);
 		definePin(_WARN_OVR,YCRD,17,_R,_INPUT,HIGH);
-		definePin(_ALARM_LED,YCRD,17,_L,_OUTPUT,HIGH);
+		definePin(_TALRMLED,YCRD,17,_L,_OUTPUT,HIGH);
 
 		definePin(IGN,YCRD,24,_L,_INPUT,_PGATE); 
 		definePin(CL,YCRD,23,_R,_INPUT,_PGATE); 
@@ -58,13 +58,13 @@ void defineUser() {
 	//////////////////////////////////////////
 
    	definePage(VSTATUS,HOME);
-		defineRow(V1, _FLOAT1 | _NOACT );
-		defineRow(V2, _FLOAT1 | _NOACT );
-		defineRow(V3, _FLOAT1 | _NOACT );
+		defineRow(V1, _FLOAT1 | UPDATE);
+		defineRow(V2, _FLOAT1 | UPDATE );
+		defineRow(V3, _FLOAT1 | UPDATE );
 		//defineRow(V0, _FLOAT1 );
 		//defineRow(CZ,  _FLOAT2 );
-		defineRow(CX,  _FLOAT1 | _NOACT );
-		defineRow(CL,  _FLOAT1 | _NOACT );
+		defineRow(CX,  _FLOAT1 | UPDATE );
+		defineRow(CL,  _FLOAT1 |  UPDATE);
 		//defineRow(IGN,  _BLAMP | LOG );
 		defineRow(ALT,  _BLAMP  | _NOACT );
 		defineJump(VGLOBALS);
@@ -144,6 +144,7 @@ void defineUser() {
 
 	defineAlias(VSTATUS,VAN STATUS);
 	defineAlias(VGLOBALS,VAN GLOBALS);
+	defineAlias(ALT,ALTERNATOR);
 	//defineAlias(RPULSE,RELAY SWITCH);
 	defineAlias(V1,VOLTS B1);
 	defineAlias(V2,VOLTS B2);
@@ -169,19 +170,19 @@ void defineUser() {
 	defineCalibrate(CX,posOnly,0.03789,-4.020);
 	defineCalibrate(CL,loadAmps,0.35,-179.35);
 
-	defineIncrement(VEXS,9.0,0.1);
-	defineIncrement(VALT,13.8,0.1);
-	defineIncrement(CHLO,12.5,0.1);
-	defineIncrement(CHHI,13.6,0.1);
-	defineIncrement(DLO1,12.5,0.1);
-	defineIncrement(DLO2,11.0,0.1);
-	defineIncrement(DLO3,10.0,0.1);
-	defineIncrement(DHI1,13.0,0.1);
-	defineIncrement(DHI2,12.0,0.1);
-	defineIncrement(DHI3,11.0,0.1);
-	defineIncrement(CPSEC,4.0,0.5);
-	defineIncrement(BKSEC,10.0,0.5);
-	defineIncrement(LGMIN,5,0.25);
+	defineValue(VEXS,9.0,0.1);
+	defineValue(VALT,13.8,0.1);
+	defineValue(CHLO,12.5,0.1);
+	defineValue(CHHI,13.6,0.1);
+	defineValue(DLO1,12.5,0.1);
+	defineValue(DLO2,11.0,0.1);
+	defineValue(DLO3,10.0,0.1);
+	defineValue(DHI1,13.0,0.1);
+	defineValue(DHI2,12.0,0.1);
+	defineValue(DHI3,11.0,0.1);
+	defineValue(CPSEC,4.0,0.5);
+	defineValue(BKSEC,10.0,0.5);
+	defineValue(LGMIN,5,0.25);
 
 	defineAlias(VEXS,BATT EXST);
 	defineAlias(VALT,ALTN ON);

@@ -22,7 +22,7 @@ class fB_Record {
 		fB_Tag*		EEloadTag(uint16_t tag, uint16_t base);
 		fB_Tag*		EEgetTag(fB_Tag &bufTag, uint16_t tag, uint16_t base);
 		void		EEclearTags(uint16_t offTags, uint16_t base);
-		fB_Tag*		EEgetEAUTO(uint16_t base);
+		int			EEgetEAUTO();
 		void		EEwriteEAUTO(uint16_t base);
 		void		EEdumpTags(uint16_t base);
 		bool		SDinit(uint8_t  SSpin, uint8_t  SPIspeed);

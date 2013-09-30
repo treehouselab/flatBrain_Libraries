@@ -44,7 +44,8 @@ typedef struct logTag {
 	uint16_t					tag;
 };
 
-extern uint8_t 		bootStatus;
+extern uint8_t 		_bootStatus;
+extern uint8_t 		_bootMsgIndex;
 extern uint8_t		secondPass;
 extern fB_Tag		*Tag(uint16_t tag);
 
@@ -92,10 +93,9 @@ void initRow(uint16_t tag, const __FlashStringHelper* Ptitle,uint32_t  flags);
 void initRowList(uint16_t tag,const __FlashStringHelper* Ptitle,uint16_t parentTag,uint32_t flags);
 void initLog(uint16_t tag, uint8_t fTag, const __FlashStringHelper* Pbase);
 void defineCalibrate( uint16_t tag, pFunc _vFunc, double factor=1,double offset=NULL);	
-void defineIncrement( uint16_t tag, double value,double offset);
 void defineTarget(uint16_t tag,uint16_t tTag);
 void defineSpace();
-
+void defineValue(uint16_t tag,double value,double offset = NULL);
 void navigate();
 void logData(uint16_t arg16);
 void playWarning(uint16_t arg16);

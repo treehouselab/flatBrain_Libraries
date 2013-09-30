@@ -68,7 +68,6 @@ class fB_Tag {
 
 		//uint16_t	tTag;	  // pointer to target Tag 
 
-		void		action(uint8_t hand);
 		void		showRow(int rowIndex, uint8_t  pageOption=NULL);
 
 		//void		frame();
@@ -116,6 +115,12 @@ class fB_Tag {
 		void frame(int rowIndex);
 		void unframe(int rowIndex);
 		void invertColors();
+
+		void	action(uint8_t hand);
+		uint8_t actionByPage();
+		uint8_t actionByTag();
+		uint8_t actionByRight();
+		uint8_t actionByLeft();
 
 
 

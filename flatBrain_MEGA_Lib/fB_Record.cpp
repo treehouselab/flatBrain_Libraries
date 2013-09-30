@@ -35,7 +35,7 @@ void fB_Record::createTagDefLog() {
 	char Pbuffer[40];
 	char title[MAXCHARSLINE+1];
 	buffer[0] = '\0';
-	if(!(bootStatus & SD) || !rec.logCreate(P("TAGDEF"))) return;	
+	if(!(_bootStatus & SD) || !rec.logCreate(P("TAGDEF"))) return;	
 	if(fat.openFile(filename,FILEMODE_TEXT_WRITE)==NO_ERROR) { 
 		//sprintf(buffer,P("GLOBAL,GTAG,LOG, VALUE,FACTOR, GPIN, GSYS, GINIT,GINP, GBIAS"));
 		fat.writeLn(P("NAME,TAG,LOG, VALUE,FACTOR, OFFSET, TPIN, _LOADEE"));
@@ -117,7 +117,6 @@ char* fB_Record::logGetFilename(uint16_t fTag) {
 	if(!pLog) return NULL;
 	getPtext(pLog->Pbase,filename);
 	strcat(filename,".LOG");
-	//dbug(F("R LGF entry  fname:%s"),filename);
 	return filename;
 }
 
@@ -327,17 +326,13 @@ void fB_Record::EEwriteTags(uint16_t base) {
 	//ee.dump(0,128);
 }
 
-fB_Tag* fB_Record::EEgetEAUTO(uint16_t base) {
-	fB_Tag * pT;
-	pT = Tag(EAUTO);
-	if(!pT ) return NULL;
+int fB_Record::EEgetEAUTO() {   // return value of EE autoload flag
 	uint8_t  buffer[11];
-	uint16_t addr;
-	double  *data;
-	ee.readBlock(base+10,buffer,2);
-	pT->iVal = *(int*)buffer;
-	return pT;
+	ee.readBlock(BASEETAG+10,buffer,2);
+	return  *(int*)buffer;
 }
+
+
 
 fB_Tag* fB_Record::EEgetTag(fB_Tag &bufTag, uint16_t tag,uint16_t base) {
 	fB_Tag * pT;

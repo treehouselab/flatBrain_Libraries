@@ -18,11 +18,11 @@ void setup(){
 	flatBrainInit();
 
 	vduino.init(VSTATUS);
- 
-	menu.showPage(VSTATUS);
-
         vduinoUpdate(NULL);
-	//i2c.scan();
+
+	menu.showPage(SOUNDS);
+
+   	//i2c.scan();
 	//Card(YCRD)->LED(HIGH);
 	timer.perpetual(_TIMER_UPDATE,4000,vduinoUpdate);
 	//initState();

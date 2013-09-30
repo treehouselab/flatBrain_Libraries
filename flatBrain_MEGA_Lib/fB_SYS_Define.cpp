@@ -16,18 +16,52 @@ void defineSystem()  {
 		defineRow(ARCHIVES,NULL);
 		defineJump(EEPROM);
 		defineJump(CLOCK);
-		defineJump(ALARM);
+		defineJump(ALARMP);
 		defineRow(FRAM,_INT5 | _NOACT);
 		defineRow(VCC,_FLOAT2 | _NOACT);
 
-	definePage(ALARM,SYSTEM);
-		defineRow(ALRMON,_BLAMP);
-		defineRow(ALARM0,_BLANK);
-		defineRow(ALARM1,_BLANK);
-		defineRow(ALARM2,_BLANK);
-		defineRow(ALARM3,_BLANK);
-		defineRow(ALARM4,_BLANK);
-		defineRow(ALARM5,_BLANK);
+	definePage(ALARMP,SYSTEM);
+		defineJump(SOUNDS);
+		defineRow(_SECAL, _INT5 | _INCR | _LOADEE);
+		defineRow(_SECWN, _INT5 | _INCR | _LOADEE);
+		defineRow(_SECWD, _INT5 | _INCR | _LOADEE);
+		defineRow(_TALRMON,_BLAMP | _LOADEE);
+		defineRow(ESTOR,_BLANK);
+
+		defineValue(_TALRMON,1);
+		defineValue(_SECAL,4,1);
+		defineValue(_SECWN,8,1);
+		defineValue(_SECWD,30,1);
+		defineAlias(ALARMP,ALARM);
+		defineAlias(_SECAL,ALARM SEC);
+		defineAlias(_SECWN,WARN  SEC);
+		defineAlias(_SECWD,DELAY SEC);
+		defineAlias(_TALRMON,ALARM ENABLE);
+
+	definePage(SOUNDS,ALARMP);
+		defineRow(_TALRMBT,_BLANK);
+		defineRow(_TALRMIN,_BLANK);
+		defineRow(_TALRMFL,_BLANK);
+		defineRow(_TALRMWN,_BLANK);
+		defineRow(_TALRMAC,_BLANK);
+		defineRow(_TALRMQS,_BLANK);
+		defineRow(_TALRMEG,_BLANK);
+
+		defineValue(_TALRMBT,0);
+		defineValue(_TALRMIN,1);
+		defineValue(_TALRMFL,2);
+		defineValue(_TALRMWN,3);
+		defineValue(_TALRMAC,4);
+		defineValue(_TALRMQS,5);
+		defineValue(_TALRMEG,6);
+
+		defineAlias(_TALRMBT,ALARM BOOT);
+		defineAlias(_TALRMIN,ALARM INIT);
+		defineAlias(_TALRMFL,ALARM FAIL);
+		defineAlias(_TALRMWN,ALARM WARN);
+		defineAlias(_TALRMAC,ALARM ACTION);
+		defineAlias(_TALRMQS,ALARM QUESTION);
+		defineAlias(_TALRMEG,ALARM EMERGENCY);
 
 	definePage(EEPROM,SYSTEM);
 		defineRow(ESTOR,_BLANK);
@@ -35,9 +69,9 @@ void defineSystem()  {
 		defineRow(EDUMP,_BLANK);
 		defineRow(ECLR,_BLANK);
 		defineRow(EAUTO,_BLAMP | _LOADEE); // required tag
-		defineAlias(ESTOR,WRITE ALL);
-		defineAlias(ELOAD,LOAD ALL);
-		defineAlias(ECLR,CLEAR ALL);
+		defineAlias(ESTOR,SAVE ALL EEPROM);
+		defineAlias(ELOAD,LOAD ALL EEPROM);
+		defineAlias(ECLR,CLEAR ALL EEPROM);
 		defineAlias(EDUMP,SERIAL DUMP);
 
 
@@ -115,23 +149,10 @@ void defineSystem()  {
 		defineAlias(FSIZE,SIZE);
 		defineAlias(FDUMP,SERIAL DUMP);
 		defineAlias(FARCH,ARCHIVE);
-					
-	//defineRowList(STAGS,SYSTEM,NULL); 
-	
-/*
-	definePage(TPANEL,HOME);
-		defineRow(TLOG,_NOACT);
-		defineRow(TINP,_NOACT);
-		defineRow(TVAL,_FLOAT2);
-		defineRow(TOPR,_TEXT); 
-		defineRow(TFAC,_FLOAT2);
-		if(secondPass)	Tag(TLOG)->flag16 |= _MARK;
-		*/
 
 	defineAlias(DPINS,DIGITAL PINS);
 	defineAlias(APINS,ANALOG PINS);
 	defineAlias(FRAM,FREE RAM);
-
 
 }
 
