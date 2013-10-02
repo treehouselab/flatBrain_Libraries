@@ -18,8 +18,10 @@ extern fB_Timer		timer;
 
 extern	uint8_t 	_fBiSelectK1;	// interrupt fork selector, used in fBinterruptHandlerK1
 extern	uint8_t 	_fBiK1;			// global interrupt flag
+
 extern	uint8_t		_fBiTFT;
 extern	fB_Tag		*_pTiK1shft;
+extern  fB_Tag		*_pTiK1coro; // ptr to pin that coroborates _fBiK1, "
 
 
 extern uint8_t  Xmap50[];
@@ -46,9 +48,10 @@ typedef struct logTag {
 
 extern uint8_t 		_bootStatus;
 extern uint8_t 		_bootMsgIndex;
+extern uint8_t 		_sdMsgIndex;
+
 extern uint8_t		secondPass;
 extern fB_Tag		*Tag(uint16_t tag);
-
 
 extern uint16_t		tagCount;
 extern uint16_t		rowCount;

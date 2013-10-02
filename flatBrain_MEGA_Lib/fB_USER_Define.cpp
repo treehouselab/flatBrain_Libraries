@@ -30,7 +30,7 @@ void defineUser() {
 		definePin(Y4S,YCRD,20,_R,_INPUT,HIGH); 
 		definePin(Y5S,YCRD,20,_L,_INPUT,HIGH);
 		definePin(Y6S,YCRD,18,_R,_INPUT,HIGH);
-		definePin(_WARN_OVR,YCRD,17,_R,_INPUT,HIGH);
+		definePin(_WARN_OVR,YCRD,17,_R,_INPUT,LOW);
 		definePin(_TALRMLED,YCRD,17,_L,_OUTPUT,HIGH);
 
 		definePin(IGN,YCRD,24,_L,_INPUT,_PGATE); 
@@ -58,10 +58,10 @@ void defineUser() {
 	//////////////////////////////////////////
 
    	definePage(VSTATUS,HOME);
+		defineRow(V0, _FLOAT1 );
 		defineRow(V1, _FLOAT1 | UPDATE);
 		defineRow(V2, _FLOAT1 | UPDATE );
 		defineRow(V3, _FLOAT1 | UPDATE );
-		//defineRow(V0, _FLOAT1 );
 		//defineRow(CZ,  _FLOAT2 );
 		defineRow(CX,  _FLOAT1 | UPDATE );
 		defineRow(CL,  _FLOAT1 |  UPDATE);
@@ -112,35 +112,35 @@ void defineUser() {
 
  	//////////// DEFINE RECORDS
 
-	defineLog(CPSEC,LOG1);
-	defineLog(BKSEC,LOG1);
-	defineLog(LGMIN,LOG1);
-	defineLog(VEXS,LOG1);
-	defineLog(VALT,LOG1);
-	defineLog(CHLO,LOG1);
-	defineLog(CHHI,LOG1);
-	defineLog(DLO1,LOG1);
-	defineLog(DLO2,LOG1);
-	defineLog(DLO3,LOG1);
-	defineLog(DHI1,LOG1);
-	defineLog(DHI2,LOG1);
-	defineLog(DHI3,LOG1);
+	defineLog(CPSEC,VGLOG);
+	defineLog(BKSEC,VGLOG);
+	defineLog(LGMIN,VGLOG);
+	defineLog(VEXS,VGLOG);
+	defineLog(VALT,VGLOG);
+	defineLog(CHLO,VGLOG);
+	defineLog(CHHI,VGLOG);
+	defineLog(DLO1,VGLOG);
+	defineLog(DLO2,VGLOG);
+	defineLog(DLO3,VGLOG);
+	defineLog(DHI1,VGLOG);
+	defineLog(DHI2,VGLOG);
+	defineLog(DHI3,VGLOG);
 
 	defineTag(LBOOT, _BLAMP);
-	defineLog(LBOOT,LOG2);
-	defineLog(Y1S,LOG2);
-	defineLog(Y2S,LOG2);
-	defineLog(Y3S,LOG2);
-	defineLog(Y4S,LOG2);
-	defineLog(Y5S,LOG2);
-	defineLog(Y6S,LOG2);
-	defineLog(ALT,LOG2); 
-	defineLog(V1,LOG2);
-	defineLog(V2,LOG2);
-	defineLog(V3,LOG2);
-	defineLog(CL,LOG2);
-	defineLog(CX,LOG2);
-	//defineLog(CZ,LOG2);
+	defineLog(LBOOT,VDATA);
+	defineLog(Y1S,VDATA);
+	defineLog(Y2S,VDATA);
+	defineLog(Y3S,VDATA);
+	defineLog(Y4S,VDATA);
+	defineLog(Y5S,VDATA);
+	defineLog(Y6S,VDATA);
+	defineLog(ALT,VDATA); 
+	defineLog(V1,VDATA);
+	defineLog(V2,VDATA);
+	defineLog(V3,VDATA);
+	defineLog(CL,VDATA);
+	defineLog(CX,VDATA);
+	//defineLog(CZ,VDATA);
 
 	defineAlias(VSTATUS,VAN STATUS);
 	defineAlias(VGLOBALS,VAN GLOBALS);
@@ -161,10 +161,10 @@ void defineUser() {
 	//defineAlias(Y4S,INVERTER);
 	//defineAlias(Y5S,LOAD);
 	//defineAlias(Y6S,FAN);
-	defineCalibrate(V0,posOnly,0.03676,-15.54);
-	defineCalibrate(V1,posOnly,0.03676,-15.54);
-	defineCalibrate(V2,posOnly,0.03676,-15.54);
-	defineCalibrate(V3,posOnly,0.03676,-15.54);
+	defineCalibrate(V0,posOnly,0.0609,-21.8);
+	defineCalibrate(V1,posOnly,0.0609,-21.8);
+	defineCalibrate(V2,posOnly,0.0609,-21.8);
+	defineCalibrate(V3,posOnly,0.0609,-21.8);
 
 	defineCalibrate(CZ,sysAmps,.02744,-.31);
 	defineCalibrate(CX,posOnly,0.03789,-4.020);
@@ -196,6 +196,7 @@ void defineUser() {
 	defineAlias(DHI3,LVDHI 3);
 
 	_pTiK1shft = Tag(YSHFT); // interrupt K1 shift key
+	_pTiK1coro = Tag(_WARN_OVR); // interrupt K1 coroborate
 
  }
 

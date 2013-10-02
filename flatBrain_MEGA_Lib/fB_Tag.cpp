@@ -92,7 +92,7 @@ void fB_Curr::setCurrPage(uint16_t _tag) {
 		rowCount = getRowCount();
 	}
 	farY = STARTY + (ROWHT * (1+rowCount));
-dbug(F("Tscp  tag:%d , rc:%d, fy:%d"),_tag,rowCount,farY);
+//dbug(F("Tscp  tag:%d , rc:%d, fy:%d"),_tag,rowCount,farY);
 
 }	
 

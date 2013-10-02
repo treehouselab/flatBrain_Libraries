@@ -44,7 +44,7 @@ class fB_Event
 public:
   fB_Event(void);
   uint8_t eventType;
-  void update(void);
+  bool update(void);
   unsigned long period;
   unsigned long lastEventTime;
   int repeatCount;
@@ -87,7 +87,7 @@ public:
   int pulseTag(uint8_t index,uint16_t tag, unsigned long period, uint16_t pulseValue);
   void stop(uint8_t id);
   void update(void);
-  void update(uint8_t index);
+  bool update(uint8_t index);
   void updateWarn();
   void setPeriod(uint8_t index, unsigned long period);
   uint8_t writeLog(uint8_t logTag,uint8_t mode);

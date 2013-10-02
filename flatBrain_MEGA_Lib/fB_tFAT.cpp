@@ -249,6 +249,7 @@ uint8_t fB_tFAT::stampFile(char *fn,uint8_t  year,uint8_t  month,uint8_t  day,ui
 		buffer[0x0F + offset] = tH;
 		buffer[0x0E + offset] = tL;
 		mmc::writeSector(buffer, currSec);
+		closeFile();
 		return NO_ERROR;
 	}
 	return NO_ERROR;
@@ -433,9 +434,9 @@ boolean fB_tFAT::readLn(char *st, int bufSize)
 {
 	uint32_t sec;
 	int bufIndex=0;
+	//dbug(F("TFAT  bs: %d  "),bufSize);
 
-	for (int i=0; i<=bufSize; i++)
-		st[i]=0;
+	for (int i=0; i<=bufSize; i++)	st[i]=0;
 
 	if (currFile.fileMode==FILEMODE_TEXT_READ)
 	{
@@ -717,7 +718,6 @@ uint8_t  fB_tFAT::createFile(char *fn)
 		offset = -32;
 		while (!done)
 		{
-//		dbug(F("fatCf3 %s"),fn);
 			offset+=32;
 			if (offset==512)
 			{

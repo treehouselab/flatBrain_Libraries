@@ -29,7 +29,6 @@ class fB_Menu {
 		void		showMessage(uint8_t Pindex, char *text = ""); 
 		void		clearRow(int rowIndex);
 
-
 		void		init();
 		uint8_t		dPlaces(double value, uint8_t size);
 		char *		d2str(double value, uint8_t size, char* buffer) ;

@@ -84,7 +84,7 @@ XCARDS		Ox20-27
 #define	_BKSECLIM		30
 
 #define MAXEETAGS		25  // for eeprom runaway only
-#define MAXCHARSDUMP	256  // reduce this if logfile dump collides with heap 
+#define MAXCHARSDUMP	200  // reduce this if logfile dump collides with heap 
 #define MAXLISTROWS		9 
 #define	MESSAGE_Y		285
 #define MAXCHARSLINE	15 

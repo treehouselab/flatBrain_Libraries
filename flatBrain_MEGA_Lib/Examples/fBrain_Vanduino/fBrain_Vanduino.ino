@@ -12,7 +12,6 @@ void setup(){
    //digitalWrite(13,LOW);
 
 
-	//alarm.disable();
 	//alarm.bootBeepDisable();
 
 	flatBrainInit();
@@ -20,7 +19,9 @@ void setup(){
 	vduino.init(VSTATUS);
         vduinoUpdate(NULL);
 
-	menu.showPage(SOUNDS);
+	menu.showPage(VSTATUS);
+
+	alarm.play(_ALRMIN);
 
    	//i2c.scan();
 	//Card(YCRD)->LED(HIGH);
@@ -35,7 +36,7 @@ void loop() {
     menu.checkButtonCode();
     timer.update(_TIMER_UPDATE);
     if(warn.action != _WD_OFF) timer.updateWarn();
-    if(vduino.logTimerFlag) timer.update(vduino.logTimerIndex);
+    vduino.logTimer();
 }
 
 

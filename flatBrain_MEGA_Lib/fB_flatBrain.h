@@ -20,7 +20,8 @@ fB_Timer		timer;
 uint8_t 	_fBiSelectK1 = 0;	// interrupt fork selector, used in fBinterruptHandlerK1
 uint8_t 	_fBiK1 = 0;			// global interrupt flag
 uint8_t 	_fBiTFT = 0;		// global interrupt flag from TFT switches
-fB_Tag		*_pTiK1shft = NULL; // ptr to pin that shifts _fBiK1
+fB_Tag		*_pTiK1shft = NULL; // ptr to pin that shifts _fBiK1, defined in fB_USER_Define.cpp
+fB_Tag		*_pTiK1coro = NULL; // ptr to pin that coroborates _fBiK1, "
 uint8_t		logInitFlag = 0;	// set  at first log entry after reboot, helps synchro logs
 
 double VccRef;  // adjusted Vcc
@@ -48,6 +49,7 @@ typedef struct logTag {
 
 uint8_t 	_bootStatus = 0;
 uint8_t 	_bootMsgIndex = 0;
+uint8_t 	_sdMsgIndex = 0;
 uint8_t		secondPass;
 fB_Tag		*Tag(uint16_t tag);
 //uint16_t	farY =	0;
@@ -164,15 +166,32 @@ double readVcc() {
 
 void logData(uint16_t arg16) {
 		//dbug(F("LOGDATA entry a16:%d"), arg16);
-	rec.logWriteData((uint8_t) arg16);
-		//dbug(F("LOGDATA exit"));
+	int res;
+		
+	if(res = fat.initFAT(SPISPEED)) {
+		dbug(F("SD ERROR 0X%h"),res);
+		alarm.play(_ALRMFL);
+		_sdMsgIndex = P_FAIL_SD;
+	}
+	else {
+		rec.logWriteData((uint8_t) arg16);
+		_sdMsgIndex = NULL;
+	}
 }
 
 void fBinterruptHandlerK1() {  // sets global flag, check and reset flag in user modules
 	if(_fBiK1) return;
+	//dbug(F("pTiK1shit ov:%d, val:%d"), _pTiK1shft->getOnVal(), _pTiK1shft->readInt()  );
 	if(_pTiK1shft && (_pTiK1shft->readInt()== _pTiK1shft->getOnVal())) _fBiK1 = INTK1SHFT;
-	else _fBiK1 = INTK1;
-	delayMicroseconds(10000);
+	else {
+			//dbug(F("pTiK1coro1 ov:%d, val:%d"), _pTiK1coro->getOnVal(), _pTiK1coro->readInt()  );
+		if(_pTiK1coro) {
+			//dbug(F("pTiK1coro2 ov:%d, val:%d"), _pTiK1coro->getOnVal(), _pTiK1coro->readInt()  );
+			if(_pTiK1coro->readInt() == _pTiK1coro->getOnVal()) _fBiK1 =  INTK1;
+		}
+		else _fBiK1 =  INTK1;
+	}
+	delayMicroseconds(100000);
 	//dbug(F("FB_INTERRUPT msecs:%d   manOvr:%d"),msecs, _manOver);
 }
 
@@ -264,7 +283,6 @@ void initLog(uint16_t tag, uint8_t fTag, const __FlashStringHelper* Pbase) {
 				logFileCount++;
 			}
 		}
-//dbug(F("IT2  %P FT:%x"),pT->Ptitle, pT->flag16);
 	}
 }
 
@@ -350,10 +368,14 @@ void initPin( uint16_t tag,const __FlashStringHelper* Ptitle, uint16_t ctag,uint
 	if(secondPass)	{
 		pT->createPin(ctag,row,side,dir,onval) ;
 		pT->flag16 |= ( _PIN | _UNDEF);
-		if(!(pT->flag16 & _DUBL) && pT->getMode()== _ANALOG) {
-			pT->dVal = new fB_Val;
+		if( pT->getMode() == _ANALOG) {
+			if(!(pT->flag16 & _DUBL)) {
+				pT->dVal = new fB_Val;
+			}
 			pT->flag16 |= _DUBL;
+			pT->putFormat(_FLOAT2);
 		}
+		else pT->putFormat(_BLAMP);
 	}
 	pinCount++;
 }
@@ -519,7 +541,10 @@ void flatBrainInit(){
 	if(!(_bootStatus & _RTC)) _bootMsgIndex = P_FAIL_RTC;		
 	if(!(_bootStatus & _SD))  _bootMsgIndex = P_FAIL_SD;		
 	else {
-		for(int i=0;i<logFileCount;i++) rec.logCreate(logFileRay[i].fTag);
+		for(int i=0;i<logFileCount;i++) {
+			dbug(F("INITL i:%d, c:%d ft:%d"),i,logFileCount,logFileRay[i].fTag);
+			rec.logCreate(logFileRay[i].fTag);
+		}
 		dbug(F("INIT LOGS"));
 	}
 	attachInterrupt(NAV_INT, navigate,FALLING);
@@ -536,7 +561,7 @@ void flatBrainInit(){
 	Tag(FRAM)->iVal = freeRAM();
 	Tag(VCC)->dVal->value = VccRef;
 	warn.init();
-	alarm.playTag(_TALRMIN);
+	//alarm.playTag(_TALRMWN);
 	dbug(F("INIT COMPLETE"));	
 }
 

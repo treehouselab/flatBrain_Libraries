@@ -329,7 +329,7 @@ void fB_TFT::LCD_Write_COM_DATA(char com1,int dat1)
 void fB_TFT::clear(uint16_t ht)
 {
 	
-	dbug(F("****TFT clr ht:%d"),ht);
+	//dbug(F("****TFT clr ht:%d"),ht);
 	
 	long i,m;
 	int y;

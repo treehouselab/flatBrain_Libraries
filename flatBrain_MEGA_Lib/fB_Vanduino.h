@@ -78,17 +78,25 @@
 #define nRELAYS		(next.flags & RMASK)		// Relay 6  
 
 
+#define sV0			state.dV0	// V0 voltage
 #define sV1			state.dV1	// V1 voltage
 #define sV2			state.dV2	// V2 voltage
 #define sV3			state.dV3	// V3 voltage
 #define sCL			state.dCL	// Load Amps
 #define sCX			state.dCX	// EXT Charging Amps
 
+#define pV0			prevShow.dV0	// V1 voltage
 #define pV1			prevShow.dV1	// V1 voltage
 #define pV2			prevShow.dV2	// V2 voltage
 #define pV3			prevShow.dV3	// V3 voltage
 #define pCL			prevShow.dCL	// Load Amps
 #define pCX			prevShow.dCX	// EXT Charging Amps
+
+#define gV1			log.dV1	// V1 voltage
+#define gV2			log.dV2	// V2 voltage
+#define gV3			log.dV3	// V3 voltage
+#define gCL			log.dCL	// Load Amps
+#define gCX			log.dCX	// EXT Charging Amps
 
 #define R1_ON			relay1.turn(ON)	
 #define R1_OFF			relay1.turn(OFF)	
@@ -110,7 +118,7 @@
 class V_State {
 	public:
 		uint16_t flags;
-		double dCL, dCX, dV1, dV2, dV3;
+		double dCL, dCX, dV0,dV1, dV2, dV3;
 		uint16_t msgIndex;
 		char	*msgText;
 		void copyAllTo(V_State* pState);
@@ -122,7 +130,7 @@ class V_State {
  } ;
 
  V_State::V_State() {
-	 dCL = dCX = dV1 = dV2 = dV3 = 0;
+	 dCL = dCX = dV0 =dV1 = dV2 = dV3 = 0;
 	 flags = 0;
  }
 
@@ -203,8 +211,9 @@ class fB_Vanduino {
 		V_State		prevShow;
 		V_State		next;
 		V_State		state;
+		V_State		log;
 		V_Relay		relay1, relay2, relay3, relay4, relay5, relay6;
-		fB_Tag		*ptCL, *ptCX, *ptIGN, *ptALT, *ptV1, *ptV2, *ptV3, *ptVALT, *ptVEXS;
+		fB_Tag		*ptCL, *ptCX, *ptIGN, *ptALT, *ptV0,  *ptV1, *ptV2, *ptV3, *ptVALT, *ptVEXS;
 		fB_Tag		*ptCHLO, *ptCHHI, *ptDLO1, *ptDLO2, *ptDLO3, *ptDHI1, *ptDHI2, *ptDHI3;
 		fB_Tag		*ptYSHFT, *ptLED, *ptCPSEC, *ptBKSEC, *ptLGMIN;
 		uint16_t	pageTag;
@@ -215,6 +224,7 @@ class fB_Vanduino {
 		uint8_t		bootFlag;
 
 
+		void logTimer();
 		void getState();
 		double getStateAnalogTag(uint16_t tag);
 		uint8_t getStateRelayIndex(uint8_t index) ;
@@ -242,7 +252,7 @@ fB_Vanduino::fB_Vanduino() {
 
 void fB_Vanduino::init(uint16_t pTag) { 
 
-
+	analogReference(EXTERNAL);
 	pageTag  =  pTag; 
 	manOver = 0;
 
@@ -258,6 +268,7 @@ void fB_Vanduino::init(uint16_t pTag) {
 	ptLGMIN = Tag(LGMIN);
 	ptCL = Tag(CL);
 	ptCX = Tag(CX);
+	ptV0 = Tag(V0);
 	ptV1 = Tag(V1);
 	ptV2 = Tag(V2);
 	ptV3 = Tag(V3);
@@ -303,19 +314,16 @@ void fB_Vanduino::init(uint16_t pTag) {
 	setRelaysNext();
 	next.copyRelaysTo(&state);
 	if(_bootStatus & _SD){
-		timer.writeLog(LOG1,_APPENDDIF);
+		timer.writeLog(VGLOG,_APPENDDIF);
 		if(bootFlag) {
 			Tag(LBOOT)->iVal = HIGH;;
-			timer.writeLog(LOG2,_APPENDLOG);
+			timer.writeLog(VDATA,_APPENDLOG);
 			bootFlag = 0;
 			Tag(LBOOT)->iVal = LOW;
 		}
-		logTimerIndex = timer.scheduleLog(LOG2,_APPENDLOG, ptLGMIN->dVal->value);
+		logTimerIndex = timer.scheduleLog(VDATA,_APPENDLOG, ptLGMIN->dVal->value);
 	}
-
 	if(_bootMsgIndex) state.setMsg(_bootMsgIndex);
-	//dbug(F("V INIT2 sB2:%d, sB3:%d, "),sB2,sB3);
-	//dbug(F("V INIT3 cl:%P val:%f"),ptCL->Ptitle,ptCL->dVal->value);
 }
 
 void fB_Vanduino::setBit(uint16_t bitVal, uint16_t ival) { 
@@ -331,6 +339,7 @@ void fB_Vanduino::getStateAnalog() {
 	//dbug(F("V GSA entry"));
 	getStateAnalogTag(CL);
 	getStateAnalogTag(CX);
+	getStateAnalogTag(V0);
 	getStateAnalogTag(V1);
 	getStateAnalogTag(V2);
 	getStateAnalogTag(V3);
@@ -392,6 +401,9 @@ double fB_Vanduino::getStateAnalogTag(uint16_t tag) {
 		case CX:	
 				ptCX->read();
 				return state.dCX = ptCX->dVal->value;
+		case V0:	
+				ptV0->read();
+				return state.dV0 = ptV1->dVal->value;
 		case V1:	
 				ptV1->read();
 				return state.dV1 = ptV1->dVal->value;
@@ -483,8 +495,9 @@ void fB_Vanduino::buildNextState() {
 	//dbug(F("*** V BNS sf:0x%x"),state.flags);
 	//dbug(F("*** V BNS nf:0x%x"),next.flags);
 
+	if(_sdMsgIndex) next.setMsg(_sdMsgIndex);
+	else next.setMsg(P_BLANK); 
 
-	next.setMsg(P_BLANK); 
 	if(!sB3) next.setBit(RT3, OFF);						// if no batt 3, turn off relay 3
 	if(!sR1 && !sR2 && !sR1) {							// if no batt relays on, turn off load relays
 		next.setBit(RT4, OFF);												
@@ -759,8 +772,8 @@ void fB_Vanduino::setRelaysNext() {
 			relay2.turn(nR2);
 			delay(100);
 			relay1.turn(nR1);
-			delay(100);
 			relay3.turn(nR3);
+			delay(100);
 			relay4.turn(nR4);
 			delay(100);
 			relay5.turn(nR5);
@@ -770,48 +783,38 @@ void fB_Vanduino::setRelaysNext() {
 	}
 }
 
- void fB_Vanduino::showState() {
+void fB_Vanduino::showState() {
 	 uint8_t show = 0;
 	 logTimerFlag= 0;
 
  	//dbug(F("V ShowState"));
 
 	 if(curr.pageTag == pageTag) show = 1;
- 	//dbug(F("V SState pMsgi:%d, sMsgi:%d"),prevShow.msgIndex,state.msgIndex);
 
-	 if(fabs(sCL -  pCL) > 0.1) {
-		 if(show) ptCL->showRow(curr.row(CL));
-		 logTimerFlag = 1;
-	 }
-
-	 if(fabs(sCX -  pCX) > 0.1)  {
-		 if(show) ptCX->showRow(curr.row(CX));
-		 logTimerFlag = 1;
-	 }
-	 if(fabs(sV1 - pV1) > 0.1)   {
-		 if(show) ptV1->showRow(curr.row(V1));
-		 logTimerFlag = 1;
-	 }
-	 if(fabs(sV2 - pV2) > 0.1)   {
-		 if(show) ptV2->showRow(curr.row(V2));
-		 logTimerFlag = 1;
-	 }
-	 if(fabs(sV3 - pV3) > 0.1)   {
-		 if(show) ptV3->showRow(curr.row(V3));
-		 logTimerFlag = 1;
-	 }
-	 //if(sB3) pV3->showRow(curr.row(V3));
-	 if((state.flags & ALTN) != (prevShow.flags & ALTN ) ) {
-		 if(show) ptALT->showRow(curr.row(ALT));
-		 logTimerFlag = 1;
+	 if((fabs(sCL -  pCL) > .5) && show) ptCL->showRow(curr.row(CL));
+	 if((fabs(sCX -  pCX) > .2) && show) ptCX->showRow(curr.row(CX));
+	 if((fabs(sV0 -  pV0) > .1) && show) ptV0->showRow(curr.row(V0));
+	 if((fabs(sV1 -  pV1) > .1) && show) ptV1->showRow(curr.row(V1));
+	 if((fabs(sV2 -  pV2) > .1) && show) ptV2->showRow(curr.row(V2));
+	 if((fabs(sV3 -  pV3) > .1) && show) ptV3->showRow(curr.row(V3));
+	 if(show) {
+		if(prevShow.msgIndex != state.msgIndex || prevShow.msgText != state.msgText) menu.showMessage(state.msgIndex,state.msgText);
+		state.copyAllTo(&prevShow);
 	 }
 
-
-	 if(show && (prevShow.msgIndex != state.msgIndex || prevShow.msgText != state.msgText))
-		 menu.showMessage(state.msgIndex,state.msgText);
-	 
-	 if(show)state.copyAllTo(&prevShow);
+	 if(log.flags != state.flags) logTimerFlag= 1;
+	 if(fabs(sCL -  gCL) > 1.0)  logTimerFlag = 2;
+	 if(fabs(sCX -  gCX) > 0.2)  logTimerFlag = 3;
+	 if(fabs(sV1 -  gV1) > 0.1)  logTimerFlag = 4;
+	 if(fabs(sV2 -  gV2) > 0.1)  logTimerFlag = 5;
+	 if(fabs(sV3 -  gV3) > 0.1)  logTimerFlag = 6;
+ 
  }
+
+void fB_Vanduino::logTimer() {
+	if(logTimerFlag && timer.update(logTimerIndex)) 	state.copyAllTo(&log);
+}
+
 
 
 #endif

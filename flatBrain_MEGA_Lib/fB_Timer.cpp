@@ -43,9 +43,10 @@ void fB_Timer::update(void){
 	}
 }
 
-void fB_Timer::update(uint8_t index){
-
-		if (_events[index].eventType != EVENT_NONE)	_events[index].update();
+bool fB_Timer::update(uint8_t index){
+	bool action = false;
+	if (_events[index].eventType != EVENT_NONE)	action = _events[index].update();
+	return action;
 }
 void fB_Timer::updateWarn() {
 
@@ -65,8 +66,9 @@ int fB_Timer::findFreeEventIndex(void)
 
 
 
-void fB_Event::update(void)
+bool fB_Event::update(void)
 {
+	bool action = false;
 	unsigned long now = millis();
 	//dbug(F("Event update a16:%d eventyp:%d, now:%d, let:%d, p:%d"),arg16 ,eventType,(uint16_t) now,(uint16_t) lastEventTime,(uint16_t) period);
 	//Serial.println(now);
@@ -74,6 +76,7 @@ void fB_Event::update(void)
 	//Serial.println(period);
 	if (now - lastEventTime >= period)
 	{
+		action = true;
 		switch (eventType)
 		{
 			case EVENT_EVERY:
@@ -93,12 +96,13 @@ void fB_Event::update(void)
 				break;
 		}
 	//dbug(F("EventX "));
-	    lastEventTime = now;
 	//Serial.println(now);
 	//Serial.println(lastEventTime);
+	    lastEventTime = now;
 		count++;
 	}
 	if (repeatCount > -1 && count >= repeatCount) eventType = EVENT_NONE;
+	return action;
 }
 
 fB_Timer::fB_Timer(void){}
@@ -220,7 +224,7 @@ uint8_t fB_Timer::writeLog(uint8_t fTag,uint8_t mode) {
 }
 
 uint8_t fB_Timer::scheduleLog(uint8_t fTag,uint8_t mode, double minutes) {
-	dbug(F("T schedulLog entry tag:%d"),fTag);
+	//dbug(F("T schedulLog entry tag:%d"),fTag);
 
 	char* filename;
 	uint8_t index;

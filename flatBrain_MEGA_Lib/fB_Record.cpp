@@ -14,10 +14,12 @@ static int compareFilename(const void *x1, const void *x2) {
 
 
 void fB_Record::buildFileRay(char *ext) {
+
 	// will select all files if !ext
 	uint16_t offset = 0,i;
 	//if(fileCount) free(sortRay);
 	fileCount = fat.fileCountExt(ext);
+	//dbug(F("R bfr entry  ext:%s, fc:%d"),ext,fileCount);
 	sortRay = (uint16_t *) calloc(fileCount,2);
 	fat.restartDir();
 	//while ((fat.findNextFile()== NO_ERROR) && i<totalFiles){
@@ -69,15 +71,13 @@ void fB_Record::createTagDefLog() {
 }
 */
 
-void fB_Record::logStamp(uint16_t fTag) {
-	logWriteData(fTag);
-	logGetAttributes();
-}
 
 char* fB_Record::fileFind(uint16_t index) {
+	//dbug(F("R FFI entry  index:%d"),index);
 	if(fat.findIndex(index) == NO_ERROR) {
 		strcpy(filename, fat.DE.filename);
 		strcpy(base, fat.DE.basename);
+		setFtag(base);
 		logGetAttributes();
 		return filename;
 	}
@@ -88,14 +88,25 @@ bool fB_Record::fileFind(char *fname){
 	if(fat.getFile(fname) == NO_ERROR) {
 		strcpy(filename, fat.DE.filename);
 		strcpy(base, fat.DE.basename);
+		setFtag(base);
 		logGetAttributes();
 		return true;
 	}
 	return false;
 }
-bool fB_Record::fileFind(){
-	if(fat.getFile(filename) == NO_ERROR) return true;
-	return false;
+
+void fB_Record::setFtag(char *base){
+	char	buffer[MAXCHARSTEXT];
+	logFile *pLog;
+	fTag = NULL;
+	for(int i=0;i < logFileCount;i++) {
+		pLog = &logFileRay[i];
+		getPtext(pLog->Pbase,buffer);
+		if(!strcmp(buffer,base)) {
+			fTag = pLog->fTag;
+			break;
+		}
+	}
 }
 
 bool fB_Record::fileCreate(char *fname) {
@@ -103,18 +114,21 @@ bool fB_Record::fileCreate(char *fname) {
 	if(!fname) return false; 
 	res = fat.createFile(fname);
 	if(res == NO_ERROR) {
+		//dbug(F("R FC created  fn:%s"),fat.DE.filename);
 		strcpy(filename, fat.DE.filename);
 		strcpy(base, fat.DE.basename);
 		logSetDate();
 		return true;
 	}
-
 	return false;
 }
-char* fB_Record::logGetFilename(uint16_t fTag) {
-	//dbug(F("R LGF entry  ftag:%d"),fTag);
-	logFile *pLog = LogFile(fTag);
+
+char* fB_Record::logGetFilename(uint16_t _fTag) {
+	//dbug(F("R LGF entry  ftag:%d"),_fTag);
+	if(!logTagCount) return NULL;
+	logFile *pLog = LogFile(_fTag);
 	if(!pLog) return NULL;
+	fTag = _fTag;
 	getPtext(pLog->Pbase,filename);
 	strcat(filename,".LOG");
 	return filename;
@@ -122,9 +136,11 @@ char* fB_Record::logGetFilename(uint16_t fTag) {
 
 bool fB_Record::logCreate(uint16_t fTag) {
 	//dbug(F("R LC entry  ftag:%d"),fTag);
-	if(!logGetFilename(fTag)) return false;
+	logGetFilename(fTag);
 	if(fileCreate(filename)) {
-		logWriteHeader(fTag);  
+		//dbug(F("R LC created  f:%s"),filename);
+		logWriteHeader(); 
+		logWriteData(); 
 		logGetAttributes();
 		return true;
 	}
@@ -137,9 +153,13 @@ void fB_Record::logSetDate() {
 }
 
 void fB_Record::logWriteHeader(uint16_t fTag) {
+	if(!logGetFilename(fTag))return;
+	logWriteHeader();
+}
+
+
+void fB_Record::logWriteHeader() {
 	//dbug(F("R LWh entry  "));
-	if(!logTagCount) return;
-	logGetFilename(fTag);
 	uint8_t res =fat.openFile(filename,FILEMODE_TEXT_WRITE);
 	if(res!=NO_ERROR) return;
 	logTag	*pL;
@@ -151,7 +171,10 @@ void fB_Record::logWriteHeader(uint16_t fTag) {
 		if(logTagRay[i].fTag != fTag) continue;
 		j++;
 	}
-	if(!j) return;
+	if(!j) {
+		fat.closeFile();
+		return;
+	}
 	char buffer[j * MAXCHARSLINE];
 	buffer[0] = '\0';
 	strcpy(buffer,P("DATE,TIME"));
@@ -169,14 +192,26 @@ void fB_Record::logWriteHeader(uint16_t fTag) {
 	fat.closeFile();
 	logSetDate();
 }
-
 void fB_Record::logWriteData(uint16_t fTag) {
-	if(!logTagCount) return;
-	logGetFilename(fTag);
-	//dbug(F("R LWD ENTRY"));
+	if(!logGetFilename(fTag))return;
+	logWriteData();
+}
+void fB_Record::logWriteData() {
+	//dbug(F("REC WRITE LOG %s"),filename);
 
 	uint8_t res =fat.openFile(filename,FILEMODE_TEXT_WRITE);
-	if(res!=NO_ERROR) return;
+	if(res!=NO_ERROR) {
+		//dbug(F("REC WRITE FAIL1 %s"),filename);
+		if(fileCreate(filename)) {
+			logWriteHeader();  
+			logGetAttributes();
+		}
+		else {
+			fat.closeFile();
+			//dbug(F("REC WRITE FAIL2 %s"),filename);
+			return;
+		}
+	}
 	logTag *pL;
 	fB_Tag *pT;
 	int i,j = 0;
@@ -187,7 +222,11 @@ void fB_Record::logWriteData(uint16_t fTag) {
 		if(logTagRay[i].fTag != fTag) continue;
 		j++;
 	}
-	if(!j) return;
+	if(!j) {
+			//dbug(F("REC WRITE FAIL3 ft:%d"),fTag);
+			fat.closeFile();
+			return;
+	}
 	char buffer[j* MAXCHARSLINE];
 	buffer[0] = '\0';
 	rtc.stamp(buffer);
@@ -229,12 +268,16 @@ bool fB_Record::logArchive() {
 			if(j <0) j=1;
 			if(k <0) k=1;
 			sprintf(buf[j],"%s.A%d",base,i);
-			if(fat.getFile(buf[j])==NO_ERROR) fat.renameFile(buf[j],buf[k]);
+			if(fat.getFile(buf[j])==NO_ERROR) {
+				fat.renameFile(buf[j],buf[k]);
+				//dbug(F("REC ARCH RENAME %s to %s"),buf[j],buf[k]); 
+			}
 		}
-		//dbug(F("REC LARCH RENAME DEF:%s to %s"),filename,buf[++j]); 
-		//if(fat.renameFile(filename,buf[j])==NO_ERROR) logRemove();
-		if(fat.renameFile(fat.DE.filename,buf[++j])==NO_ERROR) logRemove();
-		return true;
+		//dbug(F("REC ARCHx RENAME %s to %s"),filename,buf[++j]); 
+		if(fat.renameFile(filename,buf[j])==NO_ERROR) {
+			logRemove();
+			return true;
+		}
 	}
 	return false;
 }
@@ -249,29 +292,42 @@ void fB_Record::logGetAttributes() {
 	sprintf(dateStr,P("%3s.%d.%d% 2.2d:%2.2d"),year
 		,(fat.DE.date>>5 & B00001111), (fat.DE.date & B00011111),
 		fat.DE.time>>11, (fat.DE.time>>5) & B00111111);
-	long size = fat.DE.fileSize;
-	if(size >= 1000) sprintf(sizeStr,P("%d KB"),fat.DE.fileSize/1000);
+	if(fat.DE.fileSize >= 1000000) sprintf(sizeStr,P("%d.%d MB"),fat.DE.fileSize/1000000, (fat.DE.fileSize%1000)/10000);
+	else if(fat.DE.fileSize >= 100000) sprintf(sizeStr,P("%d KB"),fat.DE.fileSize/1000);
+	else if(fat.DE.fileSize >= 1000) sprintf(sizeStr,P("%d.%d KB"),fat.DE.fileSize/1000, (fat.DE.fileSize%1000)/100);
 	else sprintf(sizeStr,P("%d BYTES"),fat.DE.fileSize);
 }
 
 void fB_Record::logRemove() {
-		dbug(F("R FILE remove %s  "),filename);
+		//dbug(F("R FILE remove %s  "),filename);
 		fat.deleteFile(filename);
+		EEclearLog(fTag); 
+		logCreate(fTag);
 	//fat.deleteFile(fat.DE.filename); //DO NOT DO THIS, THE CHAR POINTER CANNNOT POINT TO THE fat.DE. RECORD!
+}
+void fB_Record::logStamp() {
+	//dbug(F("R LS df:%s, f:%s"),fat.DE.filename,filename);
+
+	logWriteData();
+	logGetAttributes();
 }
 
 void fB_Record::logDump() {
-   char buffer[MAXCHARSDUMP+1] = { NULL };
-   if(fat.openFile(filename,FILEMODE_TEXT_READ)==NO_ERROR) {
-	 if(fat.DE.fileSize > 0) {
-		 Serial.begin(SERIALSPEED);
-		 Serial.print(F("FILENAME: "));
-		 Serial.println(filename);
-		 while(fat.readLn(buffer,MAXCHARSDUMP))  Serial.println(buffer);
-	 }
-     fat.closeFile();	
+	int res;
+    char buffer[MAXCHARSDUMP+2];
 
+   res = fat.openFile(filename,FILEMODE_TEXT_READ);
+	//dbug(F("R LDUMP df:%s, f:%s, s:%d r:0x%x"),fat.DE.filename,filename,fat.DE.fileSize,res);
+   if(res ==NO_ERROR) {
+		if(fat.DE.fileSize > 0) {
+			 //Serial.begin(SERIALSPEED);
+			 Serial.print(F("FILENAME: "));
+			 Serial.println(filename);
+			 while(fat.readLn(buffer,MAXCHARSDUMP))  Serial.println(buffer);
+		 }
+		 fat.closeFile();	
    }
+  
 }
 /////////////////////////////// EEPROM METHODS /////////////////////////////////////////
 
@@ -283,23 +339,28 @@ void fB_Record::EEclearTags(uint16_t offTags, uint16_t base) {
 		ee.setBlock(base+(offTags*16),'\0',16 * (count +2));  // leave blank of 32 bytes for EOF
 }
 
-void fB_Record::EEwriteEAUTO(uint16_t base) {
+int fB_Record::EEgetEAUTO() {   // return value of EE autoload flag
+	uint8_t  buffer[11];
+	ee.readBlock(BASEETAG+10,buffer,2);
+	return  *(int*)buffer;
+}
+
+void fB_Record::EEwriteEAUTO() {
 	fB_Tag * pT;
 	pT = Tag(EAUTO);
-	uint16_t addr;
 	uint8_t  * data;
 	char title[MAXCHARSLINE+1];
 	int j=0;
 	getPtext(pT->Ptitle,title);
 	title[10]= '\0';
-	ee.writeBlock(base,(uint8_t *)title,strlen(title));
+	ee.writeBlock(BASEETAG ,(uint8_t *)title,strlen(title));
 	data = (uint8_t *)&(pT->iVal);
-	ee.writeBlock(base+10,data,2);
+	ee.writeBlock(BASEETAG +10,data,2);
 }
 
 void fB_Record::EEwriteTags(uint16_t base) {
 	if(!tagCount) return;
-	dbug(F("******R EEwTags"));
+	//dbug(F("******R EEwTags"));
 	fB_Tag * pT;
 	uint16_t addr;
 	uint8_t  * data;
@@ -326,12 +387,6 @@ void fB_Record::EEwriteTags(uint16_t base) {
 	//ee.dump(0,128);
 }
 
-int fB_Record::EEgetEAUTO() {   // return value of EE autoload flag
-	uint8_t  buffer[11];
-	ee.readBlock(BASEETAG+10,buffer,2);
-	return  *(int*)buffer;
-}
-
 
 
 fB_Tag* fB_Record::EEgetTag(fB_Tag &bufTag, uint16_t tag,uint16_t base) {
@@ -354,7 +409,7 @@ fB_Tag* fB_Record::EEgetTag(fB_Tag &bufTag, uint16_t tag,uint16_t base) {
 				ee.readBlock(addr+12,buffer,4);
 				bufTag.dVal->value = *(double*)buffer;
 					//dbug(F("R EEgT %P v:%f"),bufTag.Ptitle, bufTag.dVal->value);
-	}
+			}
 			else {
 				ee.readBlock(addr+10,buffer,2);
 					//dbug(F("#########R EEgT %P i:%f"),bufTag.Ptitle, bufTag.iVal);
@@ -366,6 +421,36 @@ fB_Tag* fB_Record::EEgetTag(fB_Tag &bufTag, uint16_t tag,uint16_t base) {
 	}		
 	return NULL;
 }
+
+void fB_Record::EEclearLog( uint16_t fTag) {
+	if(!logTagCount) return;
+	//dbug(F("******R EEclearLog"));
+	fB_Tag * pT;
+	logTag * pL;
+	uint8_t  buffer[11];
+	uint16_t addr;
+	uint8_t  * data;
+	char title[MAXCHARSLINE+1];
+	for(int i=0;i<logTagCount; i++) {
+		pL = &logTagRay[i];
+		if(pL->fTag != fTag) continue;
+		pT = Tag(pL->tag);
+		if(!pT) continue;
+		getPtext(pT->Ptitle,title);
+		for(int j=0;j<tagCount;j++){
+			addr = j*16 + (BASEELOG +16);
+			ee.readBlock(addr,buffer,10);
+			if(buffer[0]=='\0') break;
+			buffer[10] = '\0';
+			if(!strcmp(title,(char *) buffer)) {
+				ee.writeBlock(addr+10,NULL,2);
+				ee.writeBlock(addr+12,NULL,4);
+			}
+		}
+	}
+}
+
+
 fB_Tag* fB_Record::EEloadTag(uint16_t tag,uint16_t base) {
 	fB_Tag * pT;
 	pT = Tag(tag);

@@ -109,7 +109,7 @@ void fB_Menu::jumpPage(uint16_t tag) {
 	fB_Tag *pT;
 	pT = Tag(tag);
 	//dbug(F("Jump from %P to tag:%d , title:%P, flags:0x%x"),curr.pP->Ptitle,pT->tag,pT->Ptitle,pT->flag16);
-	dbug(F("Jump from %P to tag:%d , title:%P  cfY:%d"),curr.pP->Ptitle,pT->tag,pT->Ptitle,curr.farY);
+	//dbug(F("Jump from %P to tag:%d , title:%P  cfY:%d"),curr.pP->Ptitle,pT->tag,pT->Ptitle,curr.farY);
 	if(!pT || !( pT->flag16 & _PAGE)) return;
 	if(curr.pageTag) clearPage();
 	showPage(tag);
@@ -117,14 +117,14 @@ void fB_Menu::jumpPage(uint16_t tag) {
 }
 void fB_Menu::jumpPage(fB_Tag *pT) {
 	if(!pT ||!( pT->flag16 & _PAGE)) return;
-	dbug(F("Jump$ from %P to tag:%d , title:%P  cpT:%d"),curr.pP->Ptitle,pT->tag,pT->Ptitle,curr.pageTag);
+	//dbug(F("Jump$ from %P to tag:%d , title:%P  cpT:%d"),curr.pP->Ptitle,pT->tag,pT->Ptitle,curr.pageTag);
 	if(curr.pageTag) clearPage();
 	showPage(pT->tag);
 
 }
 
 void fB_Menu:: clearPage(uint8_t  full) {
-	dbug(F("M CP %P ct:%d rc:%d, cfY:%d"),curr.pP->Ptitle, curr.pageTag,curr.getRowCount(),curr.farY);
+	//dbug(F("M CP %P ct:%d rc:%d, cfY:%d"),curr.pP->Ptitle, curr.pageTag,curr.getRowCount(),curr.farY);
 
 	//curr.deselectRow();
 	if(!full) tft.clear(curr.farY);
@@ -242,7 +242,7 @@ void fB_Menu:: showPage(uint16_t tag, uint8_t pageOption) {
 		curr.rowDex = 0;		
 		curr.setCurrPage(tag);
 		ptHEADER->Ptitle = curr.pP->Ptitle; 
-dbug(F("SP %P t:%d rc:%d, fY:%d"),curr.pP->Ptitle, curr.pageTag,curr.getRowCount(),curr.farY);
+//dbug(F("SP %P t:%d rc:%d, fY:%d"),curr.pP->Ptitle, curr.pageTag,curr.getRowCount(),curr.farY);
 
 		switch(tag) {
 			case SYSTEM:
@@ -251,8 +251,12 @@ dbug(F("SP %P t:%d rc:%d, fY:%d"),curr.pP->Ptitle, curr.pageTag,curr.getRowCount
 				Tag(LOGS)->Ptitle = PstrRay[P_LOGS];
 				break;
 			case LOGS:
+//dbug(F("SP %P t:%d rc:%d, fY:%d"),curr.pP->Ptitle, curr.pageTag,curr.getRowCount(),curr.farY);
 				if(Tag(LOGS)->flag16 & _ARCH)  rec.buildFileRay(P("A"));
 				else  rec.buildFileRay(P("LOG"));
+				break;
+			case FPANEL:
+				Tag(FPANEL)->flag16 |= _TTITLE;
 				break;
 			case CLOCK:
 				if(!(_bootStatus & _RTC)) return;
@@ -288,11 +292,11 @@ dbug(F("SP %P t:%d rc:%d, fY:%d"),curr.pP->Ptitle, curr.pageTag,curr.getRowCount
 				if(rec.fileCount <= listStart)listStart = max(rec.fileCount - MAXLISTROWS,0);
 				if(MAXLISTROWS < max(rec.fileCount - listStart,0) )	rows = MAXLISTROWS;
 				else rows = rec.fileCount - listStart;
+//dbug(F("SP0  fc:%d, r:%d"),rec.fileCount, rows);
 				for( i=0;i<rows;i++) {
 					pT = curr.tag(i+1); // step through each row on page
-					//pT->buf8 = rec.sortRay[i+listStart];	// use buf to store FAT index
-					pT->buf16 = rec.sortRay[i+listStart];	// use buf to store FAT index
-///dbug(F("SP %s, fc:%d, r:%d, b8:%d"),rec.filename,rec.fileCount,i+1, pT->buf8);
+					pT->buf16 = rec.sortRay[i+listStart];	// use buf16 to store FAT index
+//dbug(F("SP1 %s, fc:%d, r:%d, b16:%d"),rec.filename,rec.fileCount,i+1, pT->buf16);
 
 				}
 				curr.putRowCount(rows);
@@ -563,10 +567,10 @@ uint8_t fB_Tag::actionByPage() {
 	// returns zero if not trapped
 	switch(curr.pageTag) {
 		case LOGS:	
-				// FAT index of file is in buf8 of calling Tag
+				// FAT index of file is in buf16 of calling Tag
 				if(!rec.fileFind(buf16)) return 1;  // rec filename->fat.DE.filename and lasts only so long
 				Tag(FPANEL)->ptitle = rec.filename;
-				Tag(FSTD)->buf16 = buf16;// page tag fTag/buf8 is used for parentTag, so stuffing FAT index in FSTD tag
+				Tag(FSTD)->buf16 = buf16;// page tag fTag/buf8 is used for parentTag, so stuffing FAT index in FSTD buf16
 				Tag(FDATE)->ptitle = rec.dateStr;
 				Tag(FSIZE)->ptext = rec.sizeStr;
 				if(curr.pP->flag16 & _ARCH) {  // Archive file display
@@ -582,11 +586,12 @@ uint8_t fB_Tag::actionByPage() {
 				menu.jumpPage(FPANEL);
 				return 1;
 		case FPANEL:
-				//if(!rec.fileFind(Tag(FSTD)->buf16)) return;
+				if(!rec.fileFind(Tag(FSTD)->buf16)) return 1;
+//dbug(F("M FPANL prf:%s, 16: %d"),rec.filename,Tag(FSTD)->buf16);
 			    switch(tag) {
 					case FSTD:
 						if(iVal == FSTAMP) {
-							rec.logStamp((uint8_t) Tag(FSTD)->buf16);
+							rec.logStamp();
 							Tag(FDATE)->ptext = rec.dateStr; 
 							Tag(FSIZE)->ptext = rec.sizeStr;
 							menu.refreshRow(FDATE);
@@ -785,7 +790,7 @@ uint8_t fB_Tag::actionByRight() {
 		case EAUTO:	if(iVal == HIGH) iVal = LOW;
 					else iVal = HIGH;
 					menu.refreshRow();
-					rec.EEwriteEAUTO(BASEETAG);
+					rec.EEwriteEAUTO();
 					menu.selectHeader();
 					return 1;
 

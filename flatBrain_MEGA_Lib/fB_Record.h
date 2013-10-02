@@ -16,14 +16,16 @@ class fB_Record {
 		char		sizeStr[MAXCHARSLINE+1];
 		uint16_t*	sortRay;		    // array of indexes to FAT objects
 		uint8_t		fileCount;
+		uint16_t	fTag;				// Tag of log file
 		
 		void		EEwriteTags(uint16_t base);
 		void		EEloadTags(uint16_t base);
 		fB_Tag*		EEloadTag(uint16_t tag, uint16_t base);
 		fB_Tag*		EEgetTag(fB_Tag &bufTag, uint16_t tag, uint16_t base);
+		void		EEclearLog( uint16_t fTag); 
 		void		EEclearTags(uint16_t offTags, uint16_t base);
 		int			EEgetEAUTO();
-		void		EEwriteEAUTO(uint16_t base);
+		void		EEwriteEAUTO();
 		void		EEdumpTags(uint16_t base);
 		bool		SDinit(uint8_t  SSpin, uint8_t  SPIspeed);
 
@@ -33,13 +35,16 @@ class fB_Record {
 		char*		fileFind(uint16_t index);
 		bool		fileFind(char *fname);
 		bool		fileFind();
+		void		setFtag(char *base);
 		bool		fileCreate(char *fnameL);
 		char*		logGetFilename(uint16_t fTag);
 		void		logShow();
 		// these methods rely in the Record filename pointer pointing to fat.DE.filename
-		void		logStamp(uint16_t fTag);
+		void		logStamp();
 		bool		logCreate(uint16_t fTag);
 		void		logSetDate();
+		void		logWriteHeader();
+		void		logWriteData();
 		void		logWriteHeader(uint16_t fTag);
 		void		logWriteData(uint16_t fTag);
 		bool		logArchive();
