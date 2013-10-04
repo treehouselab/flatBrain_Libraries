@@ -42,7 +42,7 @@
 #define LVDHIV3		ptDHI3->dVal->value
 
 #define sALT		(state.flags & ALTN?1:0)	// Alternator active
-#define sIGN		(state.flags & IGTN?1:0)// Ignition switch on (Accesory switch ?)
+#define sIGN		(state.flags & IGTN?1:0)    // Ignition switch on (Accesory switch ?)
 #define sEXT		(state.flags & EXTN?1:0)	// External charge active (Solar, shore)
 #define sB2			(state.flags & BT2?1:0)		// Battery 2 exists
 #define sB3			(state.flags & BT3?1:0)		// Battery 3 exists
@@ -69,6 +69,7 @@
 #define nX1			(next.flags & XT1)		// Ext charging Battery 1 
 #define nX3			(next.flags & XT3)		// Ext charging Battery 3 
 */
+#define nALT		(next.flags & ALTN?1:0)	// Alternator active
 #define nR1			(next.flags & RT1?1:0)		// Relay 1  
 #define nR2			(next.flags & RT2?1:0)		// Relay 2  
 #define nR3			(next.flags & RT3?1:0)		// Relay 3  
@@ -85,6 +86,7 @@
 #define sCL			state.dCL	// Load Amps
 #define sCX			state.dCX	// EXT Charging Amps
 
+#define pALT		(prevShow.flags & ALTN?1:0)	// Alternator active
 #define pV0			prevShow.dV0	// V1 voltage
 #define pV1			prevShow.dV1	// V1 voltage
 #define pV2			prevShow.dV2	// V2 voltage
@@ -125,7 +127,7 @@ class V_State {
 		void copyMsgTo(V_State* pState);
 		void copyRelaysTo(V_State* pState);
 		void setMsg(uint16_t msgIndex,char *msgText);
-		void setBit(uint16_t bitVal, uint16_t ival);
+		void setBit(uint16_t bitVal, bool logic);
 		V_State();
  } ;
 
@@ -152,8 +154,8 @@ void V_State::copyMsgTo(V_State* pState) {
 	pState->msgText = msgText;
 } 
 
-void V_State::setBit(uint16_t bitVal, uint16_t ival) { 
-	if(ival) flags |= bitVal ;
+void V_State::setBit(uint16_t bitVal, bool logic) { 
+	if(logic) flags |= bitVal ;
 	else	 flags &= ~bitVal;
 }
 
@@ -235,8 +237,6 @@ class fB_Vanduino {
 		void nextState() ;
 		void buildNextState();
 		//void action();
-		void setBit(uint16_t bit, uint16_t value);
-		void setNext(uint16_t bit, uint16_t value);
 		void setMsg(uint16_t bit, uint16_t value);
 		void init(uint16_t pageTag);
 		uint8_t priorityShutdownLoad(uint16_t relay);
@@ -252,7 +252,7 @@ fB_Vanduino::fB_Vanduino() {
 
 void fB_Vanduino::init(uint16_t pTag) { 
 
-	analogReference(EXTERNAL);
+	//analogReference(EXTERNAL);
 	pageTag  =  pTag; 
 	manOver = 0;
 
@@ -293,7 +293,7 @@ void fB_Vanduino::init(uint16_t pTag) {
 
 	// find BT2, BT3, should be constant for this session
 	getStateAnalogTag(V2);
-	if(!sR2) next.setBit(BT2,sV2 > VOLTSEXIST);
+	if(!sR2) state.setBit(BT2,sV2 > VOLTSEXIST);
 	else {
 		if(sR3) R3_OFF;
 		if(sR1) R1_OFF;
@@ -303,14 +303,14 @@ void fB_Vanduino::init(uint16_t pTag) {
 	getStateRelayIndex(3); 
 	//dbug(F("V INIT1 sB2:%d, sB3:%d, "),sB2,sB3);
 	getStateAnalogTag(V3);
-	if(!sR3) next.setBit(BT3,sV3 > VOLTSEXIST);
+	if(!sR3) state.setBit(BT3,sV3 > VOLTSEXIST);
 	else {
 		if(sR1) R1_OFF;
 		getStateAnalogTag(V3);
-		state.setBit(BT2,sV3 > VOLTSEXIST);
+		state.setBit(BT3,sV3 > VOLTSEXIST);
 	}
-	// reset original relays
 	
+	// reset original relays
 	setRelaysNext();
 	next.copyRelaysTo(&state);
 	if(_bootStatus & _SD){
@@ -326,14 +326,6 @@ void fB_Vanduino::init(uint16_t pTag) {
 	if(_bootMsgIndex) state.setMsg(_bootMsgIndex);
 }
 
-void fB_Vanduino::setBit(uint16_t bitVal, uint16_t ival) { 
-	if(ival) state.flags |= bitVal ;
-	else	 state.flags &= ~bitVal;
-}
-void fB_Vanduino::setNext(uint16_t bitVal, uint16_t ival) { 
-	if(ival) next.flags |= bitVal ;
-	else	 next.flags &= ~bitVal;
-}
 
 void fB_Vanduino::getStateAnalog() {
 	//dbug(F("V GSA entry"));
@@ -341,8 +333,8 @@ void fB_Vanduino::getStateAnalog() {
 	getStateAnalogTag(CX);
 	getStateAnalogTag(V0);
 	getStateAnalogTag(V1);
-	getStateAnalogTag(V2);
-	getStateAnalogTag(V3);
+	if(sB2)	getStateAnalogTag(V2);
+	if(sB3) getStateAnalogTag(V3);
 }
 
 void fB_Vanduino::getState() {
@@ -378,6 +370,7 @@ void fB_Vanduino::getState() {
 		state.setBit(ALTN,0);
  		ptALT->iVal =0;
 	}
+
 	state.setBit(EXTN,!sALT && sCX > 0); // external source charging
 
 //dbug(F("gstateS sr1:%d, sr2:%d, sr3:%d "),sR1,sR2,sR3);
@@ -578,9 +571,10 @@ void fB_Vanduino::buildNextState() {
 		if(sX3) next.setBit(RT3, OFF);
 
 		// these calls do not switch relays without showing message
-		if(sR1 && switchShutdown(1,RT1,RT2)) return;
-		if(sR2 && switchShutdown(2,RT2,RT3)) return;
-		if(sR3 && switchShutdown(3,RT3,NULL)) return;
+		if(sR1 && nR1 && switchShutdown(1,RT1,RT2)) return;
+		if(sR2 && nR2 && switchShutdown(2,RT2,RT3)) return;
+		if(sR3 && nR3 && switchShutdown(3,RT3,NULL)) return;
+		warn.reset();
 	}
 
 }
@@ -786,20 +780,34 @@ void fB_Vanduino::setRelaysNext() {
 void fB_Vanduino::showState() {
 	 uint8_t show = 0;
 	 logTimerFlag= 0;
+	 static int firstShow = 1;
+
 
  	//dbug(F("V ShowState"));
 
 	 if(curr.pageTag == pageTag) show = 1;
 
-	 if((fabs(sCL -  pCL) > .5) && show) ptCL->showRow(curr.row(CL));
-	 if((fabs(sCX -  pCX) > .2) && show) ptCX->showRow(curr.row(CX));
-	 if((fabs(sV0 -  pV0) > .1) && show) ptV0->showRow(curr.row(V0));
-	 if((fabs(sV1 -  pV1) > .1) && show) ptV1->showRow(curr.row(V1));
-	 if((fabs(sV2 -  pV2) > .1) && show) ptV2->showRow(curr.row(V2));
-	 if((fabs(sV3 -  pV3) > .1) && show) ptV3->showRow(curr.row(V3));
 	 if(show) {
-		if(prevShow.msgIndex != state.msgIndex || prevShow.msgText != state.msgText) menu.showMessage(state.msgIndex,state.msgText);
-		state.copyAllTo(&prevShow);
+		 if(firstShow) {
+			 if(!sB2) {
+				 ptV2->putFormat(_STRIKE);
+				 ptV2->showRow(curr.row(V2));
+			 }
+			 if(!sB3) {
+				 ptV3->putFormat(_STRIKE);
+				 ptV3->showRow(curr.row(V3));
+			 }
+			 firstShow = 0;
+		}
+		 if(sALT !=  pALT) ptALT->showRow(curr.row(ALT));
+		 if(fabs(sCL -  pCL) > .5) ptCL->showRow(curr.row(CL));
+		 if(fabs(sCX -  pCX) > .2) ptCX->showRow(curr.row(CX));
+		 if(fabs(sV0 -  pV0) > .1) ptV0->showRow(curr.row(V0));
+		 if(fabs(sV1 -  pV1) > .1) ptV1->showRow(curr.row(V1));
+		 if( sB2 && fabs(sV2 -  pV2) > .1) ptV2->showRow(curr.row(V2));
+		 if( sB3 && fabs(sV3 -  pV3) > .1) ptV3->showRow(curr.row(V3));
+		 if(prevShow.msgIndex != state.msgIndex || prevShow.msgText != state.msgText) menu.showMessage(state.msgIndex,state.msgText);
+		 state.copyAllTo(&prevShow);
 	 }
 
 	 if(log.flags != state.flags) logTimerFlag= 1;

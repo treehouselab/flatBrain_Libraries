@@ -417,7 +417,7 @@ void fB_Tag::showRow(int  rowIndex, uint8_t  option) {  //when option == REFRESH
 		} 
 	}
 	if( option != REFRESHPAGE || format == _TEXT || format == _PTEXT || flag16 & _TTITLE) tft.print(STARTX +ROWTEXTX,getY(rowIndex),pTitleText,MAXCHARSLINE);
-	if(getAction() == UPDATE && pin)	read();
+	if(getAction() == _UPDATE && pin)	read();
 	//if(rowIndex == -1) tft.resetDefColors();
 	if(format == _BLAMP) {
 			int x = STARTX +ROWSTATEX; int y = getY(rowIndex)+ROWSTATEY+2;
@@ -454,9 +454,8 @@ void fB_Tag::showRow(int  rowIndex, uint8_t  option) {  //when option == REFRESH
 			if(flag16 & _UNDEF) tft.print( RIGHT, getY(rowIndex), getPstr(P_STRIKE,Pbuffer));
 			else if(ptext) tft.print( RIGHT, getY(rowIndex), ptext);
 			break;
-		case _PTEXT:
-			if(flag16 & _UNDEF) tft.print( RIGHT, getY(rowIndex), getPstr(P_STRIKE,Pbuffer));
-			else tft.print(  RIGHT, getY(rowIndex),getPtext(Ptext,Pbuffer));
+		case _STRIKE:
+			tft.print( RIGHT, getY(rowIndex), getPstr(P_STRIKE,Pbuffer));
 			break;
 	}
 	tft.resetDefColors();
@@ -621,7 +620,7 @@ uint8_t fB_Tag::actionByPage() {
 uint8_t fB_Tag::actionByTag() {
 
 	switch (tag)	{
-			case UPDATE:
+			case _UPDATE:
 				if(flag16 & _PIN) read();
 				menu.refreshRow();
 				return 1;

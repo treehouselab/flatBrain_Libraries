@@ -230,7 +230,7 @@ XCARDS		Ox20-27
 #define	_INCR			0x00002000L	
 #define	SHFTPULSE		0x00004000L	
 #define	PULSE			0x00008000L
-#define	UPDATE			0x00010000L
+#define	_UPDATE			0x00010000L
 //#define			0x00020000L
 #define	_NOACT			0x00040000L
 #define	_TOGGLE			0x00080000L
@@ -247,6 +247,7 @@ XCARDS		Ox20-27
 #define	_BLAMP			0x04000000L	
 #define	_D2STR			0x08000000L	
 #define	_PTEXT			0x10000000L	
+#define	_STRIKE			0x20000000L	
 //#define				0x20000000L
 //#define				0x40000000L
 //#define				0x80000000L

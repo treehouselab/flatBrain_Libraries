@@ -59,12 +59,12 @@ void defineUser() {
 
    	definePage(VSTATUS,HOME);
 		defineRow(V0, _FLOAT1 );
-		defineRow(V1, _FLOAT1 | UPDATE);
-		defineRow(V2, _FLOAT1 | UPDATE );
-		defineRow(V3, _FLOAT1 | UPDATE );
+		defineRow(V1, _FLOAT1 | _UPDATE);
+		defineRow(V2, _FLOAT1 | _UPDATE );
+		defineRow(V3, _FLOAT1 | _UPDATE );
 		//defineRow(CZ,  _FLOAT2 );
-		defineRow(CX,  _FLOAT1 | UPDATE );
-		defineRow(CL,  _FLOAT1 |  UPDATE);
+		defineRow(CX,  _FLOAT1 | _UPDATE );
+		defineRow(CL,  _FLOAT1 |  _UPDATE);
 		//defineRow(IGN,  _BLAMP | LOG );
 		defineRow(ALT,  _BLAMP  | _NOACT );
 		defineJump(VGLOBALS);
@@ -161,10 +161,10 @@ void defineUser() {
 	//defineAlias(Y4S,INVERTER);
 	//defineAlias(Y5S,LOAD);
 	//defineAlias(Y6S,FAN);
-	defineCalibrate(V0,posOnly,0.0609,-21.8);
-	defineCalibrate(V1,posOnly,0.0609,-21.8);
-	defineCalibrate(V2,posOnly,0.0609,-21.8);
-	defineCalibrate(V3,posOnly,0.0609,-21.8);
+	defineCalibrate(V0,posOnly,0.01515,-.1818);
+	defineCalibrate(V1,posOnly,0.0487,-22.99);
+	defineCalibrate(V2,posOnly,0.0487,-22.99);
+	defineCalibrate(V3,posOnly,0.0487,-22.99);
 
 	defineCalibrate(CZ,sysAmps,.02744,-.31);
 	defineCalibrate(CX,posOnly,0.03789,-4.020);

@@ -116,7 +116,7 @@ void defineSystem()  {
 		defineRow(PNROW,_INT5  | _NOACT);
 		defineRow(PNCOL,_PTEXT | _NOACT);
 		defineRow(PNGAT,_BLAMP );
-		defineRow(PNADC,_INT5  | UPDATE);
+		defineRow(PNADC,_INT5  | _UPDATE);
 		//defineRow(PNVAL,_FLOAT2 | _NOACT);
 		defineRow(PNVAL,_D2STR | _NOACT);
 		//defineRow(PNFAC,_D2STR | _NOACT);
