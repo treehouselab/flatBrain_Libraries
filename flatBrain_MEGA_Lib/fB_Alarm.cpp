@@ -29,7 +29,7 @@ prog_char alarm_6[] PROGMEM = ":d=16,o=5,b=120:g,p,d6,p,d6,p,d6,p,g,p,d6,p,d6,p,
 		defineAlias(_TALRMFL,ALARM FAIL);
 		defineAlias(_TALRMWN,ALARM WARN);
 		defineAlias(_TALRMAC,ALARM ACTION);
-		defineAlias(_TALRMQ,ALARM Q);
+		defineAlias(_TALRMQS,ALARM Q);
 		defineAlias(_TALRMEG,ALARM EMERG);
 
 To be recognized by ringtone programs, an RTTTL/Nokring format ringtone must contain three specific elements: name, settings, and notes.

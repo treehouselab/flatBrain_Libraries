@@ -452,11 +452,13 @@ void fB_Vanduino::nextState() {
 		warn.stop();
 		if(manOver) {
 			manOver = 0; 
+			alarm.playTag(_TALRMAC);
 			if(ptLED) 	ptLED->write(~LEDonVal);
 			next.setMsg(P_BLANK); 
 		}
 		else {
 			manOver = 1; 
+			alarm.playTag(_TALRMQS);
 			if(ptLED) 	ptLED->write(LEDonVal);	
 			next.setMsg(P_MANUAL); 
 		}

@@ -454,6 +454,10 @@ void fB_Tag::showRow(int  rowIndex, uint8_t  option) {  //when option == REFRESH
 			if(flag16 & _UNDEF) tft.print( RIGHT, getY(rowIndex), getPstr(P_STRIKE,Pbuffer));
 			else if(ptext) tft.print( RIGHT, getY(rowIndex), ptext);
 			break;
+		case _PTEXT:
+			if(flag16 & _UNDEF) tft.print( RIGHT, getY(rowIndex), getPstr(P_STRIKE,Pbuffer));
+			else tft.print(  RIGHT, getY(rowIndex),getPtext(Ptext,Pbuffer));
+			break;
 		case _STRIKE:
 			tft.print( RIGHT, getY(rowIndex), getPstr(P_STRIKE,Pbuffer));
 			break;
