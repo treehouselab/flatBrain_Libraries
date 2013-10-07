@@ -301,7 +301,7 @@ void fB_Vanduino::init(uint16_t pTag) {
 		state.setBit(BT2,sV2 > VOLTSEXIST);
 	}
 	getStateRelayIndex(3); 
-	//dbug(F("V INIT1 sB2:%d, sB3:%d, "),sB2,sB3);
+	dbug(F("V INIT1 sB2:%d, sB3:%d, "),sB2,sB3);
 	getStateAnalogTag(V3);
 	if(!sR3) state.setBit(BT3,sV3 > VOLTSEXIST);
 	else {
@@ -396,7 +396,7 @@ double fB_Vanduino::getStateAnalogTag(uint16_t tag) {
 				return state.dCX = ptCX->dVal->value;
 		case V0:	
 				ptV0->read();
-				return state.dV0 = ptV1->dVal->value;
+				return state.dV0 = ptV0->dVal->value;
 		case V1:	
 				ptV1->read();
 				return state.dV1 = ptV1->dVal->value;
@@ -539,7 +539,7 @@ void fB_Vanduino::buildNextState() {
 		//if(sA2 || sA3)  next.setBit(RT1, OFF);  
 		//next.setBit(RT1, OFF);  
 		if(sEXT) {								// external charge active
-			//dbug(F("	VbNS EXT"));
+			dbug(F("	VbNS EXT"));
 			if(sV2 > CHGHIV2) {					// batt2 charged
 				//dbug(F("	VbNS EXT V2>CHI2"));
 				if(sV1 < CHGHIV1 )	{			// charge batt 1 by external source
@@ -567,7 +567,7 @@ void fB_Vanduino::buildNextState() {
 			next.setMsg(P_CHGEXT,"B2");
 		}
 		// not EXT charging	
-		//dbug(F("    VbNS !EXT "));
+		dbug(F("    VbNS !EXT "));
 
 		if(sX1) next.setBit(RT1, OFF);   
 		if(sX3) next.setBit(RT3, OFF);
@@ -586,7 +586,7 @@ uint8_t fB_Vanduino::switchShutdown(uint8_t index,uint16_t relaySrc, uint16_t re
 	uint8_t relayX, battX;
 	double vSrc,vDst, LowSrc, LowDst;
 	char *textSrc,*textDst;
-	//dbug(F("Vssd i:%d, rs:%d , rdst:%d"), index,relaySrc,relayDst);
+	dbug(F("Vssd i:%d, rs:%d , rdst:%d"), index,relaySrc,relayDst);
 
 
 	switch(relaySrc) {
@@ -780,16 +780,14 @@ void fB_Vanduino::setRelaysNext() {
 }
 
 void fB_Vanduino::showState() {
-	 uint8_t show = 0;
+	 uint8_t delta = 0;
 	 logTimerFlag= 0;
 	 static int firstShow = 1;
 
 
- 	//dbug(F("V ShowState"));
+ 	//dbug(F("V ShowState sB2:%d, sB3:%d, "),sB2,sB3);
 
-	 if(curr.pageTag == pageTag) show = 1;
-
-	 if(show) {
+	 if(curr.pageTag == pageTag) {
 		 if(firstShow) {
 			 if(!sB2) {
 				 ptV2->putFormat(_STRIKE);
@@ -802,14 +800,36 @@ void fB_Vanduino::showState() {
 			 firstShow = 0;
 		}
 		 if(sALT !=  pALT) ptALT->showRow(curr.row(ALT));
-		 if(fabs(sCL -  pCL) > .5) ptCL->showRow(curr.row(CL));
-		 if(fabs(sCX -  pCX) > .2) ptCX->showRow(curr.row(CX));
-		 if(fabs(sV0 -  pV0) > .1) ptV0->showRow(curr.row(V0));
-		 if(fabs(sV1 -  pV1) > .1) ptV1->showRow(curr.row(V1));
-		 if( sB2 && fabs(sV2 -  pV2) > .1) ptV2->showRow(curr.row(V2));
-		 if( sB3 && fabs(sV3 -  pV3) > .1) ptV3->showRow(curr.row(V3));
-		 if(prevShow.msgIndex != state.msgIndex || prevShow.msgText != state.msgText) menu.showMessage(state.msgIndex,state.msgText);
-		 state.copyAllTo(&prevShow);
+		 if(fabs(sCL -  pCL) > .5) {
+			 ptCL->showRow(curr.row(CL));
+			 prevShow.dCL = sCL;
+		 }
+		 if(fabs(sCX -  pCX) > .2) {
+			 ptCX->showRow(curr.row(CX));
+			 prevShow.dCX = sCX;
+		 }
+		 if(fabs(sV0 -  pV0) > .1) {
+			 ptV0->showRow(curr.row(V0));
+			 prevShow.dV0 = sV0;
+		 }
+		 if(fabs(sV1 -  pV1) > .1) {
+			 ptV1->showRow(curr.row(V1));
+			 prevShow.dV1 = sV1;
+		 }
+		 if( sB2 && fabs(sV2 -  pV2) > .1) {
+ 			//dbug(F("V SS2 sv2:%f, pv2:%f /n "),sV2,pV2);
+			 ptV2->showRow(curr.row(V2));
+			 prevShow.dV2 = sV2;
+		 }
+		 if( sB3 && fabs(sV3 -  pV3) > .1) {
+			 ptV3->showRow(curr.row(V3));
+			 prevShow.dV3 = sV3;
+		 }
+		 if(prevShow.msgIndex != state.msgIndex || prevShow.msgText != state.msgText) {
+			 menu.showMessage(state.msgIndex,state.msgText);
+			 state.copyMsgTo(&prevShow);
+		 }
+		 prevShow.flags = state.flags;
 	 }
 
 	 if(log.flags != state.flags) logTimerFlag= 1;

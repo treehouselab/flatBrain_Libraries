@@ -202,7 +202,7 @@ XCARDS		Ox20-27
 #define	_PAGE			0x0001	 
 #define	_PIN			0x0002	
 #define	_LOADEE			0x0004	// load values from EEPROM on Boot
-//#define	_LOG			0x0008	// Log to SD card
+#define	_UPSHOW			0x0008	// Update value when row shows
 #define	_MARK			0x0010	// Mark row
 #define	_HIDE			0x0020
 #define	_TTITLE			0x0040	// use char* ptitle for row title instead of Ptitle

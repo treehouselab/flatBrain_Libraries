@@ -168,7 +168,7 @@ void defineUser() {
 
 	defineCalibrate(CZ,sysAmps,.02744,-.31);
 	defineCalibrate(CX,posOnly,0.03789,-4.020);
-	defineCalibrate(CL,loadAmps,0.35,-179.35);
+	defineCalibrate(CL,loadAmps,0.35,-179.20);
 
 	defineValue(VEXS,9.0,0.1);
 	defineValue(VALT,13.8,0.1);
@@ -206,9 +206,10 @@ void defineUser() {
 	double sysAmps(fB_Tag* pT,uint16_t intVal) { return max((intVal - 512) * pT->dVal->factor + pT->dVal->offset,0); }
 
 	double loadAmps(fB_Tag* pT,uint16_t intVal) {
-		//int sign;
-		if(intVal == 511) return 0;
-		return ((double)intVal * pT->dVal->factor + pT->dVal->offset);
+		double load;
+		load = (double)intVal * pT->dVal->factor + pT->dVal->offset;
+		if(fabs(load) < 1) return 0;
+		return load;
 		//return  sign * ( fabs((intVal - 534 )* pT->dVal->factor) + pT->dVal->offset);
 	}
 

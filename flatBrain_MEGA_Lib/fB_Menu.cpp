@@ -417,7 +417,7 @@ void fB_Tag::showRow(int  rowIndex, uint8_t  option) {  //when option == REFRESH
 		} 
 	}
 	if( option != REFRESHPAGE || format == _TEXT || format == _PTEXT || flag16 & _TTITLE) tft.print(STARTX +ROWTEXTX,getY(rowIndex),pTitleText,MAXCHARSLINE);
-	if(getAction() == _UPDATE && pin)	read();
+	if((flag16 & _UPSHOW) && pin)	read();
 	//if(rowIndex == -1) tft.resetDefColors();
 	if(format == _BLAMP) {
 			int x = STARTX +ROWSTATEX; int y = getY(rowIndex)+ROWSTATEY+2;
