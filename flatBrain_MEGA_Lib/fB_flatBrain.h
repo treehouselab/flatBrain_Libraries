@@ -47,7 +47,7 @@ typedef struct logTag {
 	uint16_t					tag;
 };
 
-uint8_t 	_bootStatus = 0;
+uint8_t 	_sysStatus = 0;
 uint8_t 	_bootMsgIndex = 0;
 uint8_t 	_sdMsgIndex = 0;
 uint8_t		secondPass;
@@ -164,20 +164,24 @@ double readVcc() {
 // free RAM check for debugging. SRAM for ATmega328p = 2048Kb.
 //  1024 with ATmega168
 
-void logData(uint16_t arg16) {
-		//dbug(F("LOGDATA entry a16:%d"), arg16);
-	int res;
-		
-	if(res = fat.initFAT(SPISPEED)) {
-		dbug(F("SD ERROR 0X%h"),res);
-		alarm.play(_ALRMFL);
-		_sdMsgIndex = P_FAIL_SD;
+void logData(uint16_t arg16) { 	rec.logData(arg16); }
+
+bool existSD() {
+	uint8_t res;		
+	res = fat.initFAT(SPISPEED);
+	if(res){
+		dbug(F("SD ERROR 0x%x"),res);
+		Tag(_MOUNT)->iVal = 0;
+		return false;
 	}
-	else {
-		rec.logWriteData((uint8_t) arg16);
-		_sdMsgIndex = NULL;
-	}
+	return true;
 }
+
+bool activeSD() {
+	if(existSD() && Tag(_MOUNT)->iVal != 0) return true;
+	return false;
+}
+
 
 void fBinterruptHandlerK1() {  // sets global flag, check and reset flag in user modules
 	if(_fBiK1) return;
@@ -464,24 +468,6 @@ void flatBrainInit(){
 	pinMode(AT_SPISS,_OUTPUT);  
     digitalWrite(AT_SPISS,LOW);
 
-	if(res = rtc.init()) {
-		dbug(F("RTC FAILED"));
-		alarm.play(_ALRMFL);
-	}
-	else {
-		_bootStatus |= _RTC;
-		dbug(F("INIT RTC"));
-	}
-
-	if(res = fat.initFAT(SPISPEED)) {
-		dbug(F("SD ERROR 0X%h"),res);
-		alarm.play(_ALRMFL);
-	}
-	else {
-		_bootStatus |= _SD;
-		dbug(F("INIT SD"));
-	}
-
 	secondPass = 0;  // 1st pass , determine array sizes
 
 	logTempRay = (uint8_t*) calloc( MAXTEMPLOG,1); // temp array for log list
@@ -538,27 +524,46 @@ void flatBrainInit(){
 		dbug(F("ALARM DISABLE"));
 	}
 	
-	if(!(_bootStatus & _RTC)) _bootMsgIndex = P_FAIL_RTC;		
-	if(!(_bootStatus & _SD))  _bootMsgIndex = P_FAIL_SD;		
+	if(res = rtc.init()) {
+		dbug(F("RTC FAILED"));
+		_bootMsgIndex = P_FAIL_RTC;	
+		alarm.play(_ALRMFL);
+	}
 	else {
-		for(int i=0;i<logFileCount;i++) {
-			dbug(F("INITL i:%d, c:%d ft:%d"),i,logFileCount,logFileRay[i].fTag);
-			rec.logCreate(logFileRay[i].fTag);
-		}
+		//_sysStatus |= _RTC;
+		dbug(F("INIT RTC"));
+	}
+
+	if(!existSD()) {
+		dbug(F("SD ERROR 0X%h"),res);
+		_bootMsgIndex = P_FAIL_SD;
+		alarm.play(_ALRMFL);
+		Tag(_MOUNT)->iVal = 0;
+	}
+	else {
+		//_sysStatus |= _SD;
+		Tag(_MOUNT)->iVal = 1;
+		dbug(F("INIT SD"));
+		for(int i=0;i<logFileCount;i++) rec.logCreate(logFileRay[i].fTag);
 		dbug(F("INIT LOGS"));
 	}
-	attachInterrupt(NAV_INT, navigate,FALLING);
-	attachInterrupt(WARN_INT, fBinterruptHandlerK1 ,FALLING);
-	VccRef = readVcc();
 
+	
 	//set interrupt pins to high
 	pinMode(NAV_INTPIN,INPUT_PULLUP);
 	pinMode(WARN_INTPIN,INPUT_PULLUP);
 	pinMode(K0_INTPIN,INPUT_PULLUP);
 	pinMode(K1_INTPIN,INPUT_PULLUP);
 
+	attachInterrupt(NAV_INT, navigate,FALLING);
+	attachInterrupt(WARN_INT, fBinterruptHandlerK1 ,FALLING);
+	_fBiK1 = 0;			// global interrupt flag
+ 	_fBiTFT = 0;		// global interrupt flag from TFT switches
+
+	VccRef = readVcc();
+
 	dbug(F("free RAM %d"),freeRAM());
-	Tag(FRAM)->iVal = freeRAM();
+	Tag(_FRAM)->iVal = freeRAM();
 	Tag(VCC)->dVal->value = VccRef;
 	warn.init();
 	//alarm.playTag(_TALRMWN);
@@ -606,6 +611,10 @@ void dbug(const __FlashStringHelper* Ptitle, ... ){
 		}
 		else if(fmt[i] == 'd') { 
 			n=va_arg(args,int);
+			Serial.print(n,DEC);
+		}
+		else if(fmt[i] == 'u') { 
+			n=va_arg(args,uint16_t);
 			Serial.print(n,DEC);
 		}
 		else if(fmt[i] == 'b') { 

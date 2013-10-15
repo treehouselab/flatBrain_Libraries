@@ -33,7 +33,7 @@ void defineUser() {
 		definePin(_WARN_OVR,YCRD,17,_R,_INPUT,LOW);
 		definePin(_TALRMLED,YCRD,17,_L,_OUTPUT,HIGH);
 
-		definePin(IGN,YCRD,24,_L,_INPUT,_PGATE); 
+		//definePin(IGN,YCRD,24,_L,_INPUT,_PGATE); 
 		definePin(CL,YCRD,23,_R,_INPUT,_PGATE); 
 		definePin(CZ,YCRD,21,_L,_INPUT,_PGATE); 
 		definePin(CX,YCRD,23,_L,_INPUT,_PGATE);
@@ -49,7 +49,7 @@ void defineUser() {
 		// OPTIONAL User-Defined Rows start here
 		defineJump(VSTATUS);
 		defineJump(VGLOBALS);
-		defineJump(LOGS);
+		defineJump(LOGSYS);
 		//defineJump(RPULSE);		
 		//defineJump(SENSORS);
 		defineRow(DRST,_BLANK);
@@ -58,6 +58,9 @@ void defineUser() {
 	//////////////////////////////////////////
 
    	definePage(VSTATUS,HOME);
+		defineJump(VGLOBALS);
+		defineJump(LOGSYS);
+		//defineRow(HBEAT,  _BLAMP  | _NOACT );
 		defineRow(V0, _FLOAT1 );
 		defineRow(V1, _FLOAT1 | _UPDATE);
 		defineRow(V2, _FLOAT1 | _UPDATE );
@@ -66,9 +69,6 @@ void defineUser() {
 		defineRow(CX,  _FLOAT1 | _UPDATE );
 		defineRow(CL,  _FLOAT1 |  _UPDATE);
 		//defineRow(IGN,  _BLAMP | LOG );
-		defineRow(ALT,  _BLAMP  | _NOACT );
-		defineJump(VGLOBALS);
-		defineJump(LOGS);
 		//defineTarget(IGN,VIGN);
 
  /*  	definePage(RPULSE,HOME);
@@ -89,10 +89,11 @@ void defineUser() {
 		//defineRow(CC, _FLOAT1 );
 		//defineRow(CL, _FLOAT1 );
 */
-	definePage(VGLOBALS,HOME);
+	definePage(VGLOBALS,VSTATUS);
 		defineJump(LVDLIMITS);
 		defineRow(VEXS, _FLOAT1 | _INCR | _LOADEE);
-		defineRow(VALT, _FLOAT1 | _INCR | _LOADEE);
+		defineRow(ALTHI, _FLOAT1 | _INCR | _LOADEE);
+		defineRow(ALTLO, _FLOAT1 | _INCR | _LOADEE);
 		defineRow(CHLO, _FLOAT1 | _INCR | _LOADEE);
 		defineRow(CHHI, _FLOAT1 | _INCR | _LOADEE);
 		defineRow(CPSEC,_FLOAT1 | _INCR | _LOADEE);
@@ -116,7 +117,8 @@ void defineUser() {
 	defineLog(BKSEC,VGLOG);
 	defineLog(LGMIN,VGLOG);
 	defineLog(VEXS,VGLOG);
-	defineLog(VALT,VGLOG);
+	defineLog(ALTHI,VGLOG);
+	defineLog(ALTLO,VGLOG);
 	defineLog(CHLO,VGLOG);
 	defineLog(CHHI,VGLOG);
 	defineLog(DLO1,VGLOG);
@@ -127,7 +129,16 @@ void defineUser() {
 	defineLog(DHI3,VGLOG);
 
 	defineTag(LBOOT, _BLAMP);
-	defineLog(LBOOT,VDATA);
+	defineTag(WCODE, _BLAMP);
+	defineTag(MODE, _BLAMP);
+	defineTag(LFLG, _BLAMP);
+	defineTag(IGN, _BLAMP);
+
+	defineLog(LBOOT,VDATA);  //THIS IS THE ORDER VARIABLES WILL APPEAR IN LOG RECORD
+	defineLog(MODE,VDATA);
+	defineLog(WCODE,VDATA);
+	defineLog(LFLG,VDATA);
+	defineLog(ALT,VDATA);
 	defineLog(Y1S,VDATA);
 	defineLog(Y2S,VDATA);
 	defineLog(Y3S,VDATA);
@@ -144,7 +155,8 @@ void defineUser() {
 
 	defineAlias(VSTATUS,VAN STATUS);
 	defineAlias(VGLOBALS,VAN GLOBALS);
-	defineAlias(ALT,ALTERNATOR);
+	//defineAlias(HBEAT,HEARTBEAT);
+	//defineAlias(ALT,ALTERNATOR);
 	//defineAlias(RPULSE,RELAY SWITCH);
 	defineAlias(V1,VOLTS B1);
 	defineAlias(V2,VOLTS B2);
@@ -171,7 +183,9 @@ void defineUser() {
 	defineCalibrate(CL,loadAmps,0.35,-179.20);
 
 	defineValue(VEXS,9.0,0.1);
-	defineValue(VALT,13.8,0.1);
+	//defineValue(VALT,13.8,0.1);
+	defineValue(ALTHI,14.6,0.1);
+	defineValue(ALTLO,13.6,0.1);
 	defineValue(CHLO,12.5,0.1);
 	defineValue(CHHI,13.6,0.1);
 	defineValue(DLO1,12.5,0.1);
@@ -185,9 +199,10 @@ void defineUser() {
 	defineValue(LGMIN,5,0.25);
 
 	defineAlias(VEXS,BATT EXST);
-	defineAlias(VALT,ALTN ON);
-	defineAlias(CHLO,CHG BEGIN);
-	defineAlias(CHHI,CHG STOP);
+	defineAlias(ALTHI,ALT HI);
+	defineAlias(ALTLO,ALT LOW);
+	defineAlias(CHLO,CHG LOW);
+	defineAlias(CHHI,CHG HI);
 	defineAlias(DLO1,LVDLO 1);
 	defineAlias(DLO2,LVDLO 2);
 	defineAlias(DLO3,LVDLO 3);
@@ -208,7 +223,7 @@ void defineUser() {
 	double loadAmps(fB_Tag* pT,uint16_t intVal) {
 		double load;
 		load = (double)intVal * pT->dVal->factor + pT->dVal->offset;
-		if(fabs(load) < 1) return 0;
+		if(intVal < 50 || fabs(load) < 1) return 0;
 		return load;
 		//return  sign * ( fabs((intVal - 534 )* pT->dVal->factor) + pT->dVal->offset);
 	}

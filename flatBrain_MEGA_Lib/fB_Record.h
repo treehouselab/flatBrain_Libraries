@@ -27,7 +27,7 @@ class fB_Record {
 		int			EEgetEAUTO();
 		void		EEwriteEAUTO();
 		void		EEdumpTags(uint16_t base);
-		bool		SDinit(uint8_t  SSpin, uint8_t  SPIspeed);
+		//bool		SDinit(uint8_t  SSpin, uint8_t  SPIspeed);
 
 //		static int			compareFilename(const void *x1, const void *x2);
 		void		buildFileRay(char *ext); // returns index count;
@@ -36,17 +36,13 @@ class fB_Record {
 		bool		fileFind(char *fname);
 		bool		fileFind();
 		void		setFtag(char *base);
-		bool		fileCreate(char *fnameL);
 		char*		logGetFilename(uint16_t fTag);
 		void		logShow();
 		// these methods rely in the Record filename pointer pointing to fat.DE.filename
 		void		logStamp();
 		bool		logCreate(uint16_t fTag);
-		void		logSetDate();
-		void		logWriteHeader();
-		void		logWriteData();
-		void		logWriteHeader(uint16_t fTag);
-		void		logWriteData(uint16_t fTag);
+		void		logHeader(uint16_t fTag);
+		void		logData(uint16_t fTag);
 		bool		logArchive();
 		void		logRemove();
 		void		logGetAttributes();
@@ -54,6 +50,12 @@ class fB_Record {
 
 
 	private:
+		bool		fileCreate(char *fnameL);
+		void		logSetDate();
+		void		logWriteHeader();
+		void		logWriteData();
+		void		logWriteHeader(uint16_t fTag);
+		void		logWriteData(uint16_t fTag);
 
 };
 

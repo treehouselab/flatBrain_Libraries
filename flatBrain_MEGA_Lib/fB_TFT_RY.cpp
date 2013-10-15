@@ -167,6 +167,26 @@ uint8_t  fB_TFT::readTpin(uint8_t  tDex) {
 }
 */
 uint8_t  fB_TFT::readButtons() {
+  	uint8_t  button = 0;
+  	uint8_t  buffer = 0x00;
+	static uint8_t  buttonTemp = 0;
+	static uint8_t  buttonLast = 0;
+
+	if(!i2c.read((uint8_t )TSADDR,(uint8_t )1)) buffer = ~((uint8_t )i2c.receive() & 0xFF);
+	switch (buffer) {
+		case 0x00: buttonLast = buttonTemp;	   // Simple scheme, top button = 1, next button = 2, ...3...4
+				   buttonTemp = 0;			   // if 2 buttons pressed (dual), concat values (eg; if 1&2, return value = 12, 1&3 = 13, 3&4 = 34, etc)
+				   button = buttonLast;
+				   break;
+		case 0x01: buttonTemp =  1; break;
+		case 0x02: buttonTemp =  2; break;
+		case 0x04: buttonTemp =  3; break;
+		case 0x08: buttonTemp =  4; break;
+	}
+	return button;
+}
+/*
+uint8_t  fB_TFT::readButtons() {
     static unsigned long last_interrupt_time = 0;
   	uint8_t  buffer = 0x00;
 	uint8_t button = 0;
@@ -200,7 +220,7 @@ uint8_t  fB_TFT::readButtons() {
 			return 0;
 	}
 }
-	
+*/	
 /*
 	if(!i2c.read((uint8_t )TSADDR,(uint8_t )1)) buffer = ~((uint8_t )i2c.receive() & 0xFF);
 	switch (buffer) {
@@ -329,22 +349,20 @@ void fB_TFT::LCD_Write_COM_DATA(char com1,int dat1)
 void fB_TFT::clear(uint16_t ht)
 {
 	
-	//dbug(F("****TFT clr ht:%d"),ht);
 	
-	long i,m;
-	int y;
+	uint32_t i,m,y;
+	int res;
 	
 	bangTFTbit(L_CS, LOW);
 	bangRS( HIGH);
 	
-	if(!ht) y = (long) MAXPIXELHT+1;
-	else y = (long)ht;
-	m = ((long)MAXPIXELWID+1)*y;
-
+	if(!ht) y = (uint32_t) MAXPIXELHT+1;
+	else y = ht;
+	m = (uint32_t)((MAXPIXELWID+1)*y) ;
 	for (i=0; i<m; i++)	{
-		i2c.write((uint8_t )TLADDR,(uint8_t )0);
+		res = i2c.write((uint8_t )TLADDR,(uint8_t )0);
 		//i2c.write((uint8_t )THADDR,(uint8_t )0);
-	WRbangLoHi();
+		WRbangLoHi();
 	}
 	
 	currY = 1;
@@ -760,7 +778,7 @@ void fB_TFT::fillRect(int x1, int y1, int x2, int y2,uint8_t color)
 	setXY(x1,y1,x2,y2);
 	  
 	for(long i=0;i< (y2-y1+1)*(x2-x1+1);i++) LCD_Write_HDATA(color);
-	//clrXY();	
+	clrXY();	
 	bangTFTbit(L_CS, HIGH);
 }
 

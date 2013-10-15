@@ -728,17 +728,13 @@ uint8_t  fB_tFAT::createFile(char *fn)
 
 			if ((buffer[offset]==0x00) or (buffer[offset]==0xE5))
 			{
-				for (int i=0; i<11; i++)
-				{
+				for (int i=0; i<11; i++){
 					buffer[i+offset]=0x20;
 				}
 				j=0;
-				for (int i=0; i<strlen(fn); i++)
-				{
-					if (fn[i]=='.')
-						j=8;
-					else
-					{
+				for (int i=0; i<strlen(fn); i++){
+					if (fn[i]=='.')	j=8;
+					else{
 						buffer[j+offset]=fn[i];
 						j++;
 					}

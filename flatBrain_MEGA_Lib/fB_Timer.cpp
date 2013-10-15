@@ -274,7 +274,7 @@ uint8_t fB_Timer::scheduleLog(uint8_t fTag,uint8_t mode, double minutes) {
 			writeHeader = 0;
 			writeTags = 1;
 	}
-	if(writeHeader) rec.logWriteHeader(fTag);
+	if(writeHeader) rec.logHeader(fTag);
 	if(writeTags) {
 				//dbug(F("T sl wT tag:%d"),fTag);
 		if(minutes) {
@@ -282,7 +282,7 @@ uint8_t fB_Timer::scheduleLog(uint8_t fTag,uint8_t mode, double minutes) {
 			index = timer.perpetual(msecs,logData,(uint16_t) fTag);
 			return index;
 		}
-		else rec.logWriteData(fTag);
+		else rec.logData(fTag);
 	}
 	if(writeHeader || writeTags) rec.EEwriteTags(BASEELOG);
 	return 0;

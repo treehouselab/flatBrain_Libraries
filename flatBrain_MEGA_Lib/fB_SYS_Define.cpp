@@ -12,13 +12,18 @@ void defineSystem()  {
 	definePage(SYSTEM,HOME);
 		defineJump(APINS);
 		defineJump(DPINS);
-		defineJump(LOGS);
-		defineRow(ARCHIVES,NULL);
+		defineJump(LOGSYS);
 		defineJump(EEPROM);
 		defineJump(CLOCK);
 		defineJump(ALARMP);
-		defineRow(FRAM,_INT5 | _NOACT);
+		defineRow(_FRAM,_INT5);
 		defineRow(VCC,_FLOAT2 | _NOACT);
+
+	definePage(LOGSYS,SYSTEM);
+		defineRow(_MOUNT, _BLAMP);
+		defineJump(LOGS);
+		defineRow(ARCHIVES,NULL);
+
 
 	definePage(ALARMP,SYSTEM);
 		defineJump(SOUNDS);
@@ -76,11 +81,11 @@ void defineSystem()  {
 
 
 	definePage(CLOCK,SYSTEM);
-		defineRow(CLKYR, _INCR | _INT5);
-		defineRow(CLKMO, _INCR | _INT5);
-		defineRow(CLKDY, _INCR | _INT5);
-		defineRow(CLKHH, _INCR | _INT5);
-		defineRow(CLKMM, _INCR | _INT5);
+		defineRow(CLKYR,  _INT5);
+		defineRow(CLKMO,  _INT5);
+		defineRow(CLKDY,  _INT5);
+		defineRow(CLKHH,  _INT5);
+		defineRow(CLKMM,  _INT5);
 		defineRow(CLKGET, _BLANK);
 		defineRow(CLKSET, _BLANK);
 		defineAlias(CLKYR,YEAR);
@@ -150,9 +155,12 @@ void defineSystem()  {
 		defineAlias(FDUMP,SERIAL DUMP);
 		defineAlias(FARCH,ARCHIVE);
 
+
+	defineAlias(LOGSYS,LOG FILES);
 	defineAlias(DPINS,DIGITAL PINS);
 	defineAlias(APINS,ANALOG PINS);
-	defineAlias(FRAM,FREE RAM);
+	defineAlias(_FRAM,FREE RAM);
+	defineAlias(_MOUNT,SD MOUNTED);
 
 }
 

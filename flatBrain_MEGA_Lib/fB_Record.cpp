@@ -14,6 +14,7 @@ static int compareFilename(const void *x1, const void *x2) {
 
 
 void fB_Record::buildFileRay(char *ext) {
+	if(!existSD()) return;
 
 	// will select all files if !ext
 	uint16_t offset = 0,i;
@@ -37,7 +38,7 @@ void fB_Record::createTagDefLog() {
 	char Pbuffer[40];
 	char title[MAXCHARSLINE+1];
 	buffer[0] = '\0';
-	if(!(_bootStatus & SD) || !rec.logCreate(P("TAGDEF"))) return;	
+	if(!(_sysStatus & SD) || !rec.logCreate(P("TAGDEF"))) return;	
 	if(fat.openFile(filename,FILEMODE_TEXT_WRITE)==NO_ERROR) { 
 		//sprintf(buffer,P("GLOBAL,GTAG,LOG, VALUE,FACTOR, GPIN, GSYS, GINIT,GINP, GBIAS"));
 		fat.writeLn(P("NAME,TAG,LOG, VALUE,FACTOR, OFFSET, TPIN, _LOADEE"));
@@ -74,6 +75,7 @@ void fB_Record::createTagDefLog() {
 
 char* fB_Record::fileFind(uint16_t index) {
 	//dbug(F("R FFI entry  index:%d"),index);
+	if(!activeSD()) return false;
 	if(fat.findIndex(index) == NO_ERROR) {
 		strcpy(filename, fat.DE.filename);
 		strcpy(base, fat.DE.basename);
@@ -85,6 +87,7 @@ char* fB_Record::fileFind(uint16_t index) {
 }
 
 bool fB_Record::fileFind(char *fname){
+
 	if(fat.getFile(fname) == NO_ERROR) {
 		strcpy(filename, fat.DE.filename);
 		strcpy(base, fat.DE.basename);
@@ -110,8 +113,9 @@ void fB_Record::setFtag(char *base){
 }
 
 bool fB_Record::fileCreate(char *fname) {
-	uint8_t  res;
 	if(!fname) return false; 
+	uint8_t  res;
+
 	res = fat.createFile(fname);
 	if(res == NO_ERROR) {
 		//dbug(F("R FC created  fn:%s"),fat.DE.filename);
@@ -134,11 +138,19 @@ char* fB_Record::logGetFilename(uint16_t _fTag) {
 	return filename;
 }
 
+
+
+void fB_Record::logSetDate() {
+	rtc.now();
+	fat.stampFile(filename,rtc.yOff+2000,rtc.m,rtc.d,rtc.hh,rtc.mm);
+}
+
 bool fB_Record::logCreate(uint16_t fTag) {
-	//dbug(F("R LC entry  ftag:%d"),fTag);
+	if(!activeSD()) return false;
+	dbug(F("R LC entry  ftag:%d"),fTag);
 	logGetFilename(fTag);
 	if(fileCreate(filename)) {
-		//dbug(F("R LC created  f:%s"),filename);
+		dbug(F("R LC created  f:%s"),filename);
 		logWriteHeader(); 
 		logWriteData(); 
 		logGetAttributes();
@@ -146,10 +158,35 @@ bool fB_Record::logCreate(uint16_t fTag) {
 	}
 	return false;
 }
-
-void fB_Record::logSetDate() {
-	rtc.now();
-	fat.stampFile(filename,rtc.yOff+2000,rtc.m,rtc.d,rtc.hh,rtc.mm);
+void fB_Record::logHeader(uint16_t arg16) {
+		//dbug(F("LOGHEADER entry a16:%d"), arg16);
+		
+	if(!activeSD()) {
+		digitalWrite(LED_SD, LOW);
+		alarm.play(_ALRMFL);
+		_sdMsgIndex = P_FAIL_SD;
+	}
+	else {
+		digitalWrite(LED_SD, HIGH);
+		rec.logWriteHeader((uint8_t) arg16);
+		_sdMsgIndex = NULL;
+		digitalWrite(LED_SD, LOW);
+	}
+}
+void fB_Record::logData(uint16_t arg16) {
+		//dbug(F("LOGHEADER entry a16:%d"), arg16);
+		
+	if(!activeSD()) {
+		digitalWrite(LED_SD, LOW);
+		alarm.play(_ALRMFL);
+		_sdMsgIndex = P_FAIL_SD;
+	}
+	else {
+		digitalWrite(LED_SD, HIGH);
+		rec.logWriteData((uint8_t) arg16);
+		_sdMsgIndex = NULL;
+		digitalWrite(LED_SD, LOW);
+	}
 }
 
 void fB_Record::logWriteHeader(uint16_t fTag) {
@@ -157,8 +194,8 @@ void fB_Record::logWriteHeader(uint16_t fTag) {
 	logWriteHeader();
 }
 
-
 void fB_Record::logWriteHeader() {
+
 	//dbug(F("R LWh entry  "));
 	uint8_t res =fat.openFile(filename,FILEMODE_TEXT_WRITE);
 	if(res!=NO_ERROR) return;
@@ -175,7 +212,7 @@ void fB_Record::logWriteHeader() {
 		fat.closeFile();
 		return;
 	}
-	char buffer[j * MAXCHARSLINE];
+	char buffer[(j+2) * MAXCHARSLINE];
 	buffer[0] = '\0';
 	strcpy(buffer,P("DATE,TIME"));
 	for(i=0;i<logTagCount; i++) {
@@ -191,7 +228,9 @@ void fB_Record::logWriteHeader() {
 	fat.writeLn(buffer);
 	fat.closeFile();
 	logSetDate();
+
 }
+
 void fB_Record::logWriteData(uint16_t fTag) {
 	if(!logGetFilename(fTag))return;
 	logWriteData();
@@ -201,14 +240,14 @@ void fB_Record::logWriteData() {
 
 	uint8_t res =fat.openFile(filename,FILEMODE_TEXT_WRITE);
 	if(res!=NO_ERROR) {
-		//dbug(F("REC WRITE FAIL1 %s"),filename);
+		dbug(F("REC WRITE FAIL1 %s"),filename);
 		if(fileCreate(filename)) {
 			logWriteHeader();  
 			logGetAttributes();
 		}
 		else {
 			fat.closeFile();
-			//dbug(F("REC WRITE FAIL2 %s"),filename);
+			dbug(F("REC WRITE FAIL2 %s"),filename);
 			return;
 		}
 	}
@@ -223,11 +262,11 @@ void fB_Record::logWriteData() {
 		j++;
 	}
 	if(!j) {
-			//dbug(F("REC WRITE FAIL3 ft:%d"),fTag);
+		    dbug(F("REC WRITE FAIL3 ft:%d"),fTag);
 			fat.closeFile();
 			return;
 	}
-	char buffer[j* MAXCHARSLINE];
+	char buffer[(j+2 )* MAXCHARSLINE];
 	buffer[0] = '\0';
 	rtc.stamp(buffer);
 	//dbug(F("R LWD j:%d  ltc:%d  ft:%d"),j,logTagCount,fTag);
@@ -247,20 +286,21 @@ void fB_Record::logWriteData() {
 			case _PTEXT:	getPtext(pT->Ptext, datastr);break;
 			case _BLANK:	datastr[0] = '\0' ;break;
 		}
+	//dbug(F("R LWD data:%s"),datastr);
 		strcat(buffer,",");
 		strcat(buffer,datastr);
 	}
 	fat.writeLn(buffer);
 	fat.closeFile();
 	logSetDate();
-
 }
 
 bool fB_Record::logArchive() {
-
+	if(!activeSD()) return false;
 	//if(strcmp(fat.DE.fileext,"LOG")) return false;
 	char buf[2][MAXCHARSLINE+1];
 	int i,j=1,k=0;
+	digitalWrite(LED_SD, HIGH);
 	if(fat.getFile(filename)==NO_ERROR){
 		sprintf(buf[k],"%s.A%d",base,MAXAFILES);
 		if(fat.getFile(buf[k])==NO_ERROR) fat.deleteFile(buf[k]);
@@ -275,9 +315,11 @@ bool fB_Record::logArchive() {
 		}
 		//dbug(F("REC ARCHx RENAME %s to %s"),filename,buf[++j]); 
 		if(fat.renameFile(filename,buf[j])==NO_ERROR) {
-			logRemove();
+			logCreate(fTag);
+			digitalWrite(LED_SD, LOW);
 			return true;
 		}
+	digitalWrite(LED_SD, LOW);
 	}
 	return false;
 }
@@ -299,23 +341,29 @@ void fB_Record::logGetAttributes() {
 }
 
 void fB_Record::logRemove() {
+		if(!activeSD()) return;
+		digitalWrite(LED_SD, HIGH);
 		//dbug(F("R FILE remove %s  "),filename);
 		fat.deleteFile(filename);
 		EEclearLog(fTag); 
 		logCreate(fTag);
+		digitalWrite(LED_SD, LOW);
+
 	//fat.deleteFile(fat.DE.filename); //DO NOT DO THIS, THE CHAR POINTER CANNNOT POINT TO THE fat.DE. RECORD!
 }
 void fB_Record::logStamp() {
 	//dbug(F("R LS df:%s, f:%s"),fat.DE.filename,filename);
 
-	logWriteData();
+	logData(fTag);
 	logGetAttributes();
 }
 
 void fB_Record::logDump() {
+	if(!activeSD()) return ;
 	int res;
     char buffer[MAXCHARSDUMP+2];
 
+   digitalWrite(LED_SD, HIGH);
    res = fat.openFile(filename,FILEMODE_TEXT_READ);
 	//dbug(F("R LDUMP df:%s, f:%s, s:%d r:0x%x"),fat.DE.filename,filename,fat.DE.fileSize,res);
    if(res ==NO_ERROR) {
@@ -327,6 +375,8 @@ void fB_Record::logDump() {
 		 }
 		 fat.closeFile();	
    }
+   	digitalWrite(LED_SD, LOW);
+
   
 }
 /////////////////////////////// EEPROM METHODS /////////////////////////////////////////
@@ -424,6 +474,7 @@ fB_Tag* fB_Record::EEgetTag(fB_Tag &bufTag, uint16_t tag,uint16_t base) {
 
 void fB_Record::EEclearLog( uint16_t fTag) {
 	if(!logTagCount) return;
+
 	//dbug(F("******R EEclearLog"));
 	fB_Tag * pT;
 	logTag * pL;

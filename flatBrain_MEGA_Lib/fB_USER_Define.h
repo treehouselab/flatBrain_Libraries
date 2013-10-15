@@ -70,7 +70,10 @@
 #define CX			646
 #define CL			647 
 #define IGN			648 
-#define ALT			649 
+#define ALTLO			649 
+#define ALTHI			650 
+//#define HBEAT		651 
+#define ALT			652
 
 #define VGLOBALS	123
 
@@ -81,14 +84,17 @@
 #define CPSEC			705  // VANDUINO CURRENT PAGE INTERVAL
 #define BKSEC			706  // VANDUINO BACKGROUND INTERVAL
 #define LGMIN			707  // VANDUINO LOG INTERVAL
+#define MODE			708  // VANDUINO LOG INTERVAL
+#define WCODE			709  // VANDUINO LOG INTERVAL
+#define LFLG			710  // VANDUINO LOG INTERVAL
 
 #define LVDLIMITS	124
 
-#define DLO1			710
-#define DLO2			711
-#define DLO3			712
-#define DHI1			713
-#define DHI2			714 
-#define DHI3			715 
+#define DLO1			740
+#define DLO2			741
+#define DLO3			742
+#define DHI1			743
+#define DHI2			744 
+#define DHI3			745 
 
 #endif

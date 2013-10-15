@@ -20,6 +20,8 @@ Treehouselab.com - Mike Price */
 #define defineSpace()							initSpace()
 #define defineJump(tag)							initJump(tag);
 
+//#define _MOUNTED								_sysStatus & _SD
+
 #define P(str) (strcpy_P(Pbuffer, PSTR(str)), Pbuffer)
 #define createPstr(index,text) PstrRay[index] = F(text); 
 

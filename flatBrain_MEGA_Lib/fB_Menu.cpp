@@ -109,7 +109,7 @@ void fB_Menu::jumpPage(uint16_t tag) {
 	fB_Tag *pT;
 	pT = Tag(tag);
 	//dbug(F("Jump from %P to tag:%d , title:%P, flags:0x%x"),curr.pP->Ptitle,pT->tag,pT->Ptitle,pT->flag16);
-	//dbug(F("Jump from %P to tag:%d , title:%P  cfY:%d"),curr.pP->Ptitle,pT->tag,pT->Ptitle,curr.farY);
+	//dbug(F("Jump from %P ,tag:%d ,cfY:%d TO %P  tag:%d "),curr.pP->Ptitle,curr.pageTag,curr.farY,pT->Ptitle,pT->tag);
 	if(!pT || !( pT->flag16 & _PAGE)) return;
 	if(curr.pageTag) clearPage();
 	showPage(tag);
@@ -134,9 +134,9 @@ void fB_Menu:: clearPage(uint8_t  full) {
 }
 
 void fB_Menu::checkButtonCode() {
-  //dbug(F("MENU CBC bcode:%d"),buttonCode);
 
 	if(buttonCode) {
+  //dbug(F("MENU CBC bcode:%d"),buttonCode);
 		switch(buttonCode) {
 			case 1: context(RIGHT);break;
 			case 2: context(LEFT);break;
@@ -174,6 +174,7 @@ void fB_Menu::context(uint8_t  hand) {
 						return;
 					}
 			}
+			return;
 		}
 		else { /// LEFT,  back to parent page, unless in middle of multi-page output
 			switch(curr.pageTag) {
@@ -259,13 +260,14 @@ void fB_Menu:: showPage(uint16_t tag, uint8_t pageOption) {
 				Tag(FPANEL)->flag16 |= _TTITLE;
 				break;
 			case CLOCK:
-				if(!(_bootStatus & _RTC)) return;
+				if(!(_sysStatus & _RTC)) return;
 				rtc.now();
 				Tag(CLKYR)->iVal = rtc.yOff+2000 ;
 				Tag(CLKMO)->iVal = rtc.m ;
 				Tag(CLKDY)->iVal = rtc.d ;
 				Tag(CLKHH)->iVal = rtc.hh ;
 				Tag(CLKMM)->iVal = rtc.mm ;
+//dbug(F("SP clk H:%d M:%d"),rtc.hh, rtc.mm);
 				break;
 			case APINS:
 				if(cardCount<2) jumpPage(SYSTEM);//jumpPage(curr.parentTag);
@@ -352,6 +354,7 @@ void fB_Menu::clearRow(int rowIndex) {
 }
 
 void fB_Menu::showMessage(uint8_t PstrIndex,char* text) {  
+	//dbug(F("M SMsg i:%d, txt:%s "),PstrIndex, text);
 	if(PstrIndex == P_BLANK) clearRow(-1);
 	else {
 		fB_Tag* pT = Tag(_MSG);
@@ -566,8 +569,11 @@ void fB_Tag::action(uint8_t  hand) {
 
 }
 
-uint8_t fB_Tag::actionByPage() {
-	// returns zero if not trapped
+uint8_t fB_Tag::actionByPage() {  // returns zero if not trapped
+	
+	//check page jump first 
+	if(flag16 & _PAGE) {	menu.jumpPage(tag); return 1; }
+
 	switch(curr.pageTag) {
 		case LOGS:	
 				// FAT index of file is in buf16 of calling Tag
@@ -624,8 +630,13 @@ uint8_t fB_Tag::actionByPage() {
 uint8_t fB_Tag::actionByTag() {
 
 	switch (tag)	{
-			case _UPDATE:
-				if(flag16 & _PIN) read();
+			case _MOUNT:
+				if(iVal) iVal = 0;
+				else iVal = 1;
+				menu.refreshRow();
+				return 1;
+			case _FRAM:
+				iVal = freeRAM();
 				menu.refreshRow();
 				return 1;
 			case _TALRMBT:
@@ -655,12 +666,13 @@ uint8_t fB_Tag::actionByTag() {
 uint8_t fB_Tag::actionByRight() {
 
 	fB_Tag *pT;
-
-	//check page jump first 
-	if(flag16 & _PAGE) {	menu.jumpPage(tag); return 1; }
-	// then check tag
 	uint16_t aVal;
+
 	switch(getAction()) {
+		case _UPDATE:
+				if(flag16 & _PIN) read();
+				menu.refreshRow();
+				return 1;
 		case PULSE:
 			if(flag16 & _PIN)  pulse(PULSEMSECS);
 			menu.refreshRow();
@@ -753,12 +765,12 @@ uint8_t fB_Tag::actionByRight() {
 			rtc.hh = (uint8_t ) Tag(CLKHH)->iVal ;
 			rtc.mm = (uint8_t ) Tag(CLKMM)->iVal ;
 			rtc.adjust();
-			menu.showPage(curr.pP->tag,REFRESHPAGE);
+			menu.showPage(curr.pP->tag);
 			//break;
 			return 1;
 		case CLKGET:
 			rtc.set(__DATE__,__TIME__);
-			menu.showPage(curr.pP->tag,REFRESHPAGE);
+			menu.showPage(curr.pP->tag);
 			//break;
 			return 1;
 		case CLKYR: 
@@ -823,6 +835,21 @@ uint8_t fB_Tag::actionByLeft() {
 			}
 			curr.selectRow();
 			return 1;
+					case CLKGET:
+			rtc.set(__DATE__,__TIME__);
+			menu.showPage(curr.pP->tag);
+			//break;
+			return 1;
+		case CLKYR: 
+		case CLKMO: 
+		case CLKDY: 
+		case CLKHH: 
+		case CLKMM: 
+			if(iVal > 1) iVal  -= 1;
+			else iVal = 1;
+			menu.refreshRow();
+			return 1;
+
 	}
 	switch(getAction()) {
 		case _INCR:

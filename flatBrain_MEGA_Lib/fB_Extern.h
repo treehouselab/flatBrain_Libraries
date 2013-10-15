@@ -46,7 +46,7 @@ typedef struct logTag {
 	uint16_t					tag;
 };
 
-extern uint8_t 		_bootStatus;
+extern uint8_t 		_sysStatus;
 extern uint8_t 		_bootMsgIndex;
 extern uint8_t 		_sdMsgIndex;
 
@@ -76,6 +76,9 @@ extern	logFile*		logFileRay;			// sparse array of pointers to Card objects
 extern  double VccRef;  // adjusted Vcc
 void dbug(const __FlashStringHelper* Pdata,... );
 
+bool activeSD();
+bool existSD();
+void logData(uint16_t arg16);
 int freeRAM();
 double readVcc();
 char* getPstr(uint16_t tag, char *buffer);

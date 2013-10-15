@@ -86,7 +86,7 @@ XCARDS		Ox20-27
 #define MAXEETAGS		25  // for eeprom runaway only
 #define MAXCHARSDUMP	200  // reduce this if logfile dump collides with heap 
 #define MAXLISTROWS		9 
-#define	MESSAGE_Y		285
+#define	MESSAGE_Y		295
 #define MAXCHARSLINE	15 
 #define MAXCHARSTEXT	8 
 #define MAXCHARS_D2STR	6 
@@ -178,6 +178,8 @@ XCARDS		Ox20-27
 #define ADJX		   52
 #define REFRESHPAGE		53
 
+#define LED_HB    9
+#define LED_SD    8
 
 #define GAUGEHT		    60
 #define GSTARTY			5
@@ -293,6 +295,7 @@ XCARDS		Ox20-27
 #define	APINS		10
 #define	ARCHIVES	11
 #define	EEPROM		12
+#define	LOGSYS		13
 
 #define LOGS		29   // 29->40  11 RESERVED FOR LOGS
 
@@ -302,7 +305,8 @@ XCARDS		Ox20-27
 #define _WARN_OVR	258  // used by warnDelay system, can be pins defined in fB_USR_defines.cpp or fB_SYS_Defines.cpp
 #define _TALRMLED	259
 #define HEADER		260
-#define FRAM		267
+#define _FRAM		267
+#define _MOUNT		268
 #define _MSG		271
 #define VCC			272
 #define DRST		273
