@@ -488,13 +488,13 @@ void fB_Vanduino::nextState() {
 			next.setBit(MODF, 0); 
 			alarm.playTag(_TALAC);
 			if(ptLED) 	ptLED->write(~LEDonVal);
-			next.setMsg(P_BLANK); 
+			next.setMsg(G_BLANK); 
 		}
 		else {
 			state.setBit(MODF, 1);
 			alarm.playTag(_TALQS);
 			if(ptLED) 	ptLED->write(LEDonVal);	
-			state.setMsg(P_MANUAL); 
+			state.setMsg(G_MANUAL); 
 		}
 		//next.copyMsgTo(&state);
 		//state.flags = next.flags;
@@ -526,7 +526,7 @@ void fB_Vanduino::buildNextState() {
 	//dbug(F("*** V BNS nf:0x%x"),next.flags);
 	//dbug(F("*** V BNStest1, sdm:%d"),_sdMsgIndex);
 	if(_sdMsgIndex) next.setMsg(_sdMsgIndex);
-	else next.setMsg(P_BLANK); 
+	else next.setMsg(G_BLANK); 
 
 	if(!sB2) next.setBit(RT2, OFF);						// if no batt 2, turn off relay 2
 	if(!sB3) next.setBit(RT3, OFF);						// if no batt 3, turn off relay 3
@@ -535,7 +535,7 @@ void fB_Vanduino::buildNextState() {
 		next.setBit(RT5, OFF);												
 		next.setBit(RT6, OFF);	
 	}
-	if( nR4 && (nR1 || nR2 || nR3))  next.setMsg(P_INVERTER); 
+	if( nR4 && (nR1 || nR2 || nR3))  next.setMsg(G_INVERTER); 
 
 	if(sALT){											// alternator on and charging voltage ( > VOLTSALT)
 		//if(!sC3 && sV2 < CHGLOV2){ // alternator on and not charging batt 3 and batt 2 low
@@ -543,14 +543,14 @@ void fB_Vanduino::buildNextState() {
 			next.setBit(RT1, ON); 
 			next.setBit(RT2, ON); 
 			next.setBit(RT3, OFF); 
-			next.setMsg(P_CHGALT,"B2"); 
+			next.setMsg(G_CHGALT,"B2"); 
 			return; 
 		}
 		if(!sR2 &&  sB3 && sV3 < CHGLOV3){ // alternator on and not charging batt 2 and batt 3 and batt 3 low
 			next.setBit(RT1, ON); 
 			next.setBit(RT3, ON); 
 			next.setBit(RT2, OFF); 
-			next.setMsg(P_CHGALT,"B3"); 
+			next.setMsg(G_CHGALT,"B3"); 
 			return; 
 		}
 		if((sR2 && sV2 > CHGHIV2) || (sR3 && sB3 && sV3 > CHGHIV3)){ // alternator on and ( charging batt 2 and batt 2  topped OR charging batt 3 and batt 3  topped)
@@ -565,10 +565,10 @@ void fB_Vanduino::buildNextState() {
 		if(!sR1 && !sR2 && !sR3) {  // no Batt relays on, turn all load off
 			next.setBit(RT4, OFF);   
 			next.setBit(RT5, OFF);   
-			next.setBit(RT6, OFF);  next.setMsg(P_CHGALT,"B3"); 
+			next.setBit(RT6, OFF);  next.setMsg(G_CHGALT,"B3"); 
 		}
 		
-		if(next.msgIndex == P_CHGALT) next.setMsg(P_BLANK); 
+		if(next.msgIndex ==G_CHGALT) next.setMsg(G_BLANK); 
 		//if(sA2 || sA3)  next.setBit(RT1, OFF);  
 		//next.setBit(RT1, OFF);  
 		if(sEXT) {								// external charge active
@@ -580,7 +580,7 @@ void fB_Vanduino::buildNextState() {
 					next.setBit(RT2, ON);   
 					next.setBit(RT1, ON);   
 					next.setBit(RT3, OFF);   
-					next.setMsg(P_CHGEXT,"B1"); 
+					next.setMsg(G_CHGEXT,"B1"); 
 					return; 
 				}	
 				if(sB3 && sV3 < CHGLOV3 )	{	// charge batt 3 by external source
@@ -588,7 +588,7 @@ void fB_Vanduino::buildNextState() {
 					next.setBit(RT2, ON);   
 					next.setBit(RT3, ON);   
 					next.setBit(RT1, OFF);   
-					next.setMsg(P_CHGEXT,"B3"); 
+					next.setMsg(G_CHGEXT,"B3"); 
 					return; 
 				}
 			}
@@ -602,15 +602,15 @@ void fB_Vanduino::buildNextState() {
 
 			if(sR1 && sR2 && sV1 > CHGHIV1 ){
 					next.setBit(RT1, OFF);   
-					next.setMsg(P_CHGEXT,"B2");
+					next.setMsg(G_CHGEXT,"B2");
 					return; 
 			}	
 			if(sR3 && sR2 && sV3 > CHGHIV3 )	{
 					next.setBit(RT2, OFF);   
-					next.setMsg(P_CHGEXT,"B2");
+					next.setMsg(G_CHGEXT,"B2");
 					return; 
 			}	
-			if(!nR1 && !nR3) next.setMsg(P_CHGEXT,"B2");
+			if(!nR1 && !nR3) next.setMsg(G_CHGEXT,"B2");
 		}
 		else {	// not EXT charging	
 			//dbug(F("    VbNS !EXT "));
@@ -691,16 +691,16 @@ uint8_t fB_Vanduino::switchShutdown(uint8_t index,uint16_t relaySrc, uint16_t re
 			//switch ( warn.warning(index*2, 20,20, 4, WLED)) { 
 			switch ( warn.warning(index*2, Tag(_SECWD)->iVal,Tag(_SECWN)->iVal,Tag(_SECAL)->iVal, WLED)) { 
 				case _WD_WARN:
-					next.setMsg(P_SWITCHTO,textDst);
+					next.setMsg(G_SWITCHTO,textDst);
 			//dbug(F("          Vssd _WD_WARN"));
 					return 1;
 				case _WD_DELAY:
-					next.setMsg(P_DELAYSW2,textDst);
+					next.setMsg(G_DELAYSW2,textDst);
 					return 1;
 				case _WD_ACT: // switch to batt dest
 					next.setBit(relayDst, ON); 
 					next.setBit(relaySrc, OFF); 
-					next.setMsg(P_BLANK);
+					next.setMsg(G_BLANK);
 					return 1;
 			}		
 	
@@ -709,32 +709,32 @@ uint8_t fB_Vanduino::switchShutdown(uint8_t index,uint16_t relaySrc, uint16_t re
 		//dbug(F("          Vssd 3"));
 		 if(warn.currID == index*2) {					// If Batt Dest voltage drops below Vdiscon while above warn active, clear warning
 				warn.reset();
-				next.setMsg(P_BLANK);
+				next.setMsg(G_BLANK);
 			}
 			//dbug(F("          Vssd  psL "));
 			if(priorityShutdownLoad(relaySrc)) {			// Start priority shutdown of Load to see if we can bring Batt Src above Vdiscon
-				next.setMsg(P_BLANK);
+				next.setMsg(G_BLANK);
 				return 1;
 			}
 		//dbug(F("          Vssd 4"));
 			switch ( warn.warning(index*2 +1, 20,20, 4, WLED)) { // Start shutdown of Relay Source
 		//dbug(F("          Vssd 5"));
 				case _WD_WARN:
-					next.setMsg(P_SHUTDOWN,textSrc);
+					next.setMsg(G_SHUTDOWN,textSrc);
 					return 1;
 				case _WD_DELAY:
-					next.setMsg(P_DELAYSHUT,textSrc);
+					next.setMsg(G_DELAYSHUT,textSrc);
 					return 1;
 				case _WD_ACT:									// shutdown relay src
 					next.setBit(relaySrc, OFF); 
-					next.setMsg(P_BLANK);
+					next.setMsg(G_BLANK);
 					return 1;
 			}
 		}
 	}
 	 if(warn.currID == index*2 || warn.currID == index*2 +1 ) {		// If Batt Src voltage above Vdiscon while either above warns active, clear warning
 		warn.reset();
-		next.setMsg(P_BLANK);
+		next.setMsg(G_BLANK);
 	}
 	return 0;
 }
@@ -786,16 +786,16 @@ void fB_Vanduino::setRelaysNext() {
 
 	if(nR1 && nR2 && nR3) {  // failsafe
 		alarm.playTag(_TALEG);
-		next.setMsg(P_ALARM,"123");
+		next.setMsg(G_ALARM,"123");
 	}
 	/*
 	else if(!sB3 &&  nR3) {  // failsafe
 		alarm.playTag(_TALEG);
-		next.setMsg(P_ALARM,"R3");
+		next.setMsg(G_ALARM,"R3");
 	}
 	else if(!sB2 &&  nR2) {  // failsafe
 		alarm.playTag(_TALEG);
-		next.setMsg(P_ALARM,"R2");
+		next.setMsg(G_ALARM,"R2");
 	}
 	*/
 	else {	

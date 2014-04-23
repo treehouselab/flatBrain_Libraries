@@ -2,9 +2,9 @@
 #define FP_EXTERN_H
 
 	
-extern fB_I2C		i2c;
+extern TwoWire		Wire1;
 extern fB_RTC		rtc;
-extern fB_Alarm		alarm;
+//extern fB_Alarm		alarm;
 extern fB_EEPROM	ee;
 extern fB_TFT		tft;
 extern fB_Menu		menu; 
@@ -13,7 +13,7 @@ extern fB_Record	record;
 extern fB_Curr		curr;
 extern fB_Record	rec;
 extern uint8_t 		_i2cspeed;
-extern fB_WarnDelay	warn;
+//extern fB_WarnDelay	warn;
 extern fB_Timer		timer;
 
 extern	uint8_t 	_fBiSelectK1;	// interrupt fork selector, used in fBinterruptHandlerK1
@@ -27,7 +27,7 @@ extern  fB_Tag		*_pTiK1coro; // ptr to pin that coroborates _fBiK1, "
 extern uint8_t  Xmap50[];
 extern uint8_t  Xmap76[];
 
-extern const __FlashStringHelper* PstrRay[MAXPSTRCOUNT];
+extern char* gRay[MAXGRAYCOUNT];
 
 typedef double (*pFunc)(fB_Tag* pT, uint16_t ival); 
 
@@ -38,7 +38,7 @@ typedef union  PandT {			// array of tags, preserves menu structure
 
 typedef struct logFile {
 	uint8_t						fTag;
-	const __FlashStringHelper*	Pbase;
+	char**	base;
 };
 
 typedef struct logTag {
@@ -74,30 +74,27 @@ extern	logTag*			logTagRay;			// sparse array of pointers to Card objects
 extern	logFile*		logFileRay;			// sparse array of pointers to Card objects
 
 extern  double VccRef;  // adjusted Vcc
-void dbug(const __FlashStringHelper* Pdata,... );
+void dbug(char** Pdata,... );
 
 bool activeSD();
 bool existSD();
 void logData(uint16_t arg16);
 int freeRAM();
 double readVcc();
-char* getPstr(uint16_t tag, char *buffer);
-char* getPtext(const __FlashStringHelper* Ptext,char *buffer);
-void getPtextU(const __FlashStringHelper* Ptext,char *buffer);
 //logTag* LogTag(uint16_t tag) ;
 logFile* LogFile(uint8_t fTag) ;
 logTag*  LogTag(uint8_t fTag) ;
 fB_Tag*  Tag(uint16_t tag) ;
 fB_Card* Card(uint16_t tag) ;	
-fB_Tag* initTag(uint16_t tag,const __FlashStringHelper* Ptitle,uint32_t flags,uint16_t tTag=NULL);
-fB_Tag* initPage( uint16_t tag,const __FlashStringHelper* Ptitle, uint16_t parentTag); 
+fB_Tag* initTag(uint16_t tag,char *title,uint32_t flags,uint16_t tTag=NULL);
+fB_Tag* initPage( uint16_t tag,char *title, uint16_t parentTag); 
 void initJump(uint16_t tag);
-void initAlias(uint16_t tag, const __FlashStringHelper* Palias);
-void initPin( uint16_t tag,const __FlashStringHelper* Ptitle, uint16_t ctag,uint8_t   row,uint8_t   side,   uint8_t  dir, uint8_t  onval) ;
-void initCard(uint16_t tag,const __FlashStringHelper* Ptitle, uint8_t  type,uint8_t  i2cAddr, uint8_t  aChan );
-void initRow(uint16_t tag, const __FlashStringHelper* Ptitle,uint32_t  flags);
-void initRowList(uint16_t tag,const __FlashStringHelper* Ptitle,uint16_t parentTag,uint32_t flags);
-void initLog(uint16_t tag, uint8_t fTag, const __FlashStringHelper* Pbase);
+void initAlias(uint16_t tag, char** Palias);
+void initPin( uint16_t tag,char *title, uint16_t ctag,uint8_t   row,uint8_t   side,   uint8_t  dir, uint8_t  onval) ;
+void initCard(uint16_t tag,char *title, uint8_t  type,uint8_t  i2cAddr, uint8_t  aChan );
+void initRow(uint16_t tag, char *title,uint32_t  flags);
+void initRowList(uint16_t tag,char *title,uint16_t parentTag,uint32_t flags);
+void initLog(uint16_t tag, uint8_t fTag, char** base);
 void defineCalibrate( uint16_t tag, pFunc _vFunc, double bias=1,double offset=NULL);	
 void defineTarget(uint16_t tag,uint16_t tTag);
 void defineSpace();

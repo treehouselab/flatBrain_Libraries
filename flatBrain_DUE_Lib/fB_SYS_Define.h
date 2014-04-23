@@ -1,5 +1,5 @@
 //////////////////////////////////////
-// SYSTEM DEFINES. EDIT AT YOUR PERIL.
+// SYSTEM DEFINES. FOR ARDUINO DUE.  EDIT AT YOUR PERIL.
 //////////////////////////////////////
 #ifndef FP_SYS_DEFINES_H
 #define FP_SYS_DEFINES_H
@@ -9,30 +9,30 @@
 
 
 
-#define WRPIN	1     // for port banging WR pin on TFT ( corresponds to ARDUINO D23  )
-#define WRPORT	PORTA // for port banging WR pin on TFT ( corresponds to ARDUINO D23  )
-#define WRDDR	DDRA // for port banging WR pin on TFT ( corresponds to ARDUINO D23  )
-#define RSPIN	2     // for port banging RS pin on TFT ( corresponds to ARDUINO D24  )
-#define RSPORT	PORTA // for port banging RS pin on TFT ( corresponds to ARDUINO D24  )
-#define RSDDR	DDRA // for port banging WR pin on TFT ( corresponds to ARDUINO D24  )
+#define WRPIN	6     // for port banging WR pin on TFT ( corresponds to DUE D29  )
+#define WRPORT	PORTD // for port banging WR pin on TFT ( corresponds to DUE D29  )
+#define WRDDR	DDRD // for port banging WR pin on TFT ( corresponds to DUE D29  )
+#define RSPIN	2     // for port banging RS pin on TFT ( corresponds to DUE D27 )
+#define RSPORT	PORTD // for port banging RS pin on TFT ( corresponds to DUE D27 )
+#define RSDDR	DDRD // for port banging WR pin on TFT ( corresponds to DUE D27 )
 
 #define AT_SPISS 		    53 //  dedicated Mega d53 pin for Chip Select pin for ATTINYs
 
-#define SD_SSPIN 		    15 //  dedicated Mega d15 pin for Chip Select pin for TFT-SD card 
+#define SD_SSPIN 		    30 //  dedicated Mega d15 pin for Chip Select pin for TFT-SD card 
 #define SD_SSBIT 		    0 
 #define SD_SSPORT 		    PORTJ
 #define SD_SSDDR 		    DDRJ 
 #define SPISPEED			0x01 //(0-VERY HIGH....3-VERY SLOW)
 
-#define _ALARMPIN		11 // option: pin 45
+#define _ALARMPIN		7 // option: DUE pin 7
 
-#define NAV_INT			5 // Display Navigation button interrupt number, corresp. to Mega pin 18
-#define NAV_INTPIN		18
+#define NAV_INT			24 // Display Navigation button interrupt number, corresp. to DUE pin 24
+#define NAV_INTPIN		24
 #define WARN_INT		4 // Alarm warning interrupt number, corresp. to Mega pin 20
 #define WARN_INTPIN		19
-#define K0_INT			0 //  interrupt number, corresp. to Mega pin 2
+#define K0_INT			0 //  interrupt number, corresp. to DUE pin 2
 #define K0_INTPIN		2 
-#define K1_INT			1 //  interrupt number, corresp. to Mega pin 3
+#define K1_INT			1 //  interrupt number, corresp. to DUE pin 3
 #define K1_INTPIN		3
 
 #define	INTK1			1	// Interrupt K1 active
@@ -101,10 +101,11 @@ XCARDS		Ox20-27
 #define	_B2		A10
 #define	_B3		A11
 
-#define	_K0		44
-#define	_K1		42
-#define	_K2		2
-#define	_K3		3
+#define	_SH		6
+#define	_K1		5
+#define	_K2		4
+#define	_K3		2
+#define	_K4		3
 
 // Card types
 #define	BRAIN			0
@@ -371,32 +372,32 @@ XCARDS		Ox20-27
 #define	_ALRMQS		5
 #define	_ALRMEG		6
 
-#define P_LEFT			0
-#define P_RIGHT			1
-#define P_STAMP			2
-#define P_DELETE		3
-#define P_NOLOG			4
-#define P_INPUT			5
-#define P_AMP			6
-#define P_STRIKE		7
-#define P_TOGGLE		8
-#define P_GATE			9
-#define P_LOGS			10
-#define P_SHUTDOWN		11
-#define P_SWITCHTO		12
-#define P_DELAYSHUT		13
-#define P_DELAYSW2		14
-#define P_CHGALT		15
-#define P_CHGEXT		16
-#define P_BLANK			17
-#define P_MANUAL		18
-#define P_FAIL			19
-#define P_FAIL_RTC		20
-#define P_FAIL_SD		21
-#define P_ALARM			22
-#define P_INVERTER		23
+#define G_LEFT			0
+#define G_RIGHT			1
+#define G_STAMP			2
+#define G_DELETE		3
+#define G_NOLOG			4
+#define G_INPUT			5
+#define G_AMP			6
+#define G_STRIKE		7
+#define G_TOGGLE		8
+#define G_GATE			9
+#define G_LOGS			10
+#define G_SHUTDOWN		11
+#define G_SWITCHTO		12
+#define G_DELAYSHUT		13
+#define G_DELAYSW2		14
+#define G_CHGALT		15
+#define G_CHGEXT		16
+#define G_BLANK			17
+#define G_MANUAL		18
+#define G_FAIL			19
+#define G_FAIL_RTC		20
+#define G_FAIL_SD		21
+#define G_ALARM			22
+#define G_INVERTER		23
 
-#define	MAXPSTRCOUNT	24
+#define	MAXGRAYCOUNT	24
 
 #define _TIMER_MAX_EVENTS		10     
 #define	_TIMER_UPDATE			0 

@@ -47,16 +47,12 @@ class fB_Tag {
 		uint16_t	tag;
 		uint16_t	flag16;
 		uint8_t 	flag8;
-		const __FlashStringHelper	*Palias;
-		union {	
-			const __FlashStringHelper	*Ptitle;
-			char						*ptitle;
-		};
+		char*		alias;
+		char*		title;
 		union {	
 			int							iVal; 	
 			fB_Val						*dVal;	
-			const __FlashStringHelper	*Ptext;
-			char						*ptext; 
+			char						*text; 
 		} ;
 
 		union {

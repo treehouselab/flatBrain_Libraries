@@ -24,13 +24,13 @@ prog_char alarm_6[] PROGMEM = ":d=16,o=5,b=120:g,p,d6,p,d6,p,d6,p,g,p,d6,p,d6,p,
 //prog_char alarm_8[] PROGMEM = "";
 
 /*
-		defineAlias(_TALRMBT,ALARM BOOT);
-		defineAlias(_TALRMIN,ALARM INIT);
-		defineAlias(_TALRMFL,ALARM FAIL);
-		defineAlias(_TALRMWN,ALARM WARN);
-		defineAlias(_TALRMAC,ALARM ACTION);
-		defineAlias(_TALRMQS,ALARM Q);
-		defineAlias(_TALRMEG,ALARM EMERG);
+		defineAlias(_TALBT,ALARM BOOT);
+		defineAlias(_TALIN,ALARM INIT);
+		defineAlias(_TALFL,ALARM FAIL);
+		defineAlias(_TALWN,ALARM WARN);
+		defineAlias(_TALAC,ALARM ACTION);
+		defineAlias(_TALQS,ALARM Q);
+		defineAlias(_TALEG,ALARM EMERG);
 
 To be recognized by ringtone programs, an RTTTL/Nokring format ringtone must contain three specific elements: name, settings, and notes.
 
@@ -394,7 +394,7 @@ void fB_Alarm::play(uint8_t  alarmIndex )
 void fB_WarnDelay::init() {
 	currID = NULL;
 	action = _WD_OFF;
-	ptLED = Tag(_TALRMLED);
+	ptLED = Tag(_TALLED);
 	if(ptLED) {
 		LEDonVal = ptLED->getOnVal();
 		ptLED->write(~LEDonVal);
@@ -450,14 +450,14 @@ void fB_WarnDelay::startWarnDelay() {  // alarm delay interrupt handler
 //////////////////// these methods are not in class because they need to be argument callable functions ////////////
 void playWarning(uint16_t arg16) { 
 	if(warn.ptLED) warn.ptLED->write(warn.LEDonVal);
-	alarm.playTag(_TALRMWN);
+	alarm.playTag(_TALWN);
 	if(warn.ptLED) warn.ptLED->write(~warn.LEDonVal);
 }
 
 void endWarning(uint16_t arg16) {
 	warn.stop();
 	warn.action = _WD_ACT;
-	alarm.playTag(_TALRMAC);
+	alarm.playTag(_TALAC);
 	//warn.setMsg(P_BLANK);
 
 }

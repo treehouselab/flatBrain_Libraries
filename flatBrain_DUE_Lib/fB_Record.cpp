@@ -45,7 +45,7 @@ void fB_Record::createTagDefLog() {
 		for(int i=0;i<tagCount;i++){
 			pT = &tagRay[i];
 			if(!pT || !(pT->flag16 & (_LOADEE | _PIN))) continue;
-			getPtext(pT->Ptitle,title);
+			getPtext(pT->title,title);
 			char datastr[16];
 			if(pT->flag16 & _UNDEF) 	sprintf(datastr,P("----"));
 			else switch(pT->getFormat()){
@@ -104,7 +104,7 @@ void fB_Record::setFtag(char *base){
 	fTag = NULL;
 	for(int i=0;i < logFileCount;i++) {
 		pLog = &logFileRay[i];
-		getPtext(pLog->Pbase,buffer);
+		getPtext(pLog->base,buffer);
 		if(!strcmp(buffer,base)) {
 			fTag = pLog->fTag;
 			break;
@@ -133,7 +133,7 @@ char* fB_Record::logGetFilename(uint16_t _fTag) {
 	logFile *pLog = LogFile(_fTag);
 	if(!pLog) return NULL;
 	fTag = _fTag;
-	getPtext(pLog->Pbase,filename);
+	getPtext(pLog->base,filename);
 	strcat(filename,".LOG");
 	return filename;
 }
@@ -163,8 +163,8 @@ void fB_Record::logHeader(uint16_t arg16) {
 		
 	if(!activeSD()) {
 		digitalWrite(LED_SD, LOW);
-		alarm.play(_ALRMFL);
-		_sdMsgIndex = P_FAIL_SD;
+		//alarm.play(_ALRMFL);
+		_sdMsgIndex =G_FAIL_SD;
 	}
 	else {
 		digitalWrite(LED_SD, HIGH);
@@ -178,8 +178,8 @@ void fB_Record::logData(uint16_t arg16) {
 		
 	if(!activeSD()) {
 		digitalWrite(LED_SD, LOW);
-		alarm.play(_ALRMFL);
-		_sdMsgIndex = P_FAIL_SD;
+		//alarm.play(_ALRMFL);
+		_sdMsgIndex =G_FAIL_SD;
 	}
 	else {
 		digitalWrite(LED_SD, HIGH);
@@ -220,8 +220,8 @@ void fB_Record::logWriteHeader() {
 		if(pL->fTag != fTag) continue;
 		pT = Tag(pL->tag);
 		if(!pT) continue;
-		//if(strcmp(base,getPtext(LogFile(pT->fTag)->Pbase,Pbuffer)))continue;
-		getPtext(pT->Ptitle,title);
+		//if(strcmp(base,getPtext(LogFile(pT->fTag)->base,Pbuffer)))continue;
+		getPtext(pT->title,title);
 		strcat(buffer,",");
 		strcat(buffer,title);
 	}
@@ -401,7 +401,7 @@ void fB_Record::EEwriteEAUTO() {
 	uint8_t  * data;
 	char title[MAXCHARSLINE+1];
 	int j=0;
-	getPtext(pT->Ptitle,title);
+	getPtext(pT->title,title);
 	title[10]= '\0';
 	ee.writeBlock(BASEETAG ,(uint8_t *)title,strlen(title));
 	data = (uint8_t *)&(pT->iVal);
@@ -420,7 +420,7 @@ void fB_Record::EEwriteTags(uint16_t base) {
 	for(int i=0;i<tagCount;i++){
 		pT = &tagRay[i];
 		if(!pT || !(pT->flag16 & _LOADEE) || pT->tag == _EAUTO) continue;
-		getPtext(pT->Ptitle,title);
+		getPtext(pT->title,title);
 		title[10]= '\0';
 		addr = j*32 + (base+32);
 		ee.setBlock(addr,'\0',40); // leaves a zeroed 8 bits at end of glist to mark end
@@ -433,7 +433,7 @@ void fB_Record::EEwriteTags(uint16_t base) {
 			truncRound(pT->dVal->value,_PRECISION);
 			truncRound(pT->dVal->bias,_PRECISION);
 			truncRound(pT->dVal->offset,_PRECISION);
-			//dbug(F("R EEwTags %P, v:%f"),pT->Ptitle,pT->dVal->value);
+			//dbug(F("R EEwTags %P, v:%f"),pT->title,pT->dVal->value);
 			data = (uint8_t *)&(pT->dVal->value);
 			ee.writeBlock(addr+12,data,4);
 			data = (uint8_t *)&(pT->dVal->bias);
@@ -456,14 +456,14 @@ fB_Tag* fB_Record::EEgetTag(fB_Tag &bufTag, uint16_t tag,uint16_t base) {
 	char title[MAXCHARSLINE+1];
 	uint16_t addr;
 	double  *data;
-	getPtext(pT->Ptitle,title);
+	getPtext(pT->title,title);
 	for(int i=0;i<tagCount;i++){
 		addr = i*32 + (base+32);
 		ee.readBlock(addr,buffer,10);
 		if(buffer[0]=='\0') break;
 		buffer[10] = '\0';
 		if(!strcmp(title,(char *) buffer)) {
-			bufTag.Ptitle = pT->Ptitle;
+			bufTag.title = pT->title;
 			if(pT->flag16 & _DUBL) {
 				ee.readBlock(addr+12,buffer,4);
 				bufTag.dVal->value = *(double*)buffer;
@@ -500,7 +500,7 @@ void fB_Record::EEclearLog( uint16_t fTag) {
 		if(pL->fTag != fTag) continue;
 		pT = Tag(pL->tag);
 		if(!pT) continue;
-		getPtext(pT->Ptitle,title);
+		getPtext(pT->title,title);
 		for(int j=0;j<tagCount;j++){
 			addr = j*32 + (BASEELOG +32);
 			ee.readBlock(addr,buffer,10);
@@ -525,7 +525,7 @@ fB_Tag* fB_Record::EEloadTag(uint16_t tag,uint16_t base) {
 	char title[MAXCHARSLINE+1];
 	uint16_t addr;
 	double  *data;
-	getPtext(pT->Ptitle,title);
+	getPtext(pT->title,title);
 	for(int i=0;i<tagCount;i++){
 		addr = i*32 + (base+32);
 		ee.readBlock(addr,buffer,10);

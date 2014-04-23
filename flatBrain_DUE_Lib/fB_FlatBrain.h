@@ -4,18 +4,17 @@
 #include "fB_Header.h"
 
 
-uint8_t 	_i2cspeed = I2CSLOW;			
-fB_I2C		i2c;
-fB_RTC      rtc; 
-fB_EEPROM   ee; 
-fB_TFT      tft; 
-fB_Menu     menu; 
-fB_tFAT     fat; 
-fB_Alarm    alarm; 
-fB_Record   rec; 
-fB_Curr		curr; 
-fB_WarnDelay	warn;
+fB_RTC          rtc; 
+fB_EEPROM       ee; 
+fB_TFT          tft; 
+fB_Menu         menu; 
+fB_tFAT         fat; 
+//fB_Alarm        alarm; 
+fB_Record       rec; 
+fB_Curr		    curr; 
+//fB_WarnDelay	warn;
 fB_Timer		timer;
+extern TwoWire Wire1;
 
 uint8_t 	_fBiSelectK1 = 0;	// interrupt fork selector, used in fBinterruptHandlerK1
 uint8_t 	_fBiK1 = 0;			// global interrupt flag
@@ -24,10 +23,10 @@ fB_Tag		*_pTiK1shft = NULL; // ptr to pin that shifts _fBiK1, defined in fB_USER
 fB_Tag		*_pTiK1coro = NULL; // ptr to pin that coroborates _fBiK1, "
 uint8_t		logInitFlag = 0;	// set  at first log entry after reboot, helps synchro logs
 
-double VccRef;  // adjusted Vcc
+//double VccRef;  // adjusted Vcc
 //fB_WTV   audio;
 //fB_VLVD   vlvd;
-const __FlashStringHelper* PstrRay[MAXPSTRCOUNT];
+char* gRay[MAXGRAYCOUNT];
 
 typedef double (*pFunc)(fB_Tag* pT,uint16_t ival); 
 
@@ -38,8 +37,8 @@ typedef union  PandT {			// array of tags, preserves menu structure
 
 
 typedef struct logFile {
-	uint8_t						fTag;
-	const __FlashStringHelper*	Pbase;
+	uint8_t		fTag;
+	char*		base;
 };
 
 typedef struct logTag {
@@ -74,7 +73,7 @@ fB_Tag*			rowTagRay;		// array of tags, preserves menu structure
 fB_Card**		pCardRay;			// sparse array of pointers to Card objects
 
 
-void dbug(const __FlashStringHelper* Ptitle, ... );
+void dbug(char* title, ... );
 
 // these functions are found in fB_USER_Define.cpp, fB_SYS_Define.cpp 
 void defineUser();
@@ -88,71 +87,33 @@ void endWarning(uint16_t arg16);
 
 
 ///////////////////// GLOBAL to main.c FUNCTIONS ////////////////////////////////////////////////////////////////
-void buildPstrRay() {  // constants in fB_SYS_Define.h
-	createPstr(P_LEFT,		"L");
-	createPstr(P_RIGHT ,	"R");
-	createPstr(P_STAMP ,	"STAMP");
-	createPstr(P_DELETE ,	"DELETE");
-	createPstr(P_NOLOG ,	"NO LOG");
-	createPstr(P_INPUT ,	"INPUT");
-	createPstr(P_AMP ,		"AMP");
-	createPstr(P_STRIKE,	"----");
-	createPstr(P_TOGGLE ,	"TOGGLE");
-	createPstr(P_GATE ,		"GATE");
-	createPstr(P_LOGS ,		"LOGS");
-	createPstr(P_SHUTDOWN , "SHUTDOWN");
-	createPstr(P_DELAYSHUT, "DELAY SHUTDN");
-	createPstr(P_DELAYSW2 , "DELAY SWITCH");
-	createPstr(P_CHGALT ,	"ALT CHARGE");
-	createPstr(P_CHGEXT,	"EXT CHARGE");
-	createPstr(P_SWITCHTO,	"SWITCHING TO");
-	createPstr(P_MANUAL,	"MANUAL OVERRIDE");
-	createPstr(P_FAIL,	    "FAILURE");
-	createPstr(P_FAIL_RTC,	"FAIL BOOT RTC");
-	createPstr(P_FAIL_SD,	"FAIL BOOT SD");
-	createPstr(P_ALARM,	    "ALARM");
-	createPstr(P_INVERTER,	"INVERTER ON");
-	createPstr(P_BLANK ,	"");
+void buildGray() {  // constants in fB_SYS_Define.h
+	gRay[G_LEFT] = 	"L";
+	gRay[G_RIGHT ] = "R";
+	gRay[G_STAMP ] = "STAMP";
+	gRay[G_DELETE ] = "DELETE";
+	gRay[G_NOLOG ] = "NO LOG";
+	gRay[G_INPUT ] = "INPUT";
+	gRay[G_AMP ] = 	"AMP";
+	gRay[G_STRIKE] = "----";
+	gRay[G_TOGGLE ] = "TOGGLE";
+	gRay[G_GATE ] = 	"GATE";
+	gRay[G_LOGS ] = 	"LOGS";
+	gRay[G_SHUTDOWN]= "SHUTDOWN";
+	gRay[G_DELAYSHUT]= "DELAY SHUTDN";
+	gRay[G_DELAYSW2]= "DELAY SWITCH";
+	gRay[G_CHGALT ] = "ALT CHARGE";
+	gRay[G_CHGEXT] = "EXT CHARGE";
+	gRay[G_SWITCHTO] = "SWITCHING TO";
+	gRay[G_MANUAL] = "MANUAL OVERRIDE";
+	gRay[G_FAIL] =     "FAILURE";
+	gRay[G_FAIL_RTC] = "FAIL BOOT RTC";
+	gRay[G_FAIL_SD] = "FAIL BOOT SD";
+	gRay[G_ALARM] =     "ALARM";
+	gRay[G_INVERTER] = "INVERTER ON";
+	gRay[G_BLANK ] = "";
 }
 
-double readVcc() {
-	long vRefScale = 1125300L; // default;
-
-  // Read 1.1V reference against AVcc
-  // set the reference to Vcc and the measurement to the internal 1.1V reference
-  #if defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
-    ADMUX = _BV(REFS0) | _BV(MUX4) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
-  #elif defined (__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny84__)
-    ADMUX = _BV(MUX5) | _BV(MUX0);
-  #elif defined (__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__)
-    ADMUX = _BV(MUX3) | _BV(MUX2);
-  #else
-    ADMUX = _BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
-  #endif  
-
-  delay(2); // Wait for Vref to settle
-  ADCSRA |= _BV(ADSC); // Start conversion
-  while (bit_is_set(ADCSRA,ADSC)); // measuring
-
-  uint8_t low  = ADCL; // must read ADCL first - it then locks ADCH  
-  uint8_t high = ADCH; // unlocks both
-
-  long result = (high<<8) | low;
-  //return (double) (vRefScale/result)/1000; // Vcc in Volts
-
-   //  more accurate chip-specific scaling bias:
-  //  scale = internal.1Ref * 1023 * 1000
-  //  where internal.1Ref = 1.1 * Vcc1 (per voltmeter) / Vcc2 (per readVcc() function)
-
-	//MEASURED, THIS CHIP 4.81/4.8710 = 0.9875
-	// 0.9875 * vrEFsCALE = 1111234l
-	//vRefScale = 1111232L; // default;
-	//return ((double) (vRefScale/result)/1000) ; // Vcc in Volts
-	return ((double) (vRefScale/result)/1000) * VREFADJ; // Vcc in Volts
-
-
-
-}
 
 /*
  void softReset() // Restarts program from beginning but does not reset the peripherals and registers
@@ -171,10 +132,10 @@ void truncRound(double &x, double prec) {
    // divide by ten for each decimal place
    for (int i = 0; i < _PRECISION; i++)  d/= 10.0;    
    // this small addition, combined with truncation will round our values properly 
-   //dbug(F("tRnd1 x: %f, xt: %f"),x,x+d); 
+   //dbug("tRnd1 x: %f, xt: %f"),x,x+d); 
    x +=  d;
    x = (double) floor(x * pow(10,prec))/pow(10,prec);
-   //dbug(F("tRnd2 x: %f"),x); 
+   //dbug("tRnd2 x: %f"),x); 
 
 }
 
@@ -184,7 +145,7 @@ bool existSD() {
 	uint8_t res;		
 	res = fat.initFAT(SPISPEED);
 	if(res){
-		dbug(F("SD ERROR 0x%x"),res);
+		dbug("SD ERROR 0x%x",res);
 		Tag(_MOUNT)->iVal = 0;
 		return false;
 	}
@@ -199,18 +160,18 @@ bool activeSD() {
 
 void fBinterruptHandlerK1() {  // sets global flag, check and reset flag in user modules
 	if(_fBiK1) return;
-	//dbug(F("pTiK1shit ov:%d, val:%d"), _pTiK1shft->getOnVal(), _pTiK1shft->readInt()  );
+	//dbug("pTiK1shit ov:%d, val:%d"), _pTiK1shft->getOnVal(), _pTiK1shft->readInt()  );
 	if(_pTiK1shft && (_pTiK1shft->readInt()== _pTiK1shft->getOnVal())) _fBiK1 = INTK1SHFT;
 	else {
-			//dbug(F("pTiK1coro1 ov:%d, val:%d"), _pTiK1coro->getOnVal(), _pTiK1coro->readInt()  );
+			//dbug("pTiK1coro1 ov:%d, val:%d"), _pTiK1coro->getOnVal(), _pTiK1coro->readInt()  );
 		if(_pTiK1coro) {
-			//dbug(F("pTiK1coro2 ov:%d, val:%d"), _pTiK1coro->getOnVal(), _pTiK1coro->readInt()  );
+			//dbug("pTiK1coro2 ov:%d, val:%d"), _pTiK1coro->getOnVal(), _pTiK1coro->readInt()  );
 			if(_pTiK1coro->readInt() == _pTiK1coro->getOnVal()) _fBiK1 =  INTK1;
 		}
 		else _fBiK1 =  INTK1;
 	}
 	delayMicroseconds(100000);
-	//dbug(F("FB_INTERRUPT msecs:%d   manOvr:%d"),msecs, _manOver);
+	//dbug("FB_INTERRUPT msecs:%d   manOvr:%d"),msecs, _manOver);
 }
 
 void navigate() {   
@@ -224,30 +185,6 @@ int freeRAM () {
   return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval); 
 }
 
-char* getPstr(uint16_t tag, char *buffer){
-   int cursor = 0;
-   prog_char *ptr = ( prog_char * ) PstrRay[tag];
-   while( ( buffer[ cursor ] = pgm_read_byte_near( ptr + cursor ) ) != '\0' && cursor < MAXCHARSLINE ) ++cursor;
-   buffer[cursor] = '\0';
-   return buffer;
-}
-
-char* getPtext(const __FlashStringHelper* Ptext,char *buffer){
-  int cursor = 0;
-   prog_char *ptr = ( prog_char * ) Ptext;
-   if(Ptext) {
-	   while( ( buffer[ cursor ] = pgm_read_byte_near( ptr + cursor ) ) != '\0' && cursor < MAXCHARSLINE ) ++cursor;
-	   buffer[cursor] = '\0';
-	   return buffer;
-   }
-   return NULL;
-}
-void getPtextU(const __FlashStringHelper* Ptext,char *buffer){
-  int cursor = 0;
-   prog_char *ptr = ( prog_char * )Ptext;
-   if(Ptext)while( ( buffer[ cursor ] = pgm_read_byte_near( ptr + cursor ) ) != '\0' ) ++cursor;
-   buffer[cursor] = '\0';
-}
 
 void packtagTempRay(uint16_t tag) {
 	int i;
@@ -281,7 +218,7 @@ fB_Card* Card(uint16_t tag) {
 	return NULL;
 }
 
-void initLog(uint16_t tag, uint8_t fTag, const __FlashStringHelper* Pbase) {
+void initLog(uint16_t tag, uint8_t fTag, char* base) {
 	fB_Tag *pT = NULL;
 	if(!secondPass) {
 		int i;
@@ -297,14 +234,14 @@ void initLog(uint16_t tag, uint8_t fTag, const __FlashStringHelper* Pbase) {
 			logTagCount++;
 			if(!LogFile(fTag)) {
 				logFileRay[logFileCount].fTag = fTag;
-				logFileRay[logFileCount].Pbase = Pbase;
+				logFileRay[logFileCount].base = base;
 				logFileCount++;
 			}
 		}
 	}
 }
 
-fB_Tag* initTag(uint16_t tag,const __FlashStringHelper* Ptitle,uint32_t flags,uint16_t tTag =NULL) {
+fB_Tag* initTag(uint16_t tag,char* title,uint32_t flags,uint16_t tTag =NULL) {
 	fB_Tag *pT = NULL;
 	if(!secondPass) {
 		packtagTempRay(tag); // add to tagTempRay if unique;
@@ -315,9 +252,9 @@ fB_Tag* initTag(uint16_t tag,const __FlashStringHelper* Ptitle,uint32_t flags,ui
 		if(!pT)	{
 			pT =  &tagRay[tagCount++]; 
 			pT->pin = NULL;
-			pT->Palias = NULL;
+			pT->alias = NULL;
 			pT->tag = tag;
-			pT->Ptitle = Ptitle;
+			pT->title = title;
 			pT->tTag = tTag;  // 16bit 
 		}
 		if(!(pT->flag16 & _DUBL) && (flags & (_FLOAT1 | _FLOAT2 | _D2STR)))	{
@@ -328,20 +265,20 @@ fB_Tag* initTag(uint16_t tag,const __FlashStringHelper* Ptitle,uint32_t flags,ui
 		pT->putFormat(flags);
 		pT->putAction(flags);
 
-//dbug(F("fBIT  %P ptag:%d, f:0X%x, flag:0x%x"),pT->Ptitle, pT->tTag,flags,pT->flag16);
+//dbug("fBIT  %P ptag:%d, f:0X%x, flag:0x%x"),pT->title, pT->tTag,flags,pT->flag16);
 	}
 	return pT;
 }
 
-void initPage( uint16_t tag,const __FlashStringHelper* Ptitle, uint16_t parentTag){  
+void initPage( uint16_t tag,char* title, uint16_t parentTag){  
 	fB_Tag * pT;
-	pT = initTag(tag,Ptitle,_PAGE,parentTag);  // for _PAGE, fTag holds parentTag 
+	pT = initTag(tag,title,_PAGE,parentTag);  // for _PAGE, fTag holds parentTag 
 	if(secondPass) { 
 		rTP[rowCount].t = tag;
 		pT->iVal = rowCount;		// index in tagRay of first row of Page
 		curr.setCurrPage(tag);      // fTag = parentTag
 		curr.rowCount = 1;
-//dbug(F("fBIP  %P ptag:%d, flag:0x%x"),pT->Ptitle, pT->tTag,pT->flag16);
+//dbug("fBIP  %P ptag:%d, flag:0x%x"),pT->title, pT->tTag,pT->flag16);
 	}
 	rowCount++;
 	pageCount++;
@@ -357,8 +294,8 @@ void initJump(uint16_t tag) {
 	rowCount++;
 }
 
-void initRow(uint16_t tag, const __FlashStringHelper* Ptitle,uint32_t  flags){
-	initTag(tag,Ptitle,flags,NULL);
+void initRow(uint16_t tag, char* title,uint32_t  flags){
+	initTag(tag,title,flags,NULL);
 	if(secondPass) 	{
 		rTP[rowCount].t = tag;
 		curr.incrRowCount(); // increment rowCount for this page, store in page flags
@@ -367,8 +304,8 @@ void initRow(uint16_t tag, const __FlashStringHelper* Ptitle,uint32_t  flags){
 	rowCount++ ;
 }
 
-void initRowList(uint16_t tag,const __FlashStringHelper* Ptitle,uint16_t parentTag,uint32_t flags){
-	initPage(tag,Ptitle,parentTag);
+void initRowList(uint16_t tag,char* title,uint16_t parentTag,uint32_t flags){
+	initPage(tag,title,parentTag);
 	for(int i=0; i<MAXLISTROWS; i++)  initRow(tag+i+1,NULL,flags);
 }
 
@@ -380,9 +317,9 @@ void defineSpace() { 	// does not work!!!
 	rowCount++;
 }
 
-void initPin( uint16_t tag,const __FlashStringHelper* Ptitle, uint16_t ctag,uint8_t   row,uint8_t   side,   uint8_t  dir, uint8_t  onval) {
+void initPin( uint16_t tag,char* title, uint16_t ctag,uint8_t   row,uint8_t   side,   uint8_t  dir, uint8_t  onval) {
 	fB_Tag *pT;
-	pT = initTag(tag,Ptitle,NULL,NULL);
+	pT = initTag(tag,title,NULL,NULL);
 	if(secondPass)	{
 		pT->createPin(ctag,row,side,dir,onval) ;
 		pT->flag16 |= ( _PIN | _UNDEF);
@@ -398,8 +335,8 @@ void initPin( uint16_t tag,const __FlashStringHelper* Ptitle, uint16_t ctag,uint
 	pinCount++;
 }
 
-void  initCard(uint16_t tag,const __FlashStringHelper* Ptitle, uint8_t  type,uint8_t  i2cAddr, uint8_t  aChan ) {
-	if(secondPass)	pCardRay[cardCount] = new fB_Card(tag,Ptitle,type,i2cAddr,aChan ); // Card array is separate from Tag array
+void  initCard(uint16_t tag,char* title, uint8_t  type,uint8_t  i2cAddr, uint8_t  aChan ) {
+	if(secondPass)	pCardRay[cardCount] = new fB_Card(tag,title,type,i2cAddr,aChan ); // Card array is separate from Tag array
 	cardCount++;
 }
 
@@ -440,11 +377,11 @@ void defineTarget(uint16_t tag,uint16_t tTag){
 	}
 }
 
-void initAlias(uint16_t tag, const __FlashStringHelper* Palias) {
+void initAlias(uint16_t tag, char* alias) {
 	if(secondPass) {
 		fB_Tag *pT;
 		pT = Tag(tag);
-		if(pT) pT->Palias = Palias;
+		if(pT) pT->alias = alias;
 	}
 }
 
@@ -454,33 +391,33 @@ void flatBrainInit(){
 	fB_Tag	bufTag;
 	uint8_t res;
 
-	buildPstrRay();
+	//buildgRay();
 
-	alarm.enable();
-	alarm.play(_ALRMBT);
+	//alarm.enable();
+	//alarm.play(_ALRMBT);
 
-	dbug(F(" "));
-	dbug(F("---------"));
-	dbug(F("FB INIT ENTRY"));
-	dbug(F("FREE RAM %d"),freeRAM());
+	dbug(" ");
+	dbug("---------");
+	dbug("FB INIT ENTRY");
+	dbug("FREE RAM %d",freeRAM());
 
-	i2c.begin();
-	i2c.setSpeed(I2CSPEED);
-	i2c.timeOut(I2CTIMEOUT);
+	Wire1.begin();
+	//Wire1.setSpeed(I2CSPEED);
+	//Wire1.timeOut(I2CTIMEOUT);
 
 	tft.init(PORTRAIT);
 	tft.clear();
-	dbug(F("INIT TFT"));
+	dbug("INIT TFT");
 
 	menu.init();
-	dbug(F("INIT MENU"));
+	dbug("INIT MENU");
 
 	//alarm.play(_ALRMWN);
 
 	// turn off legacy SPI SS pin ( Mega D53) so it does not conflict w/ SD card or other SPI	
 	// enable explicitly when you want to use (eg. ATTINY SPI uses legacy SS)
-	pinMode(AT_SPISS,_OUTPUT);  
-    digitalWrite(AT_SPISS,LOW);
+	//pinMode(AT_SPISS,_OUTPUT);  
+    //digitalWrite(AT_SPISS,LOW);
 
 	secondPass = 0;  // 1st pass , determine array sizes
 
@@ -491,25 +428,25 @@ void flatBrainInit(){
 	free(tagTempRay);
 	free(logTempRay);
 
-	dbug(F("free RAM3 %d"),freeRAM());
+	dbug("free RAM3 %d",freeRAM());
 	tagRay =	(fB_Tag *) calloc(tagCount,sizeof(fB_Tag));			// array of Tag objects
 	rTP    =	(PandT *) calloc(rowCount,sizeof(PandT));			// array of tags or pointers, for menu operations
 	logTagRay =	(logTag *) calloc(logTagCount,sizeof(logTag));
 	logFileRay =(logFile *) calloc(logFileCount,sizeof(logFile));
 	pCardRay  =	(fB_Card **) calloc(cardCount,sizeof(fB_Card*));
 
-	dbug(F("INIT PASS 1"));
-	dbug(F("tagCount %d"),tagCount);
-	dbug(F("logFileCount %d"),logFileCount);
-	dbug(F("logTagCount %d"),logTagCount);
-	dbug(F("pageCount %d"),pageCount);
-	dbug(F("rowCount %d"),rowCount);
-	dbug(F("cardCount %d"),cardCount);
-	dbug(F("pinCount %d"),pinCount);
-	dbug(F("tag size %d"),sizeof(fB_Tag));
+	dbug("INIT PASS 1");
+	dbug("tagCount %d",tagCount);
+	dbug("logFileCount %d",logFileCount);
+	dbug("logTagCount %d",logTagCount);
+	dbug("pageCount %d",pageCount);
+	dbug("rowCount %d",rowCount);
+	dbug("cardCount %d",cardCount);
+	dbug("pinCount %d",pinCount);
+	dbug("tag size %d",sizeof(fB_Tag));
 
-	dbug(F("INIT MALLOC"));
-	dbug(F("free RAM %d"),freeRAM());
+	dbug("INIT MALLOC");
+	dbug("free RAM %d",freeRAM());
 
 
 	// reset counters
@@ -524,44 +461,44 @@ void flatBrainInit(){
 	secondPass = 1;  // 2nd pass , execute
 	defineSystem();
 	defineUser();
-	dbug(F("INIT PASS 2"));
+	dbug("INIT PASS 2");
 
 	for(int i=0; i< rowCount; i++) 	rTP[i].p = Tag(rTP[i].t); // might be obscure. ( see note at top of file ).
 
 	if(rec.EEgetEAUTO()) {
 		Tag(_EAUTO)->iVal = 1;
 		rec.EEloadTags(BASEETAG);   
-		dbug(F("INIT LOAD EEPROM"));
+		dbug("INIT LOAD EEPROM");
 	}
 	else Tag(_EAUTO)->iVal = 0;
 
 	if(Tag(_TALON)->iVal == LOW) {
-		alarm.disable();
-		dbug(F("ALARM DISABLE"));
+		//alarm.disable();
+		dbug("ALARM DISABLE");
 	}
 	
 	if(res = rtc.init()) {
-		dbug(F("RTC FAILED"));
-		_bootMsgIndex = P_FAIL_RTC;	
-		alarm.play(_ALRMFL);
+		dbug("RTC FAILED");
+		_bootMsgIndex =G_FAIL_RTC;	
+		//alarm.play(_ALRMFL);
 	}
 	else {
 		//_sysStatus |= _RTC;
-		dbug(F("INIT RTC"));
+		dbug("INIT RTC");
 	}
 
 	if(!existSD()) {
-		dbug(F("SD ERROR 0X%h"),res);
-		_bootMsgIndex = P_FAIL_SD;
-		alarm.play(_ALRMFL);
+		dbug("SD ERROR 0X%h",res);
+		_bootMsgIndex =G_FAIL_SD;
+		//alarm.play(_ALRMFL);
 		Tag(_MOUNT)->iVal = 0;
 	}
 	else {
 		//_sysStatus |= _SD;
 		Tag(_MOUNT)->iVal = 1;
-		dbug(F("INIT SD"));
+		dbug("INIT SD");
 		for(int i=0;i<logFileCount;i++) rec.logCreate(logFileRay[i].fTag);
-		dbug(F("INIT LOGS"));
+		dbug("INIT LOGS");
 	}
 
 	
@@ -576,27 +513,25 @@ void flatBrainInit(){
 	_fBiK1 = 0;			// global interrupt flag
  	_fBiTFT = 0;		// global interrupt flag from TFT switches
 
-	VccRef = readVcc();
+	//VccRef = readVcc();
 
-	dbug(F("free RAM %d"),freeRAM());
+	dbug("free RAM %d",freeRAM());
 	Tag(_FRAM)->iVal = freeRAM();
-	Tag(VCC)->dVal->value = VccRef;
-	warn.init();
+	//Tag(VCC)->dVal->value = VccRef;
+	//warn.init();
 	//alarm.playTag(_TALWN);
-	dbug(F("INIT COMPLETE"));	
+	dbug("INIT COMPLETE");	
 }
 
 
-void dbug(const __FlashStringHelper* Ptitle, ... ){
+void dbug(char* title, ... ){
   char fmt[ 60 ]; //Size array as needed.
 
-  getPtextU(Ptitle,fmt);
   char prefix[ 61 ]; 
   char sbuffer[61] = { '\0' };
   int wid = 60;
   double f;
-  char * s;
-  const __FlashStringHelper* Ptext;
+  char *s, *text;
   int i,j,n,k;
   
   va_list args;
@@ -609,9 +544,9 @@ void dbug(const __FlashStringHelper* Ptitle, ... ){
 		j = 0;
 		i++;
 		if(fmt[i] == 'P') { 
-			Ptext =va_arg(args,const __FlashStringHelper*);
+			text =va_arg(args,char*);
 			char pstr[MAXCHARSLINE+1];
-			getPtext(Ptext,pstr);
+			//getPtext(Ptext,pstr);
 			Serial.print(pstr);
 		}
 		if(fmt[i] == 'f') { 
