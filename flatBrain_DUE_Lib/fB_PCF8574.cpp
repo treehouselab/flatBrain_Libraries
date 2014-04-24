@@ -1,7 +1,7 @@
 #include "fB_PCF8574.h"
-#include "fB_PCinterrupt.h"
 #include "fB_Define.h"
-
+#include <Wire.h>
+extern TwoWire Wire1;
 extern fB_I2C  i2c;
 
 PCF8574::PCF8574(){
@@ -98,11 +98,11 @@ void PCF8574::blink(int pin,int time,int wait){
 void PCF8574::enableInterrupt(int pin,void(* selfCheckFunction)(void)){
 	PCFIntPin = pin;
 	pinMode(PCFIntPin,INPUT);
-	PCattachInterrupt(PCFIntPin,selfCheckFunction,FALLING);
+	attachInterrupt(PCFIntPin,selfCheckFunction,FALLING);
 }
 
 void PCF8574::disableInterrupt(){
-	PCdetachInterrupt(PCFIntPin);
+	detachInterrupt(PCFIntPin);
 }
 
 #ifdef INT_INPUT_ONLY
@@ -112,7 +112,7 @@ void PCF8574::disableInterrupt(){
 #endif
 
 void PCF8574::checkForInterrupt(){
-	sei();
+	interrupts();
 	PCFBUFFER = i2cRead(0x00);
 	for(int i=0;i<8;i++){
 		switch(PCFINT[i]){
@@ -179,13 +179,13 @@ void PCF8574::i2cSend(){
 
 void PCF8574::i2cRead(){
   uint8_t  value = 0x00;
-  Wire1.requestFrom((uint8_t )PCFaddress, (uint8_t )1));
+  Wire1.requestFrom((uint8_t )PCFaddress, (uint8_t )1);
   if (Wire1.available())  PCFPORTA = (int) Wire1.read();
   else PCFPORTA = (int)value; //error condition
 }
 
 int PCF8574::i2cRead(uint8_t  value){
-  Wire1.requestFrom((uint8_t )PCFaddress, (uint8_t )1));
+  Wire1.requestFrom((uint8_t )PCFaddress, (uint8_t )1);
   if (Wire1.available())  PCFPORTA = (int) Wire1.read();
   else PCFPORTA = (int)value; //error condition
   //return value;

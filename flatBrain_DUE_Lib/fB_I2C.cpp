@@ -42,8 +42,7 @@ int  fB_I2C::read(uint8_t  address,uint8_t  registerAddress)
   return read((uint8_t) address);
 }
 
-
-uint8_t  fB_I2C::read(uint8_t  address, uint8_t  numberBytes, uint8_t  *dataBuffer)
+int  fB_I2C::read(uint8_t  address, uint8_t  numberBytes, uint8_t  *dataBuffer)
 {
   uint8_t nBytes,i;
   Wire1.requestFrom(address, numberBytes);
@@ -51,21 +50,19 @@ uint8_t  fB_I2C::read(uint8_t  address, uint8_t  numberBytes, uint8_t  *dataBuff
   for (i=0;i<nBytes;i++)  dataBuffer[i] = Wire1.read(); 
   return nBytes;
 }
-uint8_t  fB_I2C::read(uint8_t  address,uint8_t  registerAddress, uint8_t  numberBytes, uint8_t  *dataBuffer)
+int  fB_I2C::read(uint8_t  address,uint8_t  registerAddress, uint8_t  numberBytes, uint8_t  *dataBuffer)
 {
   write(address,registerAddress);
-
   uint8_t nBytes,i;
   Wire1.requestFrom(address, numberBytes);
   nBytes = Wire1.available();
   for (i=0;i<nBytes;i++)  dataBuffer[i] = Wire1.read(); 
   return nBytes;
 }
-uint8_t  fB_I2C::read(uint8_t  address,uint8_t  registerAddress1,uint8_t  registerAddress2, uint8_t  numberBytes, uint8_t  *dataBuffer)
+int  fB_I2C::read(uint8_t  address,uint8_t  registerAddress1,uint8_t  registerAddress2, uint8_t  numberBytes, uint8_t  *dataBuffer)
 {
   write(address,registerAddress1);
   write(address,registerAddress2);
-
   uint8_t nBytes,i;
   Wire1.requestFrom(address, numberBytes);
   nBytes = Wire1.available();
@@ -73,42 +70,48 @@ uint8_t  fB_I2C::read(uint8_t  address,uint8_t  registerAddress1,uint8_t  regist
   return nBytes;
 }
 
-uint8_t  fB_I2C::write(uint8_t  address, uint8_t  dataByte)
+int  fB_I2C::write(uint8_t  address, uint8_t  dataByte)
 {
-  
+  status = -1;
   Wire1.beginTransmission(address);
-  uint8_t status = Wire1.write(dataByte);
+  status = Wire1.write(dataByte);
   Wire1.endTransmission();
   return status;
 }
-uint8_t  fB_I2C::write(int address, int data)
+int  fB_I2C::write(int address, int data)
 {
+  status = -1;
   Wire1.beginTransmission((uint8_t)address);
-  uint8_t status = Wire1.write((uint8_t)data);
+  status = Wire1.write((uint8_t)data);
   Wire1.endTransmission(); 
   return status;
 }
-uint8_t  fB_I2C::write(uint8_t address,uint8_t registerAddress, uint8_t data)
+int  fB_I2C::write(uint8_t address,uint8_t registerAddress, uint8_t data)
 {
-  uint8_t status;
   Wire1.beginTransmission(address);
   status = Wire1.write(registerAddress);
-  status = Wire1.write(data);
+  if(status != -1) status = Wire1.write(data);
   Wire1.endTransmission();
   return status;
 }
-uint8_t  fB_I2C::write(int address,int registerAddress, int data)
+int  fB_I2C::write(int address,int registerAddress, int data)
 {
-  uint8_t status;
   Wire1.beginTransmission((uint8_t)address);
   status = Wire1.write((uint8_t)registerAddress);
-  status = Wire1.write((uint8_t)data);
+  if(status != -1) status = Wire1.write((uint8_t)data);
   Wire1.endTransmission();
   return status;
 }
-uint8_t  fB_I2C::write(uint8_t address,uint8_t registerAddress1,uint8_t registerAddress2, uint8_t numberBytes, uint8_t *buffer)
+int  fB_I2C::write(uint8_t address,uint8_t registerAddress, uint8_t numberBytes, uint8_t *buffer)
 {
-  uint8_t status;
+  Wire1.beginTransmission(address);
+  status = Wire1.write(registerAddress);
+  for(int i=0; i < numberBytes && status != -1 ; i++) 	status = Wire1.write(buffer[i]);
+  Wire1.endTransmission();
+  return status;
+}
+int  fB_I2C::write(uint8_t address,uint8_t registerAddress1,uint8_t registerAddress2, uint8_t numberBytes, uint8_t *buffer)
+{
   Wire1.beginTransmission(address);
   status = Wire1.write(registerAddress1);
   status = Wire1.write(registerAddress2);

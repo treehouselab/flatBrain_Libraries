@@ -8,13 +8,9 @@
 
 #define SECONDS_FROM_1970_TO_2000 946684800
 
-#if (ARDUINO >= 100)
  #include <Arduino.h> // capital A so it is error prone on case-sensitive filesystems
-#else
- #include <WProgram.h>
-#endif
+
 extern fB_I2C    i2c;
-extern uint8_t 	_i2cspeed;
 
 
 static uint8_t  conv2d(const char* p) {
@@ -50,19 +46,17 @@ static long time2long(uint16_t days, uint8_t  h, uint8_t  m, uint8_t  s) {
 uint8_t  fB_RTC::init() {
 
 	uint8_t  res;
+	error = 0;
 	res = i2c.write((uint8_t ) RTC_ADDRESS, (uint8_t )0);
-	if(res) { error = 1 ;dbug(F("RTC WRITE ERROR")); }
+	if(res) { error = 1 ;dbug("RTC WRITE ERROR"); }
 
 	else {
-		res = i2c.read((uint8_t )RTC_ADDRESS, (uint8_t )1);
-		if(res){ error = 1 ;dbug(F("RTC READ ERROR")); }
+		res = (uint8_t )i2c.read((uint8_t )RTC_ADDRESS);
+		if(res == -1 ){ error = 1 ;dbug("RTC READ ERROR"); }
 		else {
-			  //i2c.setSpeed(I2CSLOW);
-			  uint8_t  ss = i2c.receive();
-			  //i2c.setSpeed(_i2cspeed);
-			  if(ss>>7) {
+			  if(res >>7) {
 				  error = 1;
-				  dbug(F("RTC ERROR: %h"),ss);
+				  dbug("RTC ERROR: %h",res);
 			  }
 		}
 	}
@@ -173,8 +167,8 @@ void fB_RTC::adjust() {
 	data[6] = bin2bcd(yOff);
 
    //i2c.setSpeed(I2CSLOW);
-   res = i2c.write((uint8_t )RTC_ADDRESS,(uint8_t ) 0);
-   res = i2c.write((uint8_t ) RTC_ADDRESS, (uint8_t )0, (uint8_t *) data, (uint8_t ) 7);
+   res = i2c.write((uint8_t ) RTC_ADDRESS,(uint8_t ) 0);
+   res = i2c.write((uint8_t ) RTC_ADDRESS, (uint8_t )0, (uint8_t ) 7, (uint8_t *) data);
 //Serial.print("rtc adjust i2cres2: ");
 //Serial.println(res,HEX);
   // i2c.setSpeed(_i2cspeed);
@@ -182,16 +176,16 @@ void fB_RTC::adjust() {
 }
 
 void fB_RTC::now() {  
+	uint8_t data[7];
   if(error) return;
   i2c.write((uint8_t )RTC_ADDRESS,(uint8_t ) 0);
-  i2c.read((uint8_t )RTC_ADDRESS, (uint8_t )7);
-  ss = bcd2bin(i2c.receive() );
-  mm = bcd2bin(i2c.receive());
-  hh = bcd2bin(i2c.receive());// mask assumes 24hr clock
-  i2c.receive();
-  d = bcd2bin(i2c.receive());
-  m = bcd2bin(i2c.receive());
-  yOff = bcd2bin(i2c.receive());
+  i2c.read((uint8_t )RTC_ADDRESS, (uint8_t )7,data);
+  ss = data[0];
+  mm = data[1];
+  hh = data[2];// mask assumes 24hr clock
+  d = data[4];
+  m = data[5];
+  yOff = data[6];
     ///i2c.setSpeed(_i2cspeed);
 
 }
@@ -199,9 +193,9 @@ void fB_RTC::now() {
 
 char *fB_RTC::stamp(char *buffer){
 	char Pbuffer[30];
-    if(error) return P("NO RTC,");
+    if(error) return "NO RTC,";
    // digital clock display of current time
 	now();
-	sprintf(buffer,P("%d-%02d-%02d, %02d:%02d:%02d"),yOff+2000,m,d,hh,mm,ss);
+	sprintf(buffer,"%d-%02d-%02d, %02d:%02d:%02d",yOff+2000,m,d,hh,mm,ss);
 	return buffer;
 }

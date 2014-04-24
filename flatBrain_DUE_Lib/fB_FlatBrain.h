@@ -5,12 +5,13 @@
 
 
 fB_RTC          rtc; 
+fB_I2C         i2c; 
 fB_EEPROM       ee; 
 fB_TFT          tft; 
 fB_Menu         menu; 
-fB_tFAT         fat; 
+//fB_tFAT         fat; 
 //fB_Alarm        alarm; 
-fB_Record       rec; 
+//fB_Record       rec; 
 fB_Curr		    curr; 
 //fB_WarnDelay	warn;
 fB_Timer		timer;
@@ -139,11 +140,13 @@ void truncRound(double &x, double prec) {
 
 }
 
-void logData(uint16_t arg16) { 	rec.logData(arg16); }
+void logData(uint16_t arg16) { 	
+	//rec.logData(arg16); 
+}
 
 bool existSD() {
 	uint8_t res;		
-	res = fat.initFAT(SPISPEED);
+	//res = fat.initFAT(SPISPEED);
 	if(res){
 		dbug("SD ERROR 0x%x",res);
 		Tag(_MOUNT)->iVal = 0;
@@ -465,12 +468,14 @@ void flatBrainInit(){
 
 	for(int i=0; i< rowCount; i++) 	rTP[i].p = Tag(rTP[i].t); // might be obscure. ( see note at top of file ).
 
+/*
 	if(rec.EEgetEAUTO()) {
 		Tag(_EAUTO)->iVal = 1;
 		rec.EEloadTags(BASEETAG);   
 		dbug("INIT LOAD EEPROM");
 	}
 	else Tag(_EAUTO)->iVal = 0;
+*/
 
 	if(Tag(_TALON)->iVal == LOW) {
 		//alarm.disable();
@@ -486,7 +491,7 @@ void flatBrainInit(){
 		//_sysStatus |= _RTC;
 		dbug("INIT RTC");
 	}
-
+/*
 	if(!existSD()) {
 		dbug("SD ERROR 0X%h",res);
 		_bootMsgIndex =G_FAIL_SD;
@@ -500,7 +505,7 @@ void flatBrainInit(){
 		for(int i=0;i<logFileCount;i++) rec.logCreate(logFileRay[i].fTag);
 		dbug("INIT LOGS");
 	}
-
+*/
 	
 	//set interrupt pins to high
 	pinMode(NAV_INTPIN,INPUT_PULLUP);

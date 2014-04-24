@@ -30,6 +30,7 @@
 class fB_I2C
 {
   public:
+	int status;
     void begin();
     void end();
    // void timeOut(uint16_t);
@@ -40,15 +41,16 @@ class fB_I2C
 	int  read(int address);
 	int  read(uint8_t address);
 	int  read(uint8_t address, uint8_t registerAddress);
-	uint8_t  read(uint8_t  address, uint8_t  numberBytes, uint8_t  *dataBuffer);
-	uint8_t  read(uint8_t  address,uint8_t  registerAddress, uint8_t  numberBytes, uint8_t  *dataBuffer);
-	uint8_t  read(uint8_t  address,uint8_t  registerAddress1,uint8_t  registerAddress2, uint8_t  numberBytes, uint8_t  *dataBuffer);
+	int  read(uint8_t  address, uint8_t  numberBytes, uint8_t  *dataBuffer);
+	int  read(uint8_t  address,uint8_t  registerAddress, uint8_t  numberBytes, uint8_t  *dataBuffer);
+	int  read(uint8_t  address,uint8_t  registerAddress1,uint8_t  registerAddress2, uint8_t  numberBytes, uint8_t  *dataBuffer);
 
-	uint8_t  write(uint8_t  address, uint8_t  dataByte);
-	uint8_t  write(int  address, int  dataByte);
-	uint8_t  write(uint8_t address,uint8_t registerAddress, uint8_t data);
-	uint8_t  write(int address,int registerAddress, int data);
-	uint8_t  write(uint8_t  address,uint8_t  registerAddress1,uint8_t  registerAddress2, uint8_t  numberBytes, uint8_t  *dataBuffer);
+	int  write(uint8_t  address, uint8_t  dataByte);
+	int  write(int  address, int  dataByte);
+	int  write(uint8_t address,uint8_t registerAddress, uint8_t data);
+	int  write(int address,int registerAddress, int data);
+	int  write(uint8_t address,uint8_t registerAddress, uint8_t numberBytes, uint8_t *buffer);
+	int  write(uint8_t  address,uint8_t  registerAddress1,uint8_t  registerAddress2, uint8_t  numberBytes, uint8_t  *dataBuffer);
 
 
 

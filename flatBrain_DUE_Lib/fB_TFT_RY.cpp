@@ -43,8 +43,14 @@ void fB_TFT::init(uint8_t orientation=PORTRAIT)
 	//initTpin(TSW_DN,  TS,  TSADDR,3, INPUT);
 	//initTpin(T_IRQ,		TM,NULL ,  M16, INPUT);
 
-	WRDDR  |=  _BV(WRPIN) ; // set WR as output
-	RSDDR  |=  _BV(RSPIN) ; // set RS as output //NEW
+	P_RS	= portOutputRegister(digitalPinToPort(PIN_RS));
+	B_RS	= digitalPinToBitMask(PIN_RS);
+	P_WR	= portOutputRegister(digitalPinToPort(PIN_WR));
+	B_WR	= digitalPinToBitMask(PIN_WR);
+
+
+	pinMode(PIN_WR,OUTPUT);
+	pinMode(PIN_RS,OUTPUT);
 
 	tftCtrlReg = 0;
 
@@ -122,22 +128,22 @@ void fB_TFT::bangTFTbit(uint8_t  tDex, int value) {
 }
 void fB_TFT::bangWR(uint8_t  value) {
 
-	if(value==HIGH) WRPORT |= 1<<WRPIN;
-	else WRPORT &= ~(1<<WRPIN);
+	if(value==HIGH) *P_WR |= 1<<B_WR;
+	else *P_WR &= ~(1<<B_WR);
 
 }
 void fB_TFT::WRbangLoHi() {
 
-	WRPORT &= ~(1<<WRPIN);
+	*P_WR &= ~(1<<B_WR);
 	delayMicroseconds(10);
-	WRPORT |= 1<<WRPIN;
+	*P_WR |= 1<<B_WR;
 
 }
 void fB_TFT::bangRS(uint8_t  value) {
 
 	//new
-	if(value==HIGH) RSPORT |= 1<<RSPIN;
-	else RSPORT &= ~(1<<RSPIN);
+	if(value==HIGH) *P_RS |= 1<<B_RS;
+	else *P_RS &= ~(1<<B_RS);
 
 /* 
 	//old
@@ -172,7 +178,8 @@ uint8_t  fB_TFT::readButtons() {
 	static uint8_t  buttonTemp = 0;
 	static uint8_t  buttonLast = 0;
 
-	if(!i2c.read((uint8_t )TSADDR,(uint8_t )1)) buffer = ~((uint8_t )i2c.receive() & 0xFF);
+	buffer = ~((uint8_t )i2c.read((uint8_t )TSADDR) & 0xFF);
+	//if(!i2c.read((uint8_t )TSADDR) buffer = ~((uint8_t )i2c.receive() & 0xFF);
 	switch (buffer) {
 		case 0x00: buttonLast = buttonTemp;	   // Simple scheme, top button = 1, next button = 2, ...3...4
 				   buttonTemp = 0;			   // if 2 buttons pressed (dual), concat values (eg; if 1&2, return value = 12, 1&3 = 13, 3&4 = 34, etc)
@@ -1087,8 +1094,8 @@ Serial.println(iregister,HEX);
 
 uint8_t  fB_TFT::readTouchPin(uint8_t  tDex) {
   uint8_t  iregister = 0;
-  i2c.read((uint8_t )tPin[tDex].caddr, (uint8_t )1);
-  iregister = (uint8_t )i2c.receive();
+  
+  iregister = (uint8_t )i2c.read((uint8_t )tPin[tDex].caddr);
 
   return bitRead(iregister,tPin[tDex].cpin);
 

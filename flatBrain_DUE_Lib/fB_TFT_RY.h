@@ -98,6 +98,8 @@ typedef struct TPIN {
 class fB_TFT
 {
 	public:
+		volatile uint32_t	*P_RS, *P_WR;
+		uint32_t			B_RS, B_WR;
 
 		unsigned int TP_X ,TP_Y, currY;
 		TPIN tPin[35];		

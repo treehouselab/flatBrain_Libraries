@@ -9,10 +9,10 @@ extern fB_EEPROM	ee;
 extern fB_TFT		tft;
 extern fB_Menu		menu; 
 extern fB_RTC		rtc;
-extern fB_Record	record;
+//extern fB_Record	record;
 extern fB_Curr		curr;
-extern fB_Record	rec;
-extern uint8_t 		_i2cspeed;
+//extern fB_Record	rec;
+extern fB_I2C		i2c;
 //extern fB_WarnDelay	warn;
 extern fB_Timer		timer;
 
@@ -74,7 +74,7 @@ extern	logTag*			logTagRay;			// sparse array of pointers to Card objects
 extern	logFile*		logFileRay;			// sparse array of pointers to Card objects
 
 extern  double VccRef;  // adjusted Vcc
-void dbug(char** Pdata,... );
+void dbug(char* title,... );
 
 bool activeSD();
 bool existSD();
@@ -89,12 +89,12 @@ fB_Card* Card(uint16_t tag) ;
 fB_Tag* initTag(uint16_t tag,char *title,uint32_t flags,uint16_t tTag=NULL);
 fB_Tag* initPage( uint16_t tag,char *title, uint16_t parentTag); 
 void initJump(uint16_t tag);
-void initAlias(uint16_t tag, char** Palias);
+void initAlias(uint16_t tag, char* alias);
 void initPin( uint16_t tag,char *title, uint16_t ctag,uint8_t   row,uint8_t   side,   uint8_t  dir, uint8_t  onval) ;
 void initCard(uint16_t tag,char *title, uint8_t  type,uint8_t  i2cAddr, uint8_t  aChan );
 void initRow(uint16_t tag, char *title,uint32_t  flags);
 void initRowList(uint16_t tag,char *title,uint16_t parentTag,uint32_t flags);
-void initLog(uint16_t tag, uint8_t fTag, char** base);
+void initLog(uint16_t tag, uint8_t fTag, char* base);
 void defineCalibrate( uint16_t tag, pFunc _vFunc, double bias=1,double offset=NULL);	
 void defineTarget(uint16_t tag,uint16_t tTag);
 void defineSpace();

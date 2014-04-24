@@ -162,7 +162,7 @@ void fB_Menu::context(uint8_t  hand) {
 	if(!curr.rowDex) { // page header selected
 		switch(curr.pageTag) {
 			case HOME:		return; 
-			case LOGS: 	pListStart = &fListStart; totalLines = rec.fileCount; break;
+			//case LOGS: 	pListStart = &fListStart; totalLines = rec.fileCount; break;
 		}
 		if(hand==RIGHT) {  // move forward only in cases of multi-page output
 			switch(curr.pageTag) {
@@ -252,8 +252,8 @@ void fB_Menu:: showPage(uint16_t tag, uint8_t pageOption) {
 				break;
 			case LOGS:
 //dbug(F("SP %P t:%d rc:%d, fY:%d"),curr.pP->title, curr.pageTag,curr.getRowCount(),curr.farY);
-				if(Tag(LOGS)->flag16 & _ARCH)  rec.buildFileRay("A");
-				else  rec.buildFileRay("LOG");
+				//if(Tag(LOGS)->flag16 & _ARCH)  rec.buildFileRay("A");
+				//else  rec.buildFileRay("LOG");
 				break;
 			case FPANEL:
 				Tag(FPANEL)->flag16 |= _TTITLE;
@@ -286,8 +286,9 @@ void fB_Menu:: showPage(uint16_t tag, uint8_t pageOption) {
 				Tag(_TALEG)->iVal = 6;
 				break;
 		}
-
+	/*
 		switch(tag) {
+		
 			case LOGS:
 				listStart = menu.fListStart;
 				if(rec.fileCount <= listStart)listStart = max(rec.fileCount - MAXLISTROWS,0);
@@ -302,14 +303,15 @@ void fB_Menu:: showPage(uint16_t tag, uint8_t pageOption) {
 				}
 				curr.putRowCount(rows);
 				free(rec.sortRay);
-				/*
-				dr = curr.rowCount - (rows+1); // for page tags, pagerow count is stored in iVal
-				iVal = rows+1;
-				if(dr > 0) farY -= dr * ROWHT;
-				else farY = iVal * ROWHT;
-				*/
+			
+				//dr = curr.rowCount - (rows+1); // for page tags, pagerow count is stored in iVal
+				//iVal = rows+1;
+				//if(dr > 0) farY -= dr * ROWHT;
+				//else farY = iVal * ROWHT;
+			
 				break;
 		}
+	*/
 
 	}
 
@@ -400,8 +402,8 @@ void fB_Tag::showRow(int  rowIndex, uint8_t  option) {  //when option == REFRESH
 		}
 		else {
 			if(curr.pageTag == LOGS && rowIndex) {
-					//strcpy(Pbuffer,rec.fileFind(buf8)); 
-					strcpy(pTitleText,rec.fileFind(buf16)); 
+					       //strcpy(Pbuffer,rec.fileFind(buf8)); 
+					//strcpy(pTitleText,rec.fileFind(buf16)); 
 			}
 			else pTitleText = title; // title points to text field
 		}
@@ -572,6 +574,7 @@ uint8_t fB_Tag::actionByPage() {  // returns zero if not trapped
 	if(flag16 & _PAGE) {	menu.jumpPage(tag); return 1; }
 
 	switch(curr.pageTag) {
+		/*
 		case LOGS:	
 				// FAT index of file is in buf16 of calling Tag
 				if(!rec.fileFind(buf16)) return 1;  // rec filename->fat.DE.filename and lasts only so long
@@ -591,31 +594,32 @@ uint8_t fB_Tag::actionByPage() {  // returns zero if not trapped
 				}
 				menu.jumpPage(FPANEL);
 				return 1;
+		*/
 		case FPANEL:
-				if(!rec.fileFind(Tag(FSTD)->buf16)) return 1;
+				//if(!rec.fileFind(Tag(FSTD)->buf16)) return 1;
 //dbug(F("M FPANL prf:%s, 16: %d"),rec.filename,Tag(FSTD)->buf16);
 			    switch(tag) {
 					case FSTD:
 						if(iVal == FSTAMP) {
-							rec.logStamp();
-							Tag(FDATE)->text = rec.dateStr; 
-							Tag(FSIZE)->text = rec.sizeStr;
+							//rec.logStamp();
+							//Tag(FDATE)->text = rec.dateStr; 
+							//Tag(FSIZE)->text = rec.sizeStr;
 							menu.refreshRow(FDATE);
 							menu.refreshRow(FSIZE);
 							menu.selectHeader();
 							return 1;
 						}
 						else if(iVal == FDEL && title == gRay[G_DELETE]) {
-							rec.logRemove();
+							//rec.logRemove();
 							menu.jumpPage(curr.parentTag);
 						}
 						return 1;
 					case FARCH:
-						rec.logArchive();
+						//rec.logArchive();
 						menu.jumpPage(curr.parentTag);
 						return 1;
 					case FDUMP:
-						rec.logDump();
+						//rec.logDump();
 						menu.selectHeader();
 						return 1;
 				}
@@ -812,7 +816,7 @@ uint8_t fB_Tag::actionByRight() {
 			else iVal = 1;
 			menu.refreshRow();
 			return 1;
-
+/*
 		case ELOAD:	rec.EEloadTags(BASEETAG); menu.selectHeader();return 1;
 		case _ESTOR:	rec.EEwriteTags(BASEETAG); menu.selectHeader();return 1;
 		case EDUMP:	rec.EEdumpTags(BASEETAG); menu.selectHeader();return 1;
@@ -823,6 +827,7 @@ uint8_t fB_Tag::actionByRight() {
 					rec.EEwriteEAUTO();
 					menu.selectHeader();
 					return 1;
+*/
 
 
 	} // END  Switch on  Tag

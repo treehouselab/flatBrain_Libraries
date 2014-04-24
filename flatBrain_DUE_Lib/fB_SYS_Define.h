@@ -9,12 +9,8 @@
 
 
 
-#define WRPIN	6     // for port banging WR pin on TFT ( corresponds to DUE D29  )
-#define WRPORT	PORTD // for port banging WR pin on TFT ( corresponds to DUE D29  )
-#define WRDDR	DDRD // for port banging WR pin on TFT ( corresponds to DUE D29  )
-#define RSPIN	2     // for port banging RS pin on TFT ( corresponds to DUE D27 )
-#define RSPORT	PORTD // for port banging RS pin on TFT ( corresponds to DUE D27 )
-#define RSDDR	DDRD // for port banging WR pin on TFT ( corresponds to DUE D27 )
+#define PIN_WR	29     // for port banging WR pin on TFT ( corresponds to DUE D29  )
+#define PIN_RS	27     // for port banging RS pin on TFT ( corresponds to DUE D27 )
 
 #define AT_SPISS 		    53 //  dedicated Mega d53 pin for Chip Select pin for ATTINYs
 

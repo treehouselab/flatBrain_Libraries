@@ -2,7 +2,7 @@
 
 
 void defineSystem()  {
-	initTag(TAGZERO,F("TAGZERO"),_FLOAT2); // bad tag catch
+	initTag(TAGZERO,"TAGZERO",_FLOAT2); // bad tag catch
 
 	defineCard(BRAIN,BRAIN,0,0);
 
