@@ -27,7 +27,7 @@ extern  fB_Tag		*_pTiK1coro; // ptr to pin that coroborates _fBiK1, "
 extern uint8_t  Xmap50[];
 extern uint8_t  Xmap76[];
 
-extern char* gRay[MAXGRAYCOUNT];
+extern char* gStr_STRIKE;
 
 typedef double (*pFunc)(fB_Tag* pT, uint16_t ival); 
 

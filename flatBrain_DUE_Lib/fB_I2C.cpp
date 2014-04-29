@@ -12,11 +12,9 @@ extern TwoWire Wire1;
 
 
 
-void fB_I2C::begin()
-{  Wire1.begin(); }
+void fB_I2C::begin()   { Wire1.begin(); }
 
-void fB_I2C::end()
-{ Wire1.endTransmission(); }
+void fB_I2C::end() {  Wire1.endTransmission(); }
 
 uint8_t  fB_I2C::available()
 {

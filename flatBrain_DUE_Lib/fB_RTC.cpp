@@ -43,20 +43,18 @@ static long time2long(uint16_t days, uint8_t  h, uint8_t  m, uint8_t  s) {
 // RTC implementation - ignores time zones and DST changes
 // NOTE: also ignores leap seconds, see http://en.wikipedia.org/wiki/Leap_second
 
-uint8_t  fB_RTC::init() {
+int  fB_RTC::init() {
 
-	uint8_t  res;
-	error = 0;
-	res = i2c.write((uint8_t ) RTC_ADDRESS, (uint8_t )0);
-	if(res) { error = 1 ;dbug("RTC WRITE ERROR"); }
+	error = i2c.write((uint8_t ) RTC_ADDRESS, (uint8_t )0);
+	if(error == -1) dbug("RTC WRITE ERROR");
 
 	else {
-		res = (uint8_t )i2c.read((uint8_t )RTC_ADDRESS);
-		if(res == -1 ){ error = 1 ;dbug("RTC READ ERROR"); }
+		error = (uint8_t )i2c.read((uint8_t )RTC_ADDRESS);
+		if(error == -1 )dbug("RTC READ ERROR");
 		else {
-			  if(res >>7) {
-				  error = 1;
-				  dbug("RTC ERROR: %h",res);
+			  if(error >>7) {
+				  dbug("RTC ERROR: %h",error);
+				  error = -1;
 			  }
 		}
 	}

@@ -232,16 +232,17 @@ uint8_t fB_Timer::scheduleLog(uint8_t fTag,uint8_t mode, double minutes) {
 	uint8_t writeHeader = 0;
 	uint8_t writeTags   = 0;
 
-	filename = rec.logGetFilename(fTag);
+	//filename = rec.logGetFilename(fTag);
 	if(!filename) return 0;
 	switch(mode) {
 		case _NEWLOG:
-			if(rec.fileFind(filename)) rec.logArchive();
-			rec.logCreate(fTag);
+			//if(rec.fileFind(filename)) rec.logArchive();
+			//rec.logCreate(fTag);
 			break;
 		case _APPENDLOG:
 		case _APPENDDIF:
-			if(!rec.fileFind(filename)) 	return 0;
+			//if(!rec.fileFind(filename)) 	return 0;
+			break;
 	}
 
 	switch(mode) {
@@ -252,7 +253,7 @@ uint8_t fB_Timer::scheduleLog(uint8_t fTag,uint8_t mode, double minutes) {
 				bufTag.dVal = &bufVal;
 				for(int i=0; i< logTagCount; i++) {
 					if(logTagRay[i].fTag != fTag) continue;
-					pT = rec.EEgetTag(bufTag,logTagRay[i].tag,BASEELOG);
+					//pT = rec.EEgetTag(bufTag,logTagRay[i].tag,BASEELOG);
 					if(!pT) {
 						writeHeader = 1;
 						writeTags = 1;
@@ -274,7 +275,7 @@ uint8_t fB_Timer::scheduleLog(uint8_t fTag,uint8_t mode, double minutes) {
 			writeHeader = 0;
 			writeTags = 1;
 	}
-	if(writeHeader) rec.logHeader(fTag);
+	//if(writeHeader) rec.logHeader(fTag);
 	if(writeTags) {
 				//dbug(F("T sl wT tag:%d"),fTag);
 		if(minutes) {
@@ -282,9 +283,9 @@ uint8_t fB_Timer::scheduleLog(uint8_t fTag,uint8_t mode, double minutes) {
 			index = timer.perpetual(msecs,logData,(uint16_t) fTag);
 			return index;
 		}
-		else rec.logData(fTag);
+		//else rec.logData(fTag);
 	}
-	if(writeHeader || writeTags) rec.EEwriteTags(BASEELOG);
+	//if(writeHeader || writeTags) rec.EEwriteTags(BASEELOG);
 	return 0;
 }
 /*

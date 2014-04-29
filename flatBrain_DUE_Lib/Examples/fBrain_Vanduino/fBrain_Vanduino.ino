@@ -1,8 +1,8 @@
-/#include <Timer.h>
-#include <Wire.h>
+//#include <Timer.h>
 #include <fB_FlatBrain.h>
 //#include <fB_Vanduino.h>
-
+#include <Wire.h>
+extern TwoWire Wire1;
 
 //fB_Vanduino vduino;
 #define LED_HB    13
@@ -22,6 +22,8 @@ int8_t hbdelta=16;
 void setup(){
 
    Serial.begin(57600);
+   	Wire1.begin();
+
   
     //pinMode(13,OUTPUT);
     //digitalWrite(13,LOW);
@@ -30,8 +32,10 @@ void setup(){
 
 	//alarm.disable();
 	//alarm.bootBeepDisable();
-
+	scanI2C();
 	flatBrainInit();
+
+	Card(YCRD)->LED(HIGH);
     Serial.println("fbinit");
 
 	//vduino.init(VSTATUS);
@@ -41,7 +45,6 @@ void setup(){
     //Serial.println("MSPinit");
      //   vduinoUpdate(NULL);
 	//i2c.scan();
-	//Card(YCRD)->LED(HIGH);
 	//timer.perpetual(_TIMER_UPDATE,(unsigned long)(Tag(CPSEC)->dVal->value * 1000),vduinoUpdate,NULL);
 	//initState();
   Serial.println("setup exit");

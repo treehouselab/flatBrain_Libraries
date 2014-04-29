@@ -5,6 +5,8 @@ fB_TFT::fB_TFT() { }
 
 void fB_TFT::init(uint8_t orientation=PORTRAIT)
 { 
+		dbug(" TFT INIT ENTRY");
+
 	   //initTpin( index, uint8_t   cAddr, uint8_t  cPin);
 	initTpin(0, TLADDR,  0);  
 	initTpin(1,  TLADDR, 1); 	
@@ -38,19 +40,30 @@ void fB_TFT::init(uint8_t orientation=PORTRAIT)
 	initTpin(TSW_DN,   TSADDR,3);
 
 	i2c.write((uint8_t )TSADDR, (uint8_t )0xFF);// pullup all buttons
-			
-
+/*			
+		//PIN27 -> PIO_PD2
+		REG_PIOD_ODSR=(VH>>3) & 0x04;
+		//PIN29 -> PIO_PD6
+		REG_PIOD_ODSR=(VH>>1) & 0x40;
+*/
 	//initTpin(TSW_DN,  TS,  TSADDR,3, INPUT);
 	//initTpin(T_IRQ,		TM,NULL ,  M16, INPUT);
+	//dbug("TFT INIT PORTS");
+	pinMode(WR_PIN,OUTPUT);
+	pinMode(RS_PIN,OUTPUT);
 
-	P_RS	= portOutputRegister(digitalPinToPort(PIN_RS));
-	B_RS	= digitalPinToBitMask(PIN_RS);
-	P_WR	= portOutputRegister(digitalPinToPort(PIN_WR));
-	B_WR	= digitalPinToBitMask(PIN_WR);
+/*
+	P_RS	= portOutputRegister(digitalPinToPort(RS_PIN));
+	B_RS	= digitalPinToBitMask(RS_PIN);
+	P_WR	= portOutputRegister(digitalPinToPort(WR_PIN));
+	B_WR	= digitalPinToBitMask(WR_PIN);
+	
+	dbug("P_RS %x",P_RS);
+	dbug("B_RS %d",B_RS);
+	dbug("P_WR %x",P_WR);
+	dbug("B_WR %d",B_WR);
+*/
 
-
-	pinMode(PIN_WR,OUTPUT);
-	pinMode(PIN_RS,OUTPUT);
 
 	tftCtrlReg = 0;
 
@@ -126,29 +139,27 @@ void fB_TFT::bangTFTbit(uint8_t  tDex, int value) {
 
 	//nop++;
 }
-void fB_TFT::bangWR(uint8_t  value) {
-
-	if(value==HIGH) *P_WR |= 1<<B_WR;
-	else *P_WR &= ~(1<<B_WR);
-
-}
 void fB_TFT::WRbangLoHi() {
 
+	digitalWriteDirect(WR_PIN, LOW);
+	delayMicroseconds(10);
+	digitalWriteDirect(WR_PIN, HIGH);
+
+/*
 	*P_WR &= ~(1<<B_WR);
 	delayMicroseconds(10);
 	*P_WR |= 1<<B_WR;
+*/
 
 }
 void fB_TFT::bangRS(uint8_t  value) {
 
-	//new
-	if(value==HIGH) *P_RS |= 1<<B_RS;
-	else *P_RS &= ~(1<<B_RS);
+	digitalWriteDirect(RS_PIN, value);
 
-/* 
-	//old
- 	bangTFTbit(L_RS,value); 
-*/
+	//if(value==HIGH) *P_RS |= 1<<B_RS;
+	//else *P_RS &= ~(1<<B_RS);
+
+
 }
 
 // initTpin() creates element in tPin array
@@ -312,6 +323,7 @@ void fB_TFT::setAll2Bcolor()
 
 void fB_TFT::LCD_Writ_Bus(char VH,char VL)
 {   
+
 	i2c.write((uint8_t )TLADDR, (uint8_t ) VL); ///////////////////////
 	i2c.write((uint8_t )THADDR, (uint8_t ) VH);  /////////////////////////////
 	WRbangLoHi();
@@ -331,6 +343,7 @@ void fB_TFT::LCD_Writ_HBus(char VH)
 
 void fB_TFT::LCD_Write_COM(char VL)  
 {   
+
 		bangRS( LOW);
 		LCD_Writ_Bus(0x00,VL);
 }
@@ -356,7 +369,7 @@ void fB_TFT::LCD_Write_COM_DATA(char com1,int dat1)
 void fB_TFT::clear(uint16_t ht)
 {
 	
-	
+	dbug("CLEAR TFT ENTRY");
 	uint32_t i,m,y;
 	int res;
 	
@@ -375,6 +388,7 @@ void fB_TFT::clear(uint16_t ht)
 	currY = 1;
 	clrXY();
 	bangTFTbit(L_CS, HIGH);
+	dbug("CLEAR TFT EXIT");
 
 }
 void fB_TFT::fillScr(uint8_t color)

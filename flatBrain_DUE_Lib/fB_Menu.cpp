@@ -135,7 +135,7 @@ void fB_Menu:: clearPage(uint8_t  full) {
 void fB_Menu::checkButtonCode() {
 
 	if(buttonCode) {
-  //dbug(F("MENU CBC bcode:%d"),buttonCode);
+  dbug("MENU CBC bcode:%d",buttonCode);
 		switch(buttonCode) {
 			case 1: context(RIGHT);break;
 			case 2: context(LEFT);break;
@@ -248,7 +248,7 @@ void fB_Menu:: showPage(uint16_t tag, uint8_t pageOption) {
 			case SYSTEM:
 				menu.fListStart = 0 ;
 				Tag(LOGS)->flag16 &= ~_ARCH; // default to log file list ( LOCAL ==1 displays archives
-				Tag(LOGS)->title = gRay[G_LOGS];
+				strcpy(Tag(LOGS)->title,"LOGS");
 				break;
 			case LOGS:
 //dbug(F("SP %P t:%d rc:%d, fY:%d"),curr.pP->title, curr.pageTag,curr.getRowCount(),curr.farY);
@@ -354,12 +354,12 @@ void fB_Menu::clearRow(int rowIndex) {
 
 }
 
-void fB_Menu::showMessage(uint8_t PstrIndex,char* text) {  
+void fB_Menu::showMessage(char* title,char* text) {  
 	//dbug(F("M SMsg i:%d, txt:%s "),PstrIndex, text);
-	if(PstrIndex ==G_BLANK) clearRow(-1);
+	if(title[0]=='\0') clearRow(-1);
 	else {
 		fB_Tag* pT = Tag(_MSG);
-		pT->title = gRay[PstrIndex];
+		pT->title = title;
 		pT->text = text;
 		pT->showRow(-1);
 	}
@@ -434,27 +434,27 @@ void fB_Tag::showRow(int  rowIndex, uint8_t  option) {  //when option == REFRESH
 	
 	else switch(format) {
 		case _INT5:
-			if(flag16 & _UNDEF) tft.print( RIGHT, getY(rowIndex), gRay[G_STRIKE]);
+			if(flag16 & _UNDEF) tft.print( RIGHT, getY(rowIndex), gStr_STRIKE);
 			else tft.printInt(STARTX +MONX,getY(rowIndex),iVal,6,RIGHT);
 			break;
 		case _FLOAT1:
-			if(flag16 & _UNDEF) tft.print( RIGHT, getY(rowIndex), gRay[G_STRIKE]);
+			if(flag16 & _UNDEF) tft.print( RIGHT, getY(rowIndex), gStr_STRIKE);
 			else tft.printFloat(STARTX +MONX,getY(rowIndex),dVal->value,1,RIGHT);
 			break;
 		case _FLOAT2:
-			if(flag16 & _UNDEF) tft.print( RIGHT, getY(rowIndex), gRay[G_STRIKE]);
+			if(flag16 & _UNDEF) tft.print( RIGHT, getY(rowIndex), gStr_STRIKE);
 			else tft.printFloat(STARTX +MONX,getY(rowIndex),dVal->value,AR4_2,RIGHT);
 			break;
 		case _D2STR:
-			if(flag16 & _UNDEF) tft.print( RIGHT, getY(rowIndex), gRay[G_STRIKE]);
+			if(flag16 & _UNDEF) tft.print( RIGHT, getY(rowIndex), gStr_STRIKE);
 			else tft.print( RIGHT, getY(rowIndex),menu.d2str(dVal->value,MAXCHARS_D2STR,text));
 			break;
 		case _TEXT:
-			if(flag16 & _UNDEF) tft.print( RIGHT, getY(rowIndex), gRay[G_STRIKE]);
+			if(flag16 & _UNDEF) tft.print( RIGHT, getY(rowIndex), gStr_STRIKE);
 			else if(text) tft.print( RIGHT, getY(rowIndex), text);
 			break;
 		case _STRIKE:
-			tft.print( RIGHT, getY(rowIndex), gRay[G_STRIKE]);
+			tft.print( RIGHT, getY(rowIndex), gStr_STRIKE);
 			break;
 	}
 	tft.resetDefColors();
@@ -512,12 +512,12 @@ void fB_Menu::pinPageConstruct(uint8_t mode,uint8_t startDex, uint8_t hand ) {
 				if(pT->isLatched()) Tag(PNTOG)->iVal = HIGH;
 				else Tag(PNTOG)->iVal = LOW;
 				Tag(PNTOG)->putAction(_TOGGLE);
-				Tag(PNTOG)->title = gRay[G_TOGGLE];
+				strcpy(Tag(PNTOG)->title,"TOGGLE");
 			}
 			if(pT->getDir() == _INPUT){
 				Tag(PNTOG)->iVal = pT->readInt();
 				Tag(PNTOG)->putAction(_NOACT);
-				Tag(PNTOG)->title = gRay[G_INPUT];
+				strcpy(Tag(PNTOG)->title,"INPUT");
 			}
 		}
 			else  {
@@ -609,7 +609,8 @@ uint8_t fB_Tag::actionByPage() {  // returns zero if not trapped
 							menu.selectHeader();
 							return 1;
 						}
-						else if(iVal == FDEL && title == gRay[G_DELETE]) {
+						else if(iVal == FDEL) {
+						//else if(iVal == FDEL && title == gRay[G_DELETE]) {
 							//rec.logRemove();
 							menu.jumpPage(curr.parentTag);
 						}

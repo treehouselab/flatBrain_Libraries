@@ -10,7 +10,7 @@
   Written by Limor Fried/Ladyada for Adafruit Industries.  
   BSD license, all text above must be included in any redistribution
  ****************************************************/
-
+#include "fB_Include.h"
 #include <fB_I2C.h>
 #include <fB_Define.h>
 #include <avr/pgmspace.h>
@@ -115,7 +115,6 @@ void MCP23017::digitalWrite(uint8_t  p, uint8_t  d) {
 
   // read the current GPIO output latches
   gpio = (uint8_t) i2c.read((uint8_t )i2cAddr,(uint8_t )olataddr);
-
   // set the pin and direction
   if (d == HIGH) {
     gpio |= 1 << p; 
@@ -129,8 +128,6 @@ void MCP23017::digitalWrite(uint8_t  p, uint8_t  d) {
   //Serial.println(i2c.write((uint8_t )i2cAddr,(uint8_t )gpioaddr,(uint8_t )gpio),DEC);
  //dbug("MCPdigwrite addr 0x%h, gpioaddr 0x%h,  gpio 0x%h \n",i2cAddr,gpioaddr,gpio);
   
-   i2c.write((uint8_t )i2cAddr,(uint8_t )gpioaddr,(uint8_t )gpio);
-
 }
 
 void MCP23017::pull(uint8_t  p, uint8_t  d) {

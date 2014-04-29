@@ -29,6 +29,7 @@ void fB_Card::init() {
 			MCP->pinMode(_X50LD, _OUTPUT); // pin maps to board LED
 			MCP->pinMode(_X50GT, _OUTPUT);  // pin maps to N-Chan fet gate
 			MCP->digitalWrite(_X50GT, LOW);  //  gate off
+			MCP->digitalWrite(_X50LD, LOW);  
 			MCPd = MCP;
 			//MCP->digitalWrite(_X50LED, HIGH);
 			break;
@@ -51,6 +52,7 @@ void fB_Card::init() {
 			MCP->digitalWrite(_X76IN, LOW);  
 			MCP->digitalWrite(_X76RS, HIGH);  
 			MCP->pinMode(_X76LD, _OUTPUT); // pin maps to board LED
+			MCP->digitalWrite(_X76LD, LOW);  
 			MCP->pinMode(_X76GT, _OUTPUT);  // pin maps to N-Chan fet gate
 			MCP->digitalWrite(_X76GT, LOW);  //  gate off
 			break;

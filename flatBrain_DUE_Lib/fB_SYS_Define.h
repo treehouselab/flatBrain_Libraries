@@ -9,8 +9,8 @@
 
 
 
-#define PIN_WR	29     // for port banging WR pin on TFT ( corresponds to DUE D29  )
-#define PIN_RS	27     // for port banging RS pin on TFT ( corresponds to DUE D27 )
+#define WR_PIN	29     // for port banging WR pin on TFT ( corresponds to DUE D29  )
+#define RS_PIN	27     // for port banging RS pin on TFT ( corresponds to DUE D27 )
 
 #define AT_SPISS 		    53 //  dedicated Mega d53 pin for Chip Select pin for ATTINYs
 
@@ -142,7 +142,7 @@ XCARDS		Ox20-27
 #define _X76BB			3	// MCP PIN MAPS TO CD4051 B ADDRESS PIN, FOR VD CHANNEL
 #define _X76BC			2	// MCP PIN MAPS TO CD4051 B ADDRESS PIN, FOR VD CHANNEL
 #define _X76RS			13	// MCP PIN MAPS TO 2nd MCP _RST pin
-#define _X76LD			1	// MCP PIN MAPS TO  BOARD LED
+#define _X76LD			14	// MCP PIN MAPS TO  BOARD LED
 #define _X76GT			0	// MCP PIN MAPS TO  op-iso gate
 
 // Used when invoking analogRead/Write using an MPC digital line

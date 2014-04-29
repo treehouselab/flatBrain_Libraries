@@ -15,7 +15,8 @@ fB_Menu         menu;
 fB_Curr		    curr; 
 //fB_WarnDelay	warn;
 fB_Timer		timer;
-extern TwoWire Wire1;
+
+char* gStr_STRIKE = "-----";
 
 uint8_t 	_fBiSelectK1 = 0;	// interrupt fork selector, used in fBinterruptHandlerK1
 uint8_t 	_fBiK1 = 0;			// global interrupt flag
@@ -27,7 +28,6 @@ uint8_t		logInitFlag = 0;	// set  at first log entry after reboot, helps synchro
 //double VccRef;  // adjusted Vcc
 //fB_WTV   audio;
 //fB_VLVD   vlvd;
-char* gRay[MAXGRAYCOUNT];
 
 typedef double (*pFunc)(fB_Tag* pT,uint16_t ival); 
 
@@ -62,7 +62,7 @@ uint8_t		pinCount		= 0;
 uint8_t		cardCount		= 0;
 uint8_t		pageCount		= 0;
 uint8_t		logFileCount		= 0;
-
+uint8_t		gCount				= 0;
 
 PandT*			rTP;	
 uint8_t*		logTempRay;		
@@ -72,6 +72,7 @@ logFile*		logFileRay;		// array of structs containing log tag and basename point
 fB_Tag*			tagRay;			// array of Tag objects
 fB_Tag*			rowTagRay;		// array of tags, preserves menu structure
 fB_Card**		pCardRay;			// sparse array of pointers to Card objects
+
 
 
 void dbug(char* title, ... );
@@ -88,33 +89,6 @@ void endWarning(uint16_t arg16);
 
 
 ///////////////////// GLOBAL to main.c FUNCTIONS ////////////////////////////////////////////////////////////////
-void buildGray() {  // constants in fB_SYS_Define.h
-	gRay[G_LEFT] = 	"L";
-	gRay[G_RIGHT ] = "R";
-	gRay[G_STAMP ] = "STAMP";
-	gRay[G_DELETE ] = "DELETE";
-	gRay[G_NOLOG ] = "NO LOG";
-	gRay[G_INPUT ] = "INPUT";
-	gRay[G_AMP ] = 	"AMP";
-	gRay[G_STRIKE] = "----";
-	gRay[G_TOGGLE ] = "TOGGLE";
-	gRay[G_GATE ] = 	"GATE";
-	gRay[G_LOGS ] = 	"LOGS";
-	gRay[G_SHUTDOWN]= "SHUTDOWN";
-	gRay[G_DELAYSHUT]= "DELAY SHUTDN";
-	gRay[G_DELAYSW2]= "DELAY SWITCH";
-	gRay[G_CHGALT ] = "ALT CHARGE";
-	gRay[G_CHGEXT] = "EXT CHARGE";
-	gRay[G_SWITCHTO] = "SWITCHING TO";
-	gRay[G_MANUAL] = "MANUAL OVERRIDE";
-	gRay[G_FAIL] =     "FAILURE";
-	gRay[G_FAIL_RTC] = "FAIL BOOT RTC";
-	gRay[G_FAIL_SD] = "FAIL BOOT SD";
-	gRay[G_ALARM] =     "ALARM";
-	gRay[G_INVERTER] = "INVERTER ON";
-	gRay[G_BLANK ] = "";
-}
-
 
 /*
  void softReset() // Restarts program from beginning but does not reset the peripherals and registers
@@ -183,9 +157,9 @@ void navigate() {
 }  
 
 int freeRAM () {
-  extern int __heap_start, *__brkval; 
-  int v; 
-  return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval); 
+  //extern int __heap_start, *__brkval; 
+  //int v; 
+  //return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval); 
 }
 
 
@@ -394,26 +368,25 @@ void flatBrainInit(){
 	fB_Tag	bufTag;
 	uint8_t res;
 
-	//buildgRay();
-
 	//alarm.enable();
 	//alarm.play(_ALRMBT);
 
 	dbug(" ");
 	dbug("---------");
+	//dbug("FREE RAM %d",freeRAM());
 	dbug("FB INIT ENTRY");
-	dbug("FREE RAM %d",freeRAM());
-
-	Wire1.begin();
 	//Wire1.setSpeed(I2CSPEED);
 	//Wire1.timeOut(I2CTIMEOUT);
 
-	tft.init(PORTRAIT);
-	tft.clear();
-	dbug("INIT TFT");
 
-	menu.init();
+	dbug("INIT TFT");
+	tft.init(PORTRAIT);
+
+	dbug("CLEAR TFT");
+	tft.clear();
+
 	dbug("INIT MENU");
+	menu.init();
 
 	//alarm.play(_ALRMWN);
 
@@ -431,7 +404,7 @@ void flatBrainInit(){
 	free(tagTempRay);
 	free(logTempRay);
 
-	dbug("free RAM3 %d",freeRAM());
+	//dbug("free RAM3 %d",freeRAM());
 	tagRay =	(fB_Tag *) calloc(tagCount,sizeof(fB_Tag));			// array of Tag objects
 	rTP    =	(PandT *) calloc(rowCount,sizeof(PandT));			// array of tags or pointers, for menu operations
 	logTagRay =	(logTag *) calloc(logTagCount,sizeof(logTag));
@@ -449,7 +422,7 @@ void flatBrainInit(){
 	dbug("tag size %d",sizeof(fB_Tag));
 
 	dbug("INIT MALLOC");
-	dbug("free RAM %d",freeRAM());
+	//dbug("free RAM %d",freeRAM());
 
 
 	// reset counters
@@ -482,13 +455,13 @@ void flatBrainInit(){
 		dbug("ALARM DISABLE");
 	}
 	
-	if(res = rtc.init()) {
+	if(rtc.init() == -1) {
 		dbug("RTC FAILED");
 		_bootMsgIndex =G_FAIL_RTC;	
-		//alarm.play(_ALRMFL);
+		///alarm.play(_ALRMFL);
 	}
 	else {
-		//_sysStatus |= _RTC;
+		_sysStatus |= _RTC;
 		dbug("INIT RTC");
 	}
 /*
@@ -529,8 +502,8 @@ void flatBrainInit(){
 }
 
 
-void dbug(char* title, ... ){
-  char fmt[ 60 ]; //Size array as needed.
+void dbug(char* fmt, ... ){
+  //char fmt[ 60 ]; //Size array as needed.
 
   char prefix[ 61 ]; 
   char sbuffer[61] = { '\0' };
@@ -538,7 +511,7 @@ void dbug(char* title, ... ){
   double f;
   char *s, *text;
   int i,j,n,k;
-  
+
   va_list args;
   va_start(args,fmt);
   for( i=0,j=0;i<strlen(fmt);i++) {		
@@ -602,7 +575,30 @@ void dbug(char* title, ... ){
   Serial.println(prefix);
 }
 
- 
+void scanI2C() {
+	byte error, address;
+	int nDevices;
+
+  dbug("\nScan I2C.....");
+
+  nDevices = 0;
+  for (address = 1; address < 127; address++ )
+  {
+    // The i2c_scanner uses the return value of
+    // the Write.endTransmisstion to see if
+    // a device did acknowledge to the address.
+    Wire1.beginTransmission(address);
+    error = Wire1.endTransmission();
+    if (error == 0)
+    {
+      dbug("I2C device found @ 0x%x",address);
+      nDevices++;
+    }
+    else if (error == 4)   dbug("Unknown error @ 0x%x",address);
+  }
+  if (nDevices == 0) dbug("No I2C devices found.\n");
+  else dbug("%d devices found.\n",nDevices);
+}
 
 
 #endif

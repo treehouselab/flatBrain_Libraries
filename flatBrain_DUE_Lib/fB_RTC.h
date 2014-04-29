@@ -8,7 +8,7 @@
 
 class fB_RTC {
 public:
-	uint8_t  error;
+	int  error;
 	uint8_t  data[7];
 	void set(uint32_t t =0); // Simple general-purpose date/time class (no TZ / DST / leap second handling!)
     void set(uint16_t year, uint8_t  month, uint8_t  day,
@@ -22,7 +22,7 @@ public:
     uint32_t unixtime(void) const;
     
 	void adjust();
-    uint8_t  init();
+    int  init();
     void now();
 	char *stamp(char *buffer);
     uint8_t  yOff, m, d, hh, mm, ss;

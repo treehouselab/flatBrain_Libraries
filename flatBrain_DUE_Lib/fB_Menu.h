@@ -26,7 +26,7 @@ class fB_Menu {
 		void		getFileList(); 
 		void		pinPageConstruct(uint8_t mode,uint8_t startDex, uint8_t hand=RIGHT);
 		void		refreshRow(uint16_t tag = NULL);
-		void		showMessage(uint8_t Pindex, char *text = ""); 
+		void		showMessage(char *title, char *text = ""); 
 		void		clearRow(int rowIndex);
 
 		void		init();
